@@ -60,7 +60,6 @@ author = 'TagnumElite'
 version = ''
 with open('../bot.py') as f:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE).group(1)
-version = '0.0.5'
 # The full version, including alpha/beta/rc tags.
 release = version
 
