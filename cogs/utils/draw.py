@@ -4,7 +4,7 @@ from PIL import ImageFont, Image, ImageDraw
 from urllib.request import Request, urlopen, URLopener
 
 def remove(userID, path):
-    os.chdir(path)
+    os.chdir(path+"/members")
     os.remove(userID+".png")
 
 def splash(uid: str, un: str, au: str, ga: str, st: str, rc, path):
@@ -13,7 +13,7 @@ def splash(uid: str, un: str, au: str, ga: str, st: str, rc, path):
     if len(ga) > 25:
         ga = ga[:22]+"..."
     if len(un) > 36:
-        ga = ga[:33]+"..."
+        ga = ga[:28]+"..."
     if isinstance(st, discord.Status):
         print("True")
     # Font
@@ -73,7 +73,7 @@ def splash(uid: str, un: str, au: str, ga: str, st: str, rc, path):
         print("error")
     # Output
     out = Image.alpha_composite(banner, txt)
-    os.chdir(path)
+    os.chdir(path+"/members")
     out.save(uid+".png")
 
     # Save Storage
