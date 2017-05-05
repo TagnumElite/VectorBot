@@ -59,7 +59,13 @@ ExampleConfig = """{
     "Email Outgoing Server": "",
     "IMAP Port": 143,
     "POP3 Port": 110,
-    "SMTP Port": 25
+    "SMTP Port": 25,
+
+    // Extensions that will be enabled if Dev Mode is set to true
+    "Dev Cogs": [
+        "cogs.api",
+        "cogs.image"
+    ]
 }"""
 
 Configs = {}
@@ -316,7 +322,16 @@ def main():
         except Exception as e:
             print('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
         else:
-            print("Loaded Extensions: ", extension)
+            print("Loaded Extension: ", extension)
+
+    if Configs["Dev Mode"]:
+        for dextension in Configs["Dev Cogs"]:
+            try:
+                bot.load_extension(dextension)
+            except Exception as e:
+                print('Failed to load extension {}\n{}: {}'.format(dextension, type(e).__name__, e))
+            else:
+                print("Loaded Development Extension: ", dextension)
 
     #Setup Twitch Notifications
     #bot.loop.create_task(twitch_notification())

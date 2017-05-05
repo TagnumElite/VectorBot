@@ -11,6 +11,20 @@ import asyncio
 import datetime
 from collections import Counter
 
+#NOTE: Most will be disabled because of discord audit logs but this does not mean the functions don't work. Uncomment the functions to make them work!
+#NOTE: THESE THINGS WILL CHANGE BECAUSE I CHANGED THE WAY THE BOT WILL BE LOGGING INTO THE DB
+
+# Discord Audit Logs:
+# Server Update
+# Channel Create/Delete/Update
+# Channel Perms Create/Delete/Update
+# Member Kick/Prune/Ban/Unban/Update/Update Roles
+# Role Create/Update/Remove
+# Invite Create/Update/Remove
+# Webhook Create/Update/Remove
+# Emoji Create/Update/Remove
+# Messages Remove
+
 class Database:
     """Database Commands"""
 
@@ -33,7 +47,7 @@ class Database:
 
     @database.command(pass_content=True)
     async def sexists(self, ctx, *, args):
-        """Checks if server exists in the DB"""
+        """Checks if server exists in the DB and not it is not!"""
         message = ctx.message
         author = message.author
         server = message.server
@@ -104,9 +118,9 @@ class Database:
         DB = ServerDB(self.bot.currentDB)
         DB.delete(server)
 
-    async def on_server_update(self, before, after):
-        DB = ServerDB(self.bot.currentDB)
-        DB.update(before, after)
+    #async def on_server_update(self, before, after):
+    #    DB = ServerDB(self.bot.currentDB)
+    #    DB.update(before, after)
 
     async def on_server_available(self, server):
         DB = ServerDB(self.bot.currentDB)
@@ -116,13 +130,14 @@ class Database:
         DB = ServerDB(self.bot.currentDB)
         DB.updateStatus(server, "Offline")
 
-    async def on_member_ban(self, member):
-        DB = MembersDB(self.bot.currentDB, member.server)
-        DB.ban(member)
+    # DUSCIRD ABIT LOGS (Discord Audit Logs)
+    #async def on_member_ban(self, member):
+    #    DB = MembersDB(self.bot.currentDB, member.server)
+    #    DB.ban(member)
 
-    async def on_member_unban(self, server, user):
-        DB = MembersDB(self.bot.currentDB, server)
-        DB.unban(user)
+    #async def on_member_unban(self, server, user):
+    #    DB = MembersDB(self.bot.currentDB, server)
+    #    DB.unban(user)
 
     async def on_member_join(self, member):
         DB = MembersDB(self.bot.currentDB, after.server)
@@ -140,33 +155,34 @@ class Database:
         DB = MembersDB(self.bot.currentDB, after.server)
         DB.updateVoiceState(before, after)
 
-    async def on_server_emojis_update(self, before, after):
-        DB = EmojisDB(self.bot.currentDB, after.server)
-        DB.update(before, after)
+    # Discord Audit Logs
+    #async def on_server_emojis_update(self, before, after):
+    #    DB = EmojisDB(self.bot.currentDB, after.server)
+    #    DB.update(before, after)
 
-    async def on_server_role_create(self, role):
-        DB = RolesDB(self.bot.currentDB, after.server)
-        DB.create(before, after)
+    #async def on_server_role_create(self, role):
+    #    DB = RolesDB(self.bot.currentDB, after.server)
+    #    DB.create(before, after)
 
-    async def on_server_role_delete(self, role):
-        DB = RolesDB(self.bot.currentDB, after.server)
-        DB.delete(before, after)
+    #async def on_server_role_delete(self, role):
+    #    DB = RolesDB(self.bot.currentDB, after.server)
+    #    DB.delete(before, after)
 
-    async def on_server_role_update(self, before, after):
-        DB = RolesDB(self.bot.currentDB, after.server)
-        DB.update(before, after)
+    #async def on_server_role_update(self, before, after):
+    #    DB = RolesDB(self.bot.currentDB, after.server)
+    #    DB.update(before, after)
 
-    async def on_channel_delete(self, channel):
-        DB = ChannelsDB(self.bot.currentDB, after.server)
-        DB.delete(before, after)
+    #async def on_channel_delete(self, channel):
+    #    DB = ChannelsDB(self.bot.currentDB, after.server)
+    #    DB.delete(before, after)
 
-    async def on_channel_create(self, channel):
-        DB = ChannelsDB(self.bot.currentDB, after.server)
-        DB.create(before, after)
+    #async def on_channel_create(self, channel):
+    #    DB = ChannelsDB(self.bot.currentDB, after.server)
+    #    DB.create(before, after)
 
-    async def on_channel_update(self, before, after):
-        DB = ChannelsDB(self.bot.currentDB, after.server)
-        DB.update(before, after)
+    #async def on_channel_update(self, before, after):
+    #    DB = ChannelsDB(self.bot.currentDB, after.server)
+    #    DB.update(before, after)
 
     #async def on_typing(self, channel, user, when):
         #databases.log_typing(self.bot, channel, user, when)
