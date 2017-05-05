@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # Copyright (c) 2017 Tagan Hoyle
-# This software is released under an EXAMPLE license.
+# This software is released under an GPL-3.0 license.
 # See LICENSE.md for full details.
 
 from discord.ext import commands
@@ -51,6 +51,7 @@ ExampleConfig = """{
     "Prefix": ["v!", "V!", "\\N{HEAVY EXCLAMATION MARK SYMBOL}"],
     "Description": "Hello!, I am the VectorBot!",
     "PM Help": true,
+    "Status": "V!help",
 
     "Email User": "user@example.com",
     "Email Pass": "example.password",
@@ -108,6 +109,12 @@ help_attrs = dict(hidden=True)
 
 bot = commands.Bot(command_prefix=Configs["Prefix"], description=Configs["Description"], pm_help=Configs["PM Help"], help_attrs=help_attrs)
 
+def isHelpCommand(query):
+    for pre in Configs["Prefix"]:
+        if query.lower().startswith(pre+"help"):
+            return True
+    return False
+
 async def log_message(message, timeOfMessage=datetime.datetime.utcnow()):
     print(message)
     channel = discord.Object(id=currentLog)
@@ -142,7 +149,7 @@ async def on_ready():
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
     await log_message("Started:")
-    await bot.change_presence(game=discord.Game(name='vectoresports.co.za'))
+    await bot.change_presence(game=discord.Game(name=Configs["Status"]))
     bot.currentLog = currentLog
     bot.currentWelcome = currentWelcome
     bot.currentNotification = currentNotification
@@ -157,11 +164,9 @@ async def on_message(message):
     author = message.author
     server = message.server
     channel = message.channel
-    if message.reactions is not None:
-        print(message.reactions)
     if message.author.id == bot.user.id:
         return
-    if len(msg.split()) > 1:
+    if len(msg.split()) > 1: # This is to make so that commands aren't case sensitive
         msg = msg.split(maxsplit=1)
         msg[0] = msg[0].lower()
         content = " ".join(msg)
@@ -169,14 +174,11 @@ async def on_message(message):
         await bot.process_commands(message)
     else:
         await bot.process_commands(message)
-    if message.content.lower().startswith("v!help") or message.content.startswith("\N{HEAVY EXCLAMATION MARK SYMBOL}help"):
+    if isHelpCommand(message):
         try:
             await bot.delete_message(message)
         except discord.errors.Forbidden():
             await databases.log_message(message)
-        except ValueError:
-            await log_message("""Error deleteing command `help` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: Could not convert data to an integer""" % (author, author.id, server, server.id, channel, channel.id))
         except:
             await log_message("""Error deleteing command `help` run by %s(%s) on server %s(%s) in channel %s(%s)
 Error: {0}""".format(Forbidden) % (author, author.id, server, server.id, channel, channel.id))
