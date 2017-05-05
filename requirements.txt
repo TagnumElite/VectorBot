@@ -1,0 +1,15 @@
+#https://github.com/Rapptz/discord.py/archive/master.zip#egg=discord.py[voice]
+discord.py[voice]
+#youtube_dl
+cffi==1.6.0; sys_platform == 'win32'
+lxml
+requests
+psutil
+#uvloop
+oauthlib
+feedparser
+Pillow>=4.0.0
+#mysqlclient
+#cleverbot=1.1.1
+steam
+bcrypt
