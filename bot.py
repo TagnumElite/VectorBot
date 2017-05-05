@@ -15,6 +15,12 @@ import sys, os
 import discord.errors
 from collections import Counter
 
+__title__ = 'VectorBot'
+__author__ = 'TagnumElite'
+__license__ = 'GPL-3.0'
+__copyright__ = 'Copyright 2017 TagnumElite'
+__version__ = '0.6.0'
+
 ExampleConfig = """{
     "Bot Token": "PUT THE BOTS TOKEN HERE", // This is the bots token
     "Bot Server": "123456789101112131", // This is the main server that the bot will function from
