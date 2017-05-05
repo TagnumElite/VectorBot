@@ -58,6 +58,8 @@ ExampleConfig = """{
     "Description": "Hello!, I am the VectorBot!",
     "PM Help": true,
     "Status": "V!help",
+    "Status Site": "http://example.com", //The site may not end with an /
+    "Status Path": "C:/PUBLIC_HTML", //This is where the splashes are stored!
 
     "Email User": "user@example.com",
     "Email Pass": "example.password",

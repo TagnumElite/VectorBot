@@ -10,13 +10,15 @@ I don't have any rules yet but I will in the future!
 ## TODO:
 - [ ] Database Extension (Message Logging, Server Config, MOAR)
 - [ ] Multi Server Support (Requires Database Extension to be done)
-- [x] Splash
+- [x] Splash (Member Splash Management)
 - [ ] Steam Extension ([SteamRep API](https://github.com/EliteKast/libzaek.py))
 - [ ] Wordpress API Support (More Importantly REST API Support)
 - [ ] Feeds Extension (RSS, ATOM, MOAR)
 - [ ] Twitch, Twitter, Facebook, etc. `I have no idea how to explain`
 - [ ] Image Extension (Image Manipulation) `Only Enabled In Dev Mode`
 - [ ] Email Support (Send emails when needed) `No Extension, will have no commands.`
+- [ ] Flesh out the wiki
+- [ ] Flesh out the RTD
 
 ## OCTO TAX!
 ![Octo TAX](https://assets-cdn.github.com/images/modules/logos_page/Octocat.png)

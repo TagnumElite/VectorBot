@@ -63,7 +63,7 @@ class Profile:
         message = ctx.message
         author = message.author
         server = message.server
-        if server.id == "223848547081125888" or "285864807775600641":
+        if server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
             if author.game == None:
                 game = "Not Playing"
             else:
@@ -76,14 +76,14 @@ class Profile:
                 r = author.top_role.colour.r
                 g = author.top_role.colour.g
                 b = author.top_role.colour.b
-            await self.bot.send_message(author, "Here is your custom splash! http://splash.vectoresports.co.za/members/{}".format(draw.splash(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))))
+            await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], draw.splash(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b), self.bot.Configs["Status Path"])))
         else:
             await self.bot.say("That is not permitted here!")
         await asyncio.sleep(3)
         await self.bot.delete_message(message)
 
     async def on_member_join(self, member):
-        if member.server.id == "223848547081125888" or "285864807775600641":
+        if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
             if member.game == None:
                 game = "Not Playing"
             else:
@@ -96,14 +96,14 @@ class Profile:
                 r = member.top_role.colour.r
                 g = member.top_role.colour.g
                 b = member.top_role.colour.b
-            await self.bot.send_message(member, "Here is your custom splash! http://splash.vectoresports.co.za/members/{}".format(draw.splash(member.id, member.name, member.avatar_url, game, getS(member.status), (r,g,b))))
+            await self.bot.send_message(member, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], draw.splash(member.id, member.name, member.avatar_url, game, getS(member.status), (r,g,b), self.bot.Configs["Status Path"])))
 
     async def on_member_remove(self, member):
-        if member.server.id == "223848547081125888" or "285864807775600641":
-            draw.remove(member.id)
+        if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
+            draw.remove(member.id, self.bot.Configs["Status Path"])
 
     async def on_member_update(self, before, after):
-        if after.server.id == "223848547081125888" or "285864807775600641":
+        if after.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
             print("UPDATING SPLASH")
             if after.game == None:
                 game = "Not Playing"
@@ -117,11 +117,11 @@ class Profile:
                 r = after.top_role.colour.r
                 g = after.top_role.colour.g
                 b = after.top_role.colour.b
-            draw.splash(after.id, after.name, after.avatar_url, game, getS(after.status), (r,g,b))
+            draw.splash(after.id, after.name, after.avatar_url, game, getS(after.status), (r,g,b), self.bot.Configs["Status Path"])
 
     async def on_member_ban(self, member):
-        if member.server.id == "223848547081125888" or "285864807775600641":
-            draw.remove(member.id)
+        if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
+            draw.remove(member.id, self.bot.Configs["Status Path"])
 
     async def on_member_unban(self, server, user):
         return

@@ -3,11 +3,11 @@ import PIL
 from PIL import ImageFont, Image, ImageDraw
 from urllib.request import Request, urlopen, URLopener
 
-def remove(userID):
-    os.chdir("~/var/www/html/members/")
+def remove(userID, path):
+    os.chdir(path)
     os.remove(userID+".png")
 
-def splash(uid: str, un: str, au: str, ga: str, st: str, rc):
+def splash(uid: str, un: str, au: str, ga: str, st: str, rc, path):
     os.chdir("/root/VectorBot/cogs/utils/default")
     default = os.getcwd()
     if len(ga) > 25:
@@ -73,7 +73,7 @@ def splash(uid: str, un: str, au: str, ga: str, st: str, rc):
         print("error")
     # Output
     out = Image.alpha_composite(banner, txt)
-    os.chdir("/var/www/html/members/")
+    os.chdir(path)
     out.save(uid+".png")
 
     # Save Storage
