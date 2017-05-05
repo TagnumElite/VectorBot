@@ -2,7 +2,7 @@
 #### A discord bot created for [Vector eSports](http://vectoresports.co.za)
 
 ## Installation
-Check the [Wiki](/wiki)
+Check the [Wiki](https://github.com/TagnumElite/VectorBot/wiki)
 
 ## Contributing
 I don't have any rules yet but I will in the future!
