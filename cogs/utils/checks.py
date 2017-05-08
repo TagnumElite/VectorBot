@@ -12,7 +12,7 @@ def similar(w1, w2):
     return sum(1 if i == j else 0 for i, j in zip(w1, w2)) / float(len(w1))
 
 def is_owner_check(message):
-    return message.author.id == '179891973795086336'
+    return message.author.id == '80088516616269824'
 
 def is_owner():
     return commands.check(lambda ctx: is_owner_check(ctx.message))

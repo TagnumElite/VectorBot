@@ -18,7 +18,6 @@ class Utilities:
         self.bot = bot
 
     @commands.command(pass_context=True)
-    @checks.admin_or_permissions(manage_messages=True)
     async def prune(self, ctx, number: int, user=None):
         """Deletes messages from the chat!
         Example:

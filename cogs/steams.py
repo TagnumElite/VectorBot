@@ -1,5 +1,5 @@
 from discord.ext import commands
-from .utils import checks, steammanager
+from .utils import checks, steamy
 import discord
 import inspect
 import urllib
@@ -14,6 +14,7 @@ class Steams:
     def __init__(self, bot):
         self.bot = bot
 
+
     @commands.group(pass_context=True, aliases=['rtfd'], invoke_without_command=True)
     async def steam(self, ctx, *, obj : str = None):
         """Steam Functionality!"""
@@ -21,7 +22,7 @@ class Steams:
     @steam.command(pass_context=True)
     async def fetch(self, ctx, user: str, *args):
         """Fetches Users Data From SteamRep"""
-        SteamY = steammanager.SteamY("LOL NO")
+        SteamY = steamy.SteamY("")
         data = SteamY.getBans(user)
         profile = SteamY.getProfile(user)
         color = 0xffffff
@@ -46,7 +47,7 @@ class Steams:
     async def stats(self, ctx, user: str, *args):
         """Outputs a embed with users steam stats"""
         print("start!")
-        SteamY = steammanager.SteamY("LOL NO")
+        SteamY = steamy.SteamY("")
         data = SteamY.getBans(user)
         profile = SteamY.getProfile(user)
         color = 0xffffff

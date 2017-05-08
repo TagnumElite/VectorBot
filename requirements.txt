@@ -1,18 +1,12 @@
-#Required:
 #https://github.com/Rapptz/discord.py/archive/master.zip#egg=discord.py[voice]
 discord.py[voice]
+#youtube_dl
 cffi==1.6.0; sys_platform == 'win32'
-mysqlclient
+lxml
 requests
-steam #WILL BE CHANGED IN THE FUTURE
-psutil #Might be optional
-lxml #This too, will decide in the future
-
-#Optional: Comment out what you don't want enabled!
+psutil
 #uvloop
-#oauthlib
-#feedparser
-Pillow>=4.0.0 #Image and Profile Extension Require It
-#cleverbot=1.1.1 #NO JUST NO
-#bcrypt #Encryption. Because we will be storing passwords
-#youtube_dl #I thought of making this be able to play music but then decided not to, might do in the future
+oauthlib
+feedparser
+Pillow>=4.0.0
+#mysqlclient

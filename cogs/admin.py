@@ -14,7 +14,7 @@ class Admin:
         self.bot = bot
 
     @commands.command(hidden=True)
-    @checks.admin_or_permissions(administrator=True)
+    @checks.is_owner()
     async def load(self, *, module : str):
         """Loads a module."""
         try:
@@ -26,7 +26,7 @@ class Admin:
             await self.bot.say('\N{OK HAND SIGN}')
 
     @commands.command(hidden=True)
-    @checks.admin_or_permissions(administrator=True)
+    @checks.is_owner()
     async def unload(self, *, module : str):
         """Unloads a module."""
         try:
@@ -38,7 +38,7 @@ class Admin:
             await self.bot.say('\N{OK HAND SIGN}')
 
     @commands.command(name='reload', hidden=True)
-    @checks.admin_or_permissions(administrator=True)
+    @checks.is_owner()
     async def _reload(self, *, module : str):
         """Reloads a module."""
         try:
@@ -51,7 +51,7 @@ class Admin:
             await self.bot.say('\N{OK HAND SIGN}')
 
     @commands.command(pass_context=True, hidden=True)
-    @checks.admin_or_permissions(administrator=True)
+    @checks.is_owner()
     async def debug(self, ctx, *, code : str):
         """Evaluates code."""
         code = code.strip('` ')
@@ -79,7 +79,6 @@ class Admin:
 
         await self.bot.say(python.format(result))
 
-    ''' Disabling all ban commands as discord has released audit logs!
     @commands.command(pass_context=True)
     @checks.admin_or_permissions(ban_members=True)
     async def ban(self, ctx, user=None, reason=None, msgs=0):
@@ -180,7 +179,6 @@ class Admin:
             membersNames = []
             members
             await self.bot.say("")
-    '''
 
 def setup(bot):
     bot.add_cog(Admin(bot))

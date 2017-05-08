@@ -7,7 +7,7 @@ class Email():
     """Email Class for server email logins
     serverID Required: Server ID
     host default: 'localhost'
-    port default:
+    port default: 25
     email default: ''
     password default: 'None'
     secure default: None"""
@@ -15,7 +15,7 @@ class Email():
     #Universal Vars
     test = "test"
 
-    def __init__(self, serverID, host="localhost", port=25, email="@", password="None", secure=None, keyfile=None, certfile=None):
+    def __init__(self, serverID, host="localhost", port=25, email="", password="None", secure=None, keyfile=None, certfile=None):
         self.serverID = serverID
         self.host = host
         self.port = port
@@ -73,19 +73,18 @@ class Email():
         self.server.send_message(msg)
 
 def main():
-    server = smtplib.SMTP(".", port=25)
+    server = smtplib.SMTP("", port=25)
     server.ehlo()
     server.starttls()
     server.ehlo()
-    server.login("@", password="")
+    server.login("", password="")
     msg = MIMEMultipart()
     msg['Subject'] = 'TESTY TEST TEST'
     # me == the sender's email address
     # family = the list of all recipients' email addresses
     msg['From'] = ""
     msg['To'] = ""
-    msg.preamble = 'Our family reunion'
-    #server.sendmail("@", "@", "Test")
+    msg.preamble = ''
     server.send_message(msg)
 
 if __name__ == "__main__":
