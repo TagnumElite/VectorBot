@@ -19,71 +19,24 @@ __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.0'
-
-ExampleConfig = """{
-    "Bot Token": "PUT THE BOTS TOKEN HERE", // This is the bots token
-    "Bot Server": "123456789101112131", // This is the main server that the bot will function from
-    "Bot Log": "123456789101112131", // This is the channel where the bot will log messages
-    "Bot Welcome": "123456789101112131", // This is the channel where the bot is going to welcome platers
-    "Bot Database Prefix": "vb_",
-
-    // Just a quick message. Bot Log and Bot Welcome will be removed as the bot gets support for to be able to be used in multiple servers
-
-    "Dev Mode": false,
-    "Dev Token": "ONLY USE THIS IF YOU ARE GOING TO DEVELOP THE BOT",
-    "Bot Server": "123456789101112131",
-    "Dev Log": "123456789101112131",
-    "Dev Welcome": "123456789101112131",
-    "Dev Database Prefix": "vd_",
-
-    "Database Host": "localhost",
-    "Database Port": "3306",
-    "Database Name": "Vector",
-    "Database User": "VectorBot",
-    "Database Pass": "",
-
-    "Cogs": [
-        "cogs.admin",
-        "cogs.steams",
-        "cogs.database",
-        "cogs.utilities",
-        "cogs.misc",
-        "cogs.feeds",
-        "cogs.support"
-    ],
-
-    "Owner": "123456789101112131",
-    "Prefix": ["v!", "V!", "\\N{HEAVY EXCLAMATION MARK SYMBOL}"],
-    "Description": "Hello!, I am the VectorBot!",
-    "PM Help": true,
-    "Status": "V!help",
-    "Status Site": "http://example.com", //The site may not end with an /
-    "Status Path": "C:/PUBLIC_HTML", //This is where the splashes are stored!
-
-    "Email User": "user@example.com",
-    "Email Pass": "example.password",
-    "Email Incoming Server": "",
-    "Email Outgoing Server": "",
-    "IMAP Port": 143,
-    "POP3 Port": 110,
-    "SMTP Port": 25,
-
-    // Extensions that will be enabled if Dev Mode is set to true
-    "Dev Cogs": [
-        "cogs.api",
-        "cogs.image"
-    ]
-}"""
+__version__ = '0.6.1'
 
 Configs = {}
 try:
     with open('configs.json', 'r') as file:
         Configs = json.load(file)
 except FileNotFoundError:
-    with open('configs.json', 'w+') as file:
-        file.write(ExampleConfig)
-    exit("Setup configs.json!!!")
+    try:
+        with open("ExampleConfigs.json", 'r') as example:
+            ExampleConfig = example.read()
+    except FileNotFoundError as FNFE:
+        exit("Missing ExampleConfig.json! Please download the ExampleConfig.json to setup bot!")
+    else:
+        with open('configs.json', 'w+') as newconfig:
+            file.write(ExampleConfig)
+        exit("Setup configs.json!!!")
+except:
+    exit("Config was not setup")
 
 
 defaultDir = os.getcwd()
@@ -178,8 +131,19 @@ async def on_message(message):
     author = message.author
     server = message.server
     channel = message.channel
-    if message.author.id == bot.user.id:
+    if message.author.bot or message.author.id == bot.user.id:
+        await bot.messages.remove(message)
         return
+    else:
+        if message.author.id in Configs["Ignored IDs"]:
+            await bot.messages.remove(message)
+            return
+        elif message.server.id in Configs["Ignored IDs"]:
+            await bot.messages.remove(message)
+            return
+        elif message.channel.id in Configs["Ignored IDs"]:
+            await bot.messages.remove(message)
+            return
     if len(msg.split()) > 1: # This is to make so that commands aren't case sensitive
         msg = msg.split(maxsplit=1)
         msg[0] = msg[0].lower()
