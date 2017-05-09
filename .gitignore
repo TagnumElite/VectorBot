@@ -96,14 +96,12 @@ ENV/
 /discord_feedbot/
 /mee6/
 
-# I have been looking into making the bot internet controlled
-Flask.pdf
-
 # Lets not store any compressed files
 *.zip
 *.rar
+*.7z
 
 # Lets ignore files you won't be needing
-/servers/
 /logs/
 /configs.json
+*.pdf

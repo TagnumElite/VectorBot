@@ -10,8 +10,8 @@ import json
 import datetime
 from collections import Counter
 
-dbs = MySQLdb.connect(host="localhost", user="vector", db="vectorbot")
-c = dbs.cursor()
+#dbs = MySQLdb.connect(host="localhost", user="VectorBot", db="vectordev")
+#c = dbs.cursor()
 
 class DBC():
     """This is the database connection to a MySQL databse
@@ -30,7 +30,7 @@ class DBC():
     port : Optional[int]
         Defauts to `3306`. Only use this if the database is on a different port"""
     def __init__(self, database: str, user: str, password: str="", host: str="localhost", port: int=3306):
-        self.Connection = MySQLdb.connection(host=host, user=user, passwd=password, db=database, port=port)
+        self.Connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database, port=port)
         self.cursor = self.Connection.cursor()
 
     def close(self):
@@ -49,6 +49,10 @@ class DBC():
         return self.cursor.fetchall()
 
 #Fav ywTCWGi1ikNCDbnNQxUHTjbADGCqfeaPUkfF6dM6dxn
+#Wait what was this for again?..................
+#I don't remember.
+#Bot Token? No, not the right format?
+#Must be a password, a generated password for a website or maybe it was for the local database I had on my computer...... Oh well I can't remember.
 
 
 class QS(Enum):
@@ -181,15 +185,15 @@ def log_raw_send(bot, payload):
 # Message Database
 class MessageDB(Databases):
     """Message Database!"""
-    createMessageDBIfNot = QS.cTableIfNot+" %s_messages ("+QS.cID+", "+QS.cMessageID+", "+QS.cServerID+", "+QS.cChannelID+", "+QS.cAuthorID+", "+QS.cContent+", "+QS.cMentionEveryone+", "+QS.cMentions+", "+QS.cChannelMentions+", "+QS.cRoleMentions+", "+QS.cAttachments+", "+QS.cPinned+", "+QS.cReactions+", "+QS.PKID+");"
+    createMessageDBIfNot = str(QS.cTableIfNot)+" %s_messages ("+str(QS.cID)+", "+str(QS.cMessageID)+", "+str(QS.cServerID)+", "+str(QS.cChannelID)+", "+str(QS.cAuthorID)+", "+str(QS.cContent)+", "+str(QS.cMentionEveryone)+", "+str(QS.cMentions)+", "+str(QS.cChannelMentions)+", "+str(QS.cRoleMentions)+", "+str(QS.cAttachments)+", "+str(QS.cPinned)+", "+str(QS.cReactions)+", "+str(QS.PKID)+");"
 
-    insertMessageLog = insertInto+" %s_messages(`message_id`, `server_id`, `channel_id`, `author_id`, `content`, `mention_everyone`, `mentions`, `channel_mentions`, `role_mentions`, `attachments`, `pinned`, `reactions`) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', \"%s\", '%s', '%s');"
+    insertMessageLog = str(QS.iInto)+" %s_messages(`message_id`, `server_id`, `channel_id`, `author_id`, `content`, `mention_everyone`, `mentions`, `channel_mentions`, `role_mentions`, `attachments`, `pinned`, `reactions`) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', \"%s\", '%s', '%s');"
 
     def __init__(self, DB):
         self.DB = DB
 
     def mentions(self, mentions):
-        ids = {"mentions":[]}
+        ids = {"mentions": []}
         for value in mentions:
             ids["mentions"].append(value.id)
         return ids
@@ -332,7 +336,7 @@ class UserDB(Databases):
     DB : str
         prefix of the database"""
 
-    createUserDBIfNot = QS.cTableIfNot+" %s_users ("+QS.cID+", "+QS.cUserID+", "+QS.cUsername+", "+QS.cDiscriminator+", "+QS.cAvatarUrl+", "+QS.cDUrl+", "+QS.cServers+", "+QS.cStatus+", "+QS.cGame+", "+QS.PKID+");"
+    createUserDBIfNot = str(QS.cTableIfNot)+" %s_users ("+str(QS.cID)+", "+str(QS.cUserID)+", "+str(QS.cUsername)+", "+str(QS.cDiscriminator)+", "+str(QS.cAvatarUrl)+", "+str(QS.cDUrl)+", "+str(QS.cServers)+", "+str(QS.cStatus)+", "+str(QS.cGame)+", "+str(QS.PKID)+");"
 
     userUpdate = " %s_server(user_id, username, discriminator, avatar_url, default_url, servers, status, game) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
 
@@ -415,9 +419,9 @@ class UserDB(Databases):
 class ServerDB(Databases):
     """Server Databases, contains details for all the channels and config"""
 
-    createServerDBIfNot = QS.cTableIfNot+" %s_servers ("+QS.cID+", "+QS.cServerID+", "+QS.cName+", "+QS.cMembers+", "+QS.cRoles+", "+QS.cEmojis+", "+QS.cAfkTimeout+", "+QS.cRegion+", "+QS.cAfkChannel+", "+QS.cChannels+", "+QS.cIconUrl+", "+QS.cOwner+", "+QS.cOffline+", "+QS.cLarge+", "+QS.cMFA+", "+QS.cVerficationLevel+", "+QS.cDRole+", "+QS.cSlpash+", "+QS.cSize+", "+QS.cDChannel+", "+QS.cCreatedAt+", "+QS.PKID+");"
+    createServerDBIfNot = str(QS.cTableIfNot)+" %s_servers ("+str(QS.cID)+", "+str(QS.cServerID)+", "+str(QS.cName)+", "+str(QS.cMembers)+", "+str(QS.cRoles)+", "+str(QS.cEmojis)+", "+str(QS.cAfkTimeout)+", "+str(QS.cRegion)+", "+str(QS.cAfkChannel)+", "+str(QS.cChannels)+", "+str(QS.cIconUrl)+", "+str(QS.cOwner)+", "+str(QS.cOffline)+", "+str(QS.cLarge)+", "+str(QS.cMFA)+", "+str(QS.cVerficationLevel)+", "+str(QS.cDRole)+", "+str(QS.cSlpash)+", "+str(QS.cSize)+", "+str(QS.cDChannel)+", "+str(QS.cCreatedAt)+", "+str(QS.PKID)+");"
 
-    ServerUpdate = " %s_server(server_id, server_name, members, roles, emojis, afk_timeout, region, afk_channel, channels, server_icon, server_owner, server_availibity, server_large, server_mfa, verfication_level, default_role, server_splash, server_size, default_channel, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);"
+    ServerUpdate = " %s_server(`server_id`, `server_name`, `members`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `server_icon`, `server_owner`, `server_availibity`, `server_large`, `server_mfa`, `verfication_level`, `default_role`, `server_splash`, `server_size`, `default_channel`, `created_at`) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');"
 
     def __init__(self, DB):
         self.DB = DB

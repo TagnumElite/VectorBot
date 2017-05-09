@@ -28,6 +28,7 @@ class Profile:
 
     def __init__(self, bot):
         self.bot = bot
+        self.Splash = draw.Splash(WebsitePath=bot.Configs["Splash Path"], BotPath=bot.currentDIR)
 
     @commands.command(pass_context=True, alias=["sub"])
     async def subscribe(self, ctx, Mth: str=None, *, Role: str=None):
@@ -59,8 +60,10 @@ class Profile:
 
     @commands.command(pass_context=True)
     async def banner(self, ctx):
-        """Gets your own banner! VectoreSports Only!"""
+        """Gets your own banner! Main Server Only!"""
+        msgs = []
         message = ctx.message
+        msgs.append(message)
         author = message.author
         server = message.server
         if server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
@@ -76,11 +79,11 @@ class Profile:
                 r = author.top_role.colour.r
                 g = author.top_role.colour.g
                 b = author.top_role.colour.b
-            await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], draw.splash(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b), self.bot.Configs["Status Path"])))
+            await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))))
         else:
-            await self.bot.say("That is not permitted here!")
-        await asyncio.sleep(3)
-        await self.bot.delete_message(message)
+            msgs.append(await self.bot.say("That is not permitted here!"))
+        await asyncio.sleep(4)
+        await self.bot.delete_messages(msgs)
 
     async def on_member_join(self, member):
         if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
@@ -96,15 +99,14 @@ class Profile:
                 r = member.top_role.colour.r
                 g = member.top_role.colour.g
                 b = member.top_role.colour.b
-            await self.bot.send_message(member, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], draw.splash(member.id, member.name, member.avatar_url, game, getS(member.status), (r,g,b), self.bot.Configs["Status Path"])))
+            await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))))
 
     async def on_member_remove(self, member):
         if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            draw.remove(member.id, self.bot.Configs["Status Path"])
+            self.Splash.remove(member.id)
 
     async def on_member_update(self, before, after):
         if after.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            print("UPDATING SPLASH")
             if after.game == None:
                 game = "Not Playing"
             else:
@@ -117,14 +119,11 @@ class Profile:
                 r = after.top_role.colour.r
                 g = after.top_role.colour.g
                 b = after.top_role.colour.b
-            draw.splash(after.id, after.name, after.avatar_url, game, getS(after.status), (r,g,b), self.bot.Configs["Status Path"])
+            self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))
 
     async def on_member_ban(self, member):
         if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            draw.remove(member.id, self.bot.Configs["Status Path"])
-
-    async def on_member_unban(self, server, user):
-        return
+            self.Splash.remove(member.id)
 
 def setup(bot):
     bot.add_cog(Profile(bot))

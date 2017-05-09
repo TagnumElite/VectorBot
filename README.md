@@ -38,3 +38,5 @@ That's not even a question... but so do I! Recommened Your Favs!
 Because I get bored. That's it.
 ### How did you learn to code? :coffee:
 Self taught. Going around, looking at docs and taking apart existing code to see how everything works.
+### I got an JSON with the configs.json!
+Please remove all 'comments' EG `//This is a comment` from the configs.json. These comments are for guidelines and break the JSONDecoder

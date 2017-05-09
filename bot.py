@@ -1,7 +1,13 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.6
 # Copyright (c) 2017 Tagan Hoyle
 # This software is released under an GPL-3.0 license.
 # See LICENSE.md for full details.
+
+__title__ = 'VectorBot'
+__author__ = 'TagnumElite'
+__license__ = 'GPL-3.0'
+__copyright__ = 'Copyright 2017 TagnumElite'
+__version__ = '0.6.1'
 
 from discord.ext import commands
 import discord
@@ -15,12 +21,6 @@ import sys, os
 import discord.errors
 from collections import Counter
 
-__title__ = 'VectorBot'
-__author__ = 'TagnumElite'
-__license__ = 'GPL-3.0'
-__copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.1'
-
 Configs = {}
 try:
     with open('configs.json', 'r') as file:
@@ -29,32 +29,30 @@ except FileNotFoundError:
     try:
         with open("ExampleConfigs.json", 'r') as example:
             ExampleConfig = example.read()
-    except FileNotFoundError as FNFE:
+    except FileNotFoundError:
         exit("Missing ExampleConfig.json! Please download the ExampleConfig.json to setup bot!")
     else:
         with open('configs.json', 'w+') as newconfig:
             file.write(ExampleConfig)
         exit("Setup configs.json!!!")
-except:
-    exit("Config was not setup")
 
 
 defaultDir = os.getcwd()
 
 DB = databases.DBC(database=Configs["Database Name"], user=Configs["Database User"], password=Configs["Database Pass"], host=Configs["Database Host"], port=Configs["Database Port"])
 
-if Configs["Dev"] == False:
-    currentToken = Configs["Bot Token"]
-    currentLog = Configs["Bot Log"]
-    currentWelcome = Configs["Bot Welcome"]
-    currentDB = Configs["Bot Database Prefix"]
-    #currentNotification = botNotification
-else:
+if Configs["Dev Mode"]:
     currentToken = Configs["Dev Token"]
     currentLog = Configs["Dev Log"]
     currentWelcome = Configs["Dev Welcome"]
     currentDB = Configs["Dev Database Prefix"]
     #currentNotification = devNotification
+else:
+    currentToken = Configs["Bot Token"]
+    currentLog = Configs["Bot Log"]
+    currentWelcome = Configs["Bot Welcome"]
+    currentDB = Configs["Bot Database Prefix"]
+    #currentNotification = botNotification
 
 try:
     import uvloop
@@ -63,7 +61,7 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-
+#I will fix this at some point
 #discord_logger = logging.getLogger('discord')
 #discord_logger.setLevel(logging.CRITICAL)
 #log = logging.getLogger()
@@ -86,15 +84,6 @@ async def log_message(message, timeOfMessage=datetime.datetime.utcnow()):
     print(message)
     channel = discord.Object(id=currentLog)
     await bot.send_message(channel, message + " | " + str(timeOfMessage))
-
-async def twitch_notification():
-    await bot.wait_until_ready()
-    counter = 0
-    channel = discord.Object(id=currentNotification)
-    while not bot.is_closed:
-        counter += 1
-        await bot.send_message(channel, counter)
-        await asyncio.sleep(60) # task runs every 60 seconds
 
 @bot.event
 async def on_command_error(error, ctx):
@@ -119,7 +108,7 @@ async def on_ready():
     await bot.change_presence(game=discord.Game(name=Configs["Status"]))
     bot.currentLog = currentLog
     bot.currentWelcome = currentWelcome
-    bot.currentNotification = currentNotification
+    #bot.currentNotification = currentNotification
 
 @bot.event
 async def on_resumed():
@@ -132,18 +121,13 @@ async def on_message(message):
     server = message.server
     channel = message.channel
     if message.author.bot or message.author.id == bot.user.id:
-        await bot.messages.remove(message)
+        bot.messages.remove(message)
+        print("BOT")
         return
-    else:
-        if message.author.id in Configs["Ignored IDs"]:
-            await bot.messages.remove(message)
-            return
-        elif message.server.id in Configs["Ignored IDs"]:
-            await bot.messages.remove(message)
-            return
-        elif message.channel.id in Configs["Ignored IDs"]:
-            await bot.messages.remove(message)
-            return
+    #if author.id or server.id or channel.id in Configs["Ignored IDs"]:
+    #    bot.messages.remove(message)
+    #    print("Ignored")
+    #    return
     if len(msg.split()) > 1: # This is to make so that commands aren't case sensitive
         msg = msg.split(maxsplit=1)
         msg[0] = msg[0].lower()
@@ -152,7 +136,7 @@ async def on_message(message):
         await bot.process_commands(message)
     else:
         await bot.process_commands(message)
-    if isHelpCommand(message):
+    if isHelpCommand(message.content):
         try:
             await bot.delete_message(message)
         except discord.errors.Forbidden():
@@ -160,6 +144,7 @@ async def on_message(message):
         except:
             await log_message("""Error deleteing command `help` run by %s(%s) on server %s(%s) in channel %s(%s)
 Error: {0}""".format(Forbidden) % (author, author.id, server, server.id, channel, channel.id))
+    print("MESSAGE: %s"%(message.content))
 
 @bot.command(pass_context=True, hidden=True)
 @checks.is_owner()
@@ -197,22 +182,12 @@ async def rules(ctx):
     server = msg.server
     author = msg.author
     channel = msg.channel
-    await log_message("User %s(%s) ran command `rules` on server %s(%s) in channel %s(%s)" % (author, author.id, server, server.id, channel, channel.id), datetime.datetime.utcnow())
-    em = discord.Embed(title='%s\'s rules!' % (server.name), description="""
-1. No rudeness
-2. No interfering in team practices
-3. No troll logic
-4. No spamming
-5. Obey all Exco members and senior co-ordinators (This is not Senior Member server group)
-6. Players are PROHIBITED from joining competitive rooms where the team/clan owner has not requested them  to join immediatly prior to them  joining. You can and probably will disturb a match. Owners are listed in channel descriptions.
-7. No Racism, first tme offenders will be permanently branded. If you want be to an ignorant asshole, go back to the 60's. We will not be held liable if you are recorded, your IP is tracked, and you are held accountable for your actions. By being on this teamspeak you indemnify Vector eSports for any responsibility.
-8. If you are playing another game in a competitive section that is designation for a specific game, you will be warned and forceably moved. If you do it again, you will be banned from this teamspeak.
-9. Any security officers or senior members caught abusing their powers will be stripped of all privelages.
-10. Senior members have no punishment or decisive authority in this community. If they  boss you around, report them by sending an email to admin@vectoresports.co.za - This goes for team captains aswell. Team captains should only have rights to the channel they are in.
-
-e-Sports is a profession and here we are professionals.
-
-Insta bans will be handed out for any offenders.""", color=0x992d22)
+    #TODO: Remember to make an if statement to check if the server has overridden rules!
+    em = discord.Embed(title=Configs["Rules"]["Title"].format(server=server.name, channel=channel.name, author=author.name), description=Configs["Rules"]["Description"].format(server=server.name, channel=channel.name, author=author.name), color=0xff0000, url=Configs["Rules"]["Url"])
+    em.set_footer(text=Configs["Rules"]["Footer"]["Text"].format(server=server.name), icon_url=discord.Embed.Empty if Configs["Rules"]["Footer"]["Icon Url"] is "" else Configs["Rules"]["Footer"]["Icon Url"])
+    em.set_author(name=Configs["Rules"]["Author"]["Name"].format(server=server.name), icon_url=discord.Embed.Empty if Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url) is "" else Configs["Rules"]["Author"]["Avatar Url"])
+    for rule in Configs["Rules"]["Rules"]:
+        em.add_field(name=rule["Name"], value=rule["Rule"], inline=rule["Inline"] if "Inline" in rule else False)
     try:
         await bot.delete_message(msg)
     except discord.errors.Forbidden():
@@ -264,29 +239,6 @@ async def find(ctx, user=None):
     else:
         await bot.say("User %s was found" % (member))
 
-def load_credentials():
-    with open('credentials.json') as f:
-        return json.load(f)
-
-def load_servers_configs():
-    os.chdir(defaultDir)
-    servers = {}
-    for server in os.listdir('servers'):
-        with open("servers/"+server) as server_json:
-            server_config = json.load(server_json)
-            servers[server.replace(".json", "")] = server_config
-    return servers
-
-def createServerConfig(server):
-    if server == None:
-        return
-    os.chdir(defaultDir)
-    data = ""
-    with open("servers/"+server.id+".json") as server_config_file:
-        json.dump(data, server_config_file)
-        return True
-    return False
-
 def main():
     for extension in Configs["Cogs"]:
         try:
@@ -301,12 +253,9 @@ def main():
             try:
                 bot.load_extension(dextension)
             except Exception as e:
-                print('Failed to load extension {}\n{}: {}'.format(dextension, type(e).__name__, e))
+                print('Failed to load development extension {}\n{}: {}'.format(dextension, type(e).__name__, e))
             else:
                 print("Loaded Development Extension: ", dextension)
-
-    #Setup Twitch Notifications
-    #bot.loop.create_task(twitch_notification())
 
     #Setup Global Vars
     bot.currentLog = currentLog
@@ -320,7 +269,7 @@ def main():
     #handlers = log.handlers[:]
     #for hdlr in handlers:
     #    hdlr.close()
-    #log.removeHandler(hdlr)
+    #    log.removeHandler(hdlr)
 
 if __name__ == '__main__':
     main() # just doing this so I can run the bot easier
