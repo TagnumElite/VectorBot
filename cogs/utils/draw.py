@@ -10,7 +10,7 @@ class Splash():
         self.WebsitePath = WebsitePath
         self.BotPath = BotPath
 
-    def update(self, uid: str, un: str, au: str, ga: str, st: str, rc):
+    def Update(self, uid: str, un: str, au: str, ga: str, st: str, rc):
         """Used to update and create Splashes"""
         default = self.BotPath+"/cogs/utils/default"
         os.chdir(default)
