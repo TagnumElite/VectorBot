@@ -286,8 +286,8 @@ class MessageDB():
         self.createTable()
         if self.exists(message):
             results = self.DBC.queryOne("SELECT content FROM %s_messages WHERE message_id = '%s'" % (self.DB, message.id))
-            print(results[0][0])
-            data = json.loads(results[0][0])
+            print(results[0])
+            data = json.loads(results[0])
             print(data)
             json_react = parser.messageDBDelete(message, results, time)
             return self.DBC.query("UPDATE `%s_messages` SET `content`='%s' WHERE `message_id`='%s';" % (self.DB, json_react, message.id))

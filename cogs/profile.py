@@ -82,8 +82,10 @@ class Profile:
             await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))))
         else:
             msgs.append(await self.bot.say("That is not permitted here!"))
+            await asyncio.sleep(4)
+            return await self.bot.delete_messages(msgs)
         await asyncio.sleep(4)
-        await self.bot.delete_messages(msgs)
+        return await self.bot.delete_message(msgs[0])
 
     async def on_member_join(self, member):
         if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
