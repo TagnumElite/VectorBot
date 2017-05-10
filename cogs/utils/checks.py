@@ -12,7 +12,7 @@ def similar(w1, w2):
     return sum(1 if i == j else 0 for i, j in zip(w1, w2)) / float(len(w1))
 
 def is_owner_check(message):
-    return message.author.id == '179891973795086336'
+    return message.author.id == '179891973795086336' # Must make this a Configs["Owner"]
 
 def is_owner():
     return commands.check(lambda ctx: is_owner_check(ctx.message))
@@ -51,13 +51,13 @@ def role_or_permissions(ctx, check, **perms):
 
 def mod_or_permissions(**perms):
     def predicate(ctx):
-        return role_or_permissions(ctx, lambda r: r.name in ('Bot Mod', 'Bot Admin'), **perms)
+        return role_or_permissions(ctx, lambda r: r.name in ('Bot Staff', 'Bot Mod'), **perms)
 
     return commands.check(predicate)
 
 def admin_or_permissions(**perms):
     def predicate(ctx):
-        return role_or_permissions(ctx, lambda r: r.name == 'Bot Admin', **perms)
+        return role_or_permissions(ctx, lambda r: r.name in ('Bot Masters', 'Bot Master'), **perms)
 
     return commands.check(predicate)
 
@@ -71,6 +71,15 @@ def is_in_servers(*server_ids):
 
 def is_lounge_cpp():
     return is_in_servers('145079846832308224')
+
+def is_an_ignored(ids, ignoredids):
+    if isinstance(ids, list):
+        for ID in ids:
+            if ID in ignoredids:
+                return True
+        return False
+    else:
+        return ids in ignoredids
 
 def find_user(username, members):
     usernames = []

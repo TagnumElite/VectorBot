@@ -1,6 +1,7 @@
 from discord.ext import commands
 from . import checks, parser#, salt
 from enum import Enum
+import warnings, functools
 import hashlib
 import discord
 import MySQLdb
@@ -10,8 +11,19 @@ import json
 import datetime
 from collections import Counter
 
-#dbs = MySQLdb.connect(host="localhost", user="VectorBot", db="vectordev")
-#c = dbs.cursor()
+def deprecated(func):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emmitted
+    when the function is used."""
+
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning) #turn off filter
+        warnings.warn("Call to deprecated function {}.".format(func.__name__), category=DeprecationWarning, stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning) #reset filter
+        return func(*args, **kwargs)
+
+    return new_func
 
 class DBC():
     """This is the database connection to a MySQL databse
@@ -31,119 +43,105 @@ class DBC():
         Defauts to `3306`. Only use this if the database is on a different port"""
     def __init__(self, database: str, user: str, password: str="", host: str="localhost", port: int=3306):
         self.Connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database, port=port)
-        self.cursor = self.Connection.cursor()
+        self.Cursor = self.Connection.cursor()
 
     def close(self):
         """Closes the connection."""
         self.Connection.close()
 
-    def execute(self, query):
-        """Executes the query and returns the results.
-
-        Parameters
-        ----------
-        query : str
-            The MySQL string that will be executed."""
-        self.cursor.execute(query)
-        self.Connection.commit()
-        return self.cursor.fetchall()
-
-#Fav ywTCWGi1ikNCDbnNQxUHTjbADGCqfeaPUkfF6dM6dxn
-#Wait what was this for again?..................
-#I don't remember.
-#Bot Token? No, not the right format?
-#Must be a password, a generated password for a website or maybe it was for the local database I had on my computer...... Oh well I can't remember.
-
-
-class QS(Enum):
-    getTable = "SELECT * FROM"
-    PKID = "primary key(id)"
-    iInto = "INSERT INTO"
-    cTableIfNot = "CREATE TABLE IF NOT EXISTS"
-    cID = "`id` INT auto_increment NOT NULL"
-    cName = "`name` VARCHAR(100) NOT NULL"
-    cServerID = "`server_id` VARCHAR(20) NOT NULL"
-    cMessageID = "`message_id` VARCHAR(20) NOT NULL"
-    cAuthorID = "`author_id` VARCHAR(20) NOT NULL"
-    cUserID = "`user_id` VARCHAR(20) NOT NULL"
-    cChannelID = "`channel_id` VARCHAR(20) NOT NULL"
-    cContent = "`content` JSON NOT NULL"
-    cCreatedAt = "`created_at` DATETIME NOT NULL"
-    cRemovedAt = "`removed_at` DATETIME NULL"
-    cEditedAt = "`edited_at` DATE NOT NULL"
-    cError = "`error` VARCHAR(1000) NOT NULL"
-    cMembers = "`members` JSON NOT NULL"
-    cRoles = "`roles` JSON NOT NULL"
-    cEmojis = "`emojis` JSON NULL"
-    cAfkTimeout = "`afk_timeout` INT NULL"
-    cRegion = "`region` ENUM('Brazil', 'Central Europe', 'Hong Kong', 'Russia', 'Singapore', 'Sydney', 'US Central', 'US East', 'US South', 'US West', 'Western Europe') NOT NULL"
-    cAfkChannel = "`afk_channel` VARCHAR(20)"
-    cChannels = "`channels` JSON NOT NULL"
-    cIconUrl = "`icon_url` TEXT(30) NULL"
-    cOwner = "`server_owner` VARCHAR(20) NOT NULL"
-    cOffline = "`offline` TINYINT NOT NULL DEFAULT 1"
-    cLarge = "`large` TINYINT NOT NULL DEFAULT 0"
-    cMFA = "`mfa` TINYINT NOT NULL DEFAULT 0"
-    cVerficationLevel = "`verfication_level` ENUM('None', 'Low', 'Medium', 'High', 'Table Flip') NOT NULL DEFAULT 'None'"
-    cDRole = "default_role VARCHAR(20) NOT NULL"
-    cDChannel = "default_channel VARCHAR(20) NOT NULL"
-    cSlpash = "splash VARCHAR(45) NULL"
-    cSize = "size REAL NOT NULL"
-    cConfig = "config JSON"
-    cMentionEveryone = "`mention_everyone` TINYINT NULL DEFAULT 0"
-    cMentions = "`mentions` JSON NULL"
-    cChannelMentions = "`channel_mentions` JSON NULL"
-    cRoleMentions = "`role_mentions` JSON NULL"
-    cAttachments = "`attachments` LONGTEXT NULL"
-    cPinned = "`pinned` TINYINT NULL DEFAULT 0"
-    cReactions = "`reactions` JSON NULL"
-    cUsername = "`username` VARCHAR(45) NOT NULL"
-    cDiscriminator = "`discriminator` VARCHAR(45) NOT NULL"
-    cAvatarUrl = "`avatar_url` VARCHAR(45) NULL"
-    cDUrl = "`default_url` VARCHAR(45) NOT NULL"
-    cServers = "`servers` JSON NULL"
-    cStatus = "`status` ENUM('online', 'idle', 'dnd', 'offline') NOT NULL DEFAULT 'offline'"
-    cGame = "`game` LONGTEXT NULL"
-
-class Databases():
-    """Databases Parent Class"""
-
-    def __init__(self, DB):
-        self.DB = DB
-
     def query(self, query):
         try:
-            c.execute(query)
-            dbs.commit()
+            self.Cursor.execute(query)
+            self.Connection.commit()
         except Exception as me:
-            print ("{}".format(me))
+            print("Query Exception: {}".format(me))
+            self.Connection.rollback()
             return me
         else:
+            print("Query: ", query)
             return True
 
     def queryOne(self, query):
         try:
-            c.execute(query)
-            result = c.fetchone()
-            dbs.commit()
+            self.Cursor.execute(query)
+            result = self.Cursor.fetchone()
+            self.Connection.commit()
         except Exception as me:
-            print ("{}".format(me))
+            print("QueryOne Exception: {}".format(me))
+            self.Connection.rollback()
             return me
         else:
-            print(result)
+            print("QueryOne: ", query)
+            if isinstance(result, list):
+                for value in result:
+                    print("Result: ", result)
             return result
 
     def queryAll(self, query):
         try:
-            c.execute(query)
-            result = c.fetchall()
-            dbs.commit()
+            self.Cursor.execute(query)
+            result = self.Cursor.fetchall()
+            self.Connection.commit()
         except Exception as me:
-            print ("{}".format(me))
+            print("QueryAll Exception: {}".format(me))
+            self.Connection.rollback()
             return me
         else:
-            print(result)
+            print("QueryAll: ", query)
+            if isinstance(result, list):
+                for row in result:
+                    for value in row:
+                        print("Result: ", result)
             return result
+
+getTable = "SELECT * FROM"
+PKID = "primary key(id)"
+iInto = "INSERT INTO"
+cTableIfNot = "CREATE TABLE IF NOT EXISTS"
+cID = "`id` INT auto_increment NOT NULL"
+cName = "`name` VARCHAR(100) NOT NULL"
+cServerID = "`server_id` VARCHAR(20) NOT NULL"
+cMessageID = "`message_id` VARCHAR(20) NOT NULL"
+cAuthorID = "`author_id` VARCHAR(20) NOT NULL"
+cUserID = "`user_id` VARCHAR(20) NOT NULL"
+cChannelID = "`channel_id` VARCHAR(20) NOT NULL"
+cContent = "`content` JSON NOT NULL"
+cCreatedAt = "`created_at` DATETIME NOT NULL"
+cRemovedAt = "`removed_at` DATETIME NULL"
+cEditedAt = "`edited_at` DATE NOT NULL"
+cError = "`error` VARCHAR(1000) NOT NULL"
+cMembers = "`members` JSON NOT NULL"
+cRoles = "`roles` JSON NOT NULL"
+cEmojis = "`emojis` JSON NULL"
+cAfkTimeout = "`afk_timeout` INT NULL"
+cRegion = "`region` ENUM('Brazil', 'Central Europe', 'Hong Kong', 'Russia', 'Singapore', 'Sydney', 'US Central', 'US East', 'US South', 'US West', 'Western Europe') NOT NULL"
+cAfkChannel = "`afk_channel` VARCHAR(20)"
+cChannels = "`channels` JSON NOT NULL"
+cIconUrl = "`icon_url` TEXT(30) NULL"
+cOwner = "`server_owner` VARCHAR(20) NOT NULL"
+cOffline = "`offline` TINYINT NOT NULL DEFAULT 1"
+cLarge = "`large` TINYINT NOT NULL DEFAULT 0"
+cMFA = "`mfa` TINYINT NOT NULL DEFAULT 0"
+cVerficationLevel = "`verfication_level` ENUM('None', 'Low', 'Medium', 'High', 'Table Flip') NOT NULL DEFAULT 'None'"
+cDRole = "default_role VARCHAR(20) NOT NULL"
+cDChannel = "default_channel VARCHAR(20) NOT NULL"
+cSlpash = "splash VARCHAR(45) NULL"
+cSize = "size REAL NOT NULL"
+cConfig = "config JSON"
+cMentionEveryone = "`mention_everyone` TINYINT NULL DEFAULT 0"
+cMentions = "`mentions` JSON NULL"
+cChannelMentions = "`channel_mentions` JSON NULL"
+cRoleMentions = "`role_mentions` JSON NULL"
+cAttachments = "`attachments` LONGTEXT NULL"
+cPinned = "`pinned` TINYINT NULL DEFAULT 0"
+cReactions = "`reactions` JSON NULL"
+cUsername = "`username` VARCHAR(45) NOT NULL"
+cDiscriminator = "`discriminator` VARCHAR(45) NOT NULL"
+cAvatarUrl = "`avatar_url` VARCHAR(45) NULL"
+cDUrl = "`default_url` VARCHAR(45) NOT NULL"
+cServers = "`servers` JSON NULL"
+cStatus = "`status` ENUM('online', 'idle', 'dnd', 'offline') NOT NULL DEFAULT 'offline'"
+cGame = "`game` LONGTEXT NULL"
 
 class updateTypes(Enum):
     #Global
@@ -164,32 +162,17 @@ class errorType():
 
 #insertErrorLog = insertInto+" %s_errors(server_id, error, created_at) VALUES('%s', '%s', '%s');"
 
-def log_ready(bot):
-    return
-
-def log_resumed(bot):
-    return
-
-def log_error(bot, error):
-    #if query(createErrorDBIfNot % (bot.currentDB)) == True:
-        #print("Creating Table %s_errors" % (bot.currentDB))
-    #query(insertErrorLog % (bot.curretDB, error, datetime.datetime.utcnow()))
-    return
-
-def log_raw_recieve(bot, msg):
-    return
-
-def log_raw_send(bot, payload):
-    return
-
 # Message Database
-class MessageDB(Databases):
+class MessageDB():
     """Message Database!"""
-    createMessageDBIfNot = str(QS.cTableIfNot)+" %s_messages ("+str(QS.cID)+", "+str(QS.cMessageID)+", "+str(QS.cServerID)+", "+str(QS.cChannelID)+", "+str(QS.cAuthorID)+", "+str(QS.cContent)+", "+str(QS.cMentionEveryone)+", "+str(QS.cMentions)+", "+str(QS.cChannelMentions)+", "+str(QS.cRoleMentions)+", "+str(QS.cAttachments)+", "+str(QS.cPinned)+", "+str(QS.cReactions)+", "+str(QS.PKID)+");"
+    createMessageDBIfNot = cTableIfNot+" %s_messages ("+cID+", "+cMessageID+", "+cServerID+", "+cChannelID+", "+cAuthorID+", "+cContent+", "+cMentionEveryone+", "+cMentions+", "+cChannelMentions+", "+cRoleMentions+", "+cAttachments+", "+cPinned+", "+cReactions+", "+PKID+");"
+    print("Create MessageDB If Not: ", createMessageDBIfNot)
 
-    insertMessageLog = str(QS.iInto)+" %s_messages(`message_id`, `server_id`, `channel_id`, `author_id`, `content`, `mention_everyone`, `mentions`, `channel_mentions`, `role_mentions`, `attachments`, `pinned`, `reactions`) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', \"%s\", '%s', '%s');"
+    insertMessageLog = iInto+" %s_messages(`message_id`, `server_id`, `channel_id`, `author_id`, `content`, `mention_everyone`, `mentions`, `channel_mentions`, `role_mentions`, `attachments`, `pinned`, `reactions`) VALUES('%s', '%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s', %s, '%s');"
+    print("Insert MessageLog: ", insertMessageLog)
 
-    def __init__(self, DB):
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
         self.DB = DB
 
     def mentions(self, mentions):
@@ -206,30 +189,38 @@ class MessageDB(Databases):
         return ids
 
     def createTable(self):
-        self.query(self.createMessageDBIfNot % (self.DB))
+        print("CreateTable: ", self.createMessageDBIfNot % (self.DB))
+        self.DBC.query(self.createMessageDBIfNot % (self.DB))
 
     def exists(self, message):
-        result = self.queryOne("SELECT * FROM %s_messages WHERE message_id = '%s';" % (self.DB, message.id))
+        result = self.DBC.queryOne("SELECT * FROM %s_messages WHERE message_id = '%s';" % (self.DB, message.id))
         if not result:
             return False
         else:
             return True
 
     def create(self, message):
+        print("Creating Table vd_messages")
         self.createTable()
+        print("Checking if message Exists")
         if self.exists(message):
+            print("Message Exists")
             return False
         msg = "{}"
         if message.type == discord.MessageType.default:
+            print("Message Type: Default")
             msg = message.content.replace("\\", "\\\\")
             msg = msg.replace('\'','\\\'')
             msg = msg.replace("\\","\\\\")
             msg = "{\"content\":[{\"content\":\""+msg+"\", \"timestamp\":\""+str(message.timestamp.utcnow())+"\"}]}"
         elif message.type == discord.MessageType.pins_add:
+            print("Message Type: Pin Add")
             msg = "{\"content\":[{\"content\":\"%s pinned a message to this channel.\", \"timestamp\":\"%s\"}]}" % (message.author.name, str(message.timestamp.utcnow()))
         else:
+            print("Message Type: None")
             return False
-        return self.query(self.insertMessageLog % (self.DB, message.id, message.server.id, message.channel.id, message.author.id, msg, int(message.mention_everyone), str(self.mentions(message.mentions)).replace("'", "\""), str(self.mentionsNamed(message.channel_mentions, "channels")).replace("'", "\""), str(self.mentionsNamed(message.role_mentions, "roles")).replace("'", "\""), message.attachments[0] if len(message.attachments) >= 1 else "{}", int(message.pinned), str(parser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"))
+        print("Create Message : ", self.insertMessageLog % (self.DB, message.id, message.server.id, message.channel.id, message.author.id, msg, int(message.mention_everyone), str(self.mentions(message.mentions)).replace("'", "\""), str(self.mentionsNamed(message.channel_mentions, "channels")).replace("'", "\""), str(self.mentionsNamed(message.role_mentions, "roles")).replace("'", "\""), json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}", int(message.pinned), str(parser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"))
+        return self.DBC.query(self.insertMessageLog % (self.DB, message.id, message.server.id, message.channel.id, message.author.id, msg, int(message.mention_everyone), str(self.mentions(message.mentions)).replace("'", "\""), str(self.mentionsNamed(message.channel_mentions, "channels")).replace("'", "\""), str(self.mentionsNamed(message.role_mentions, "roles")).replace("'", "\""), json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}", int(message.pinned), str(parser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"))
 
     def _update(self, before, after):
         updates = []
@@ -250,17 +241,17 @@ class MessageDB(Databases):
         length = len(updates)
         search = ""
         if length == 1:
-            results = self.queryOne("SELECT %s FROM %s_messages WHERE message_id = '%s'" % (updates[0], self.DB, after.id))
+            results = self.DBC.queryOne("SELECT %s FROM %s_messages WHERE message_id = '%s'" % (updates[0], self.DB, after.id))
             search = updates[0]
             if updates[0] in ['content']:
                 json_data = json.loads(results[0])
             elif updates[0] in ['pinned']:
-                if self.query("UPDATE `%s_messages` SET `pinned`='%s' WHERE `message_id`='%s';" % (self.DB, int(after.pinned), after.id)):
+                if self.DBC.query("UPDATE `%s_messages` SET `pinned`='%s' WHERE `message_id`='%s';" % (self.DB, int(after.pinned), after.id)):
                     return True
                 else:
                     return False
             json_update = parser.messageDBUpdate(after, json_data, updates)
-            if self.query("UPDATE `%s_messages` SET `%s`='%s' WHERE `message_id`='%s';" % (self.DB, search, str(json_update).replace("'", "\""), after.id)):
+            if self.DBC.query("UPDATE `%s_messages` SET `%s`='%s' WHERE `message_id`='%s';" % (self.DB, search, str(json_update).replace("'", "\""), after.id)):
                 return True
             else:
                 return False
@@ -270,11 +261,11 @@ class MessageDB(Databases):
                     search += value
                 else:
                     search += value+", "
-            results = self.queryOne("SELECT %s FROM %s_messages WHERE message_id = '%s'" % (search, self.DB, after.id))
+            results = self.DBC.queryOne("SELECT %s FROM %s_messages WHERE message_id = '%s'" % (search, self.DB, after.id))
             string_data = parser.messageDBUpdate(after, results, updates)
             print(string_data)
             print("UPDATE `%s_messages` SET %s WHERE `message_id`='%s';" % (self.DB, string_data, after.id))
-            return self.query("UPDATE `%s_messages` SET %s WHERE `message_id`='%s';" % (self.DB, string_data, after.id))
+            return self.DBC.query("UPDATE `%s_messages` SET %s WHERE `message_id`='%s';" % (self.DB, string_data, after.id))
 
     def update(self, before, after):
         """Update a message"""
@@ -294,7 +285,7 @@ class MessageDB(Databases):
         """Adds when message was deleted!"""
         self.createTable()
         if self.exists(message):
-            results = self.queryAll("SELECT content FROM %s_messages WHERE message_id = '%s'" % (self.DB, reaction.message.id))
+            results = self.DBC.queryAll("SELECT content FROM %s_messages WHERE message_id = '%s'" % (self.DB, reaction.message.id))
             print(results[0][0])
             data = json.loads(results[0][0])
             print(data)
@@ -304,13 +295,13 @@ class MessageDB(Databases):
 
     def addReaction(self, reaction, user):
         if self.exists(reaction.message):
-            results = self.queryAll("SELECT reactions FROM %s_messages WHERE message_id = '%s'" % (self.DB, reaction.message.id))
+            results = self.DBC.queryAll("SELECT reactions FROM %s_messages WHERE message_id = '%s'" % (self.DB, reaction.message.id))
             print(results[0][0])
             data = json.loads(results[0][0])
             print(data)
             json_react = parser.reactionDB(reaction, data, user)
             print(parser.jsonToDB(json_react))
-            if self.query("UPDATE `%s_messages` SET `reactions`='%s' WHERE `message_id`='%s';" % (self.DB, str(json_react), reaction.message.id)):
+            if self.DBC.query("UPDATE `%s_messages` SET `reactions`='%s' WHERE `message_id`='%s';" % (self.DB, str(json_react), reaction.message.id)):
                 return True
             else:
                 return False
@@ -324,11 +315,9 @@ class MessageDB(Databases):
         return
 
     def fetch(self, user: discord.Member, date: datetime = None):
-        return self.queryOne("SELECT id, content FROM %s_messages WHERE author_id = '%s' ORDER BY id DESC" % (self.DB, user.id))
+        return self.DBC.queryOne("SELECT id, content FROM %s_messages WHERE author_id = '%s' ORDER BY id DESC" % (self.DB, user.id))
 
-# Server Database
-
-class UserDB(Databases):
+class UserDB():
     """User Database
 
     Parameters
@@ -336,16 +325,17 @@ class UserDB(Databases):
     DB : str
         prefix of the database"""
 
-    createUserDBIfNot = str(QS.cTableIfNot)+" %s_users ("+str(QS.cID)+", "+str(QS.cUserID)+", "+str(QS.cUsername)+", "+str(QS.cDiscriminator)+", "+str(QS.cAvatarUrl)+", "+str(QS.cDUrl)+", "+str(QS.cServers)+", "+str(QS.cStatus)+", "+str(QS.cGame)+", "+str(QS.PKID)+");"
+    createUserDBIfNot = cTableIfNot+" %s_users ("+cID+", "+cUserID+", "+cUsername+", "+cDiscriminator+", "+cAvatarUrl+", "+cDUrl+", "+cServers+", "+cStatus+", "+cGame+", "+PKID+");"
 
-    userUpdate = " %s_server(user_id, username, discriminator, avatar_url, default_url, servers, status, game) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
+    userUpdate = " %s_server(`user_id`, `username`, `discriminator`, `avatar_url`, `default_url`, `servers`, `status`, `game`) VALUES(%s, %s, %s, %s, %s, %s, %s, %s);"
 
-    def __init__(self, DB):
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
         self.DB = DB
 
     def createTable(self):
         """Creates the table"""
-        return self.query(self.createUserDBIfNot % (self.DB))
+        return self.DBC.query(self.createUserDBIfNot % (self.DB))
 
     def exists(self, user):
         """Checks if user exists in the table
@@ -355,7 +345,7 @@ class UserDB(Databases):
         user : discord.Member / discord.User
             The user to be looked up."""
         self.createTable()
-        if self.queryOne("SELECT * FROM %s_users WHERE user_id = '%s';" % (self.DB, user.id)) == 0:
+        if self.DBC.queryOne("SELECT * FROM %s_users WHERE user_id = '%s';" % (self.DB, user.id)) == 0:
             return False
         else:
             return True
@@ -370,7 +360,7 @@ class UserDB(Databases):
             Is the Member/User that is going to be checked!
         server : discord.Server
             The discord server that is being searched for"""
-        results = self.queryOne("SELECT servers FROM %s_users WHERE user_id = '%s';" % (self.DB, user.id))
+        results = self.DBC.queryOne("SELECT servers FROM %s_users WHERE user_id = '%s';" % (self.DB, user.id))
         for key, value in json.loads(results[0]).items():
             if key == "servers":
                 for idx, val in enumerate(value):
@@ -382,7 +372,7 @@ class UserDB(Databases):
         self.createTable()
         if self.exists(user):
             return True
-        return self.query("INSERT INTO"+self.userUpdate % (DB, user.id, user.name, user.discriminator, user.avatar_url, user.default_url, "{'servers':[]}", str(user.status), user.game.name))
+        return self.DBC.query("INSERT INTO"+self.userUpdate % (DB, user.id, user.name, user.discriminator, user.avatar_url, user.default_url, "{'servers':[]}", str(user.status), user.game.name))
 
     def _update(self, before, after):
         return False
@@ -416,21 +406,22 @@ class UserDB(Databases):
         #TODO
         return False
 
-class ServerDB(Databases):
+class ServerDB():
     """Server Databases, contains details for all the channels and config"""
 
-    createServerDBIfNot = str(QS.cTableIfNot)+" %s_servers ("+str(QS.cID)+", "+str(QS.cServerID)+", "+str(QS.cName)+", "+str(QS.cMembers)+", "+str(QS.cRoles)+", "+str(QS.cEmojis)+", "+str(QS.cAfkTimeout)+", "+str(QS.cRegion)+", "+str(QS.cAfkChannel)+", "+str(QS.cChannels)+", "+str(QS.cIconUrl)+", "+str(QS.cOwner)+", "+str(QS.cOffline)+", "+str(QS.cLarge)+", "+str(QS.cMFA)+", "+str(QS.cVerficationLevel)+", "+str(QS.cDRole)+", "+str(QS.cSlpash)+", "+str(QS.cSize)+", "+str(QS.cDChannel)+", "+str(QS.cCreatedAt)+", "+str(QS.PKID)+");"
+    createServerDBIfNot = cTableIfNot+" %s_servers ("+cID+", "+cServerID+", "+cName+", "+cMembers+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cOffline+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
 
     ServerUpdate = " %s_server(`server_id`, `server_name`, `members`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `server_icon`, `server_owner`, `server_availibity`, `server_large`, `server_mfa`, `verfication_level`, `default_role`, `server_splash`, `server_size`, `default_channel`, `created_at`) VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s');"
 
-    def __init__(self, DB):
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
         self.DB = DB
 
     def createTable(self):
-        return self.query(self.createServerDBIfNot % (self.DB))
+        return self.DBC.query(self.createServerDBIfNot % (self.DB))
 
     def exists(self, server):
-        if self.queryOne("SELECT * FROM %s_servers WHERE server_id = '%s';" % (self.DB, server.id)) == 0:
+        if self.DBC.queryOne("SELECT * FROM %s_servers WHERE server_id = '%s';" % (self.DB, server.id)) == 0:
             return False
         else:
             return True
@@ -478,7 +469,7 @@ class ServerDB(Databases):
         """Adds when message was deleted!"""
         self.createTable(server)
         if self.exists(server):
-            return self.query("DELETE FROM %s_servers WHERE server_id=%s"%(self.DB, server.id))
+            return self.DBC.query("DELETE FROM %s_servers WHERE server_id=%s"%(self.DB, server.id))
         else:
             return False
 
@@ -491,12 +482,13 @@ class ServerDB(Databases):
     def fetch(self, server, item):
         return False
 
+@deprecated
 class EmojisDB(ServerDB):
     """Emojis!"""
 
-    def __init__(self, DB, server):
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
         self.DB = DB
-        self.Server = server
 
     def create(self, emoji):
         return False
@@ -520,12 +512,13 @@ class EmojisDB(ServerDB):
         else:
             return self._update(before, after)
 
+@deprecated
 class RolesDB(ServerDB):
     """Roles!"""
 
-    def __init__(self, DB, server):
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
         self.DB = DB
-        self.Server = server
 
     def create(self, role):
         createServerTable(bot.currentDB)
@@ -551,12 +544,13 @@ class RolesDB(ServerDB):
 class MembersDB(ServerDB):
     """Members Database Class"""
 
-    def __init__(self, DB, server):
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
         self.DB = DB
-        self.Server = server
 
     def create(self, member):
         self.addMember(member)
+        pass
 
     def delete(self, member):
         return
@@ -567,7 +561,7 @@ class MembersDB(ServerDB):
     def ban(self, member):
         return
 
-    def unban(self, user):
+    def unban(self, server, user):
         return
 
     def updateVoiceState(self, before, after):
@@ -589,11 +583,29 @@ class ChannelsDB(ServerDB):
     def delete(self, channel):
         return
 
-class ConfigDB(ServerDB):
+class ConfigDB():
     """Config Database Class"""
-    def __init__(self, DB, server):
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
         self.DB = DB
-        self.Server = server
+
+def log_ready(bot):
+    return
+
+def log_resumed(bot):
+    return
+
+def log_error(bot, error):
+    #if query(createErrorDBIfNot % (bot.currentDB)) == True:
+        #print("Creating Table %s_errors" % (bot.currentDB))
+    #query(insertErrorLog % (bot.curretDB, error, datetime.datetime.utcnow()))
+    return
+
+def log_raw_recieve(bot, msg):
+    return
+
+def log_raw_send(bot, payload):
+    return
 
 def log_typing(bot, channel, user, when):
     return False
@@ -603,3 +615,4 @@ def log_group_join(bot, channel, user):
 
 def log_group_remove(bot, channel, user):
     return False
+#SOMEONE SEND HELP, IM STUCK IN AN LOOP BETWEEN A MAINFRAME AND A POTATO

@@ -7,7 +7,7 @@ __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.1'
+__version__ = '0.6.10'
 
 from discord.ext import commands
 import discord
@@ -39,9 +39,9 @@ except FileNotFoundError:
 
 defaultDir = os.getcwd()
 
-DB = databases.DBC(database=Configs["Database Name"], user=Configs["Database User"], password=Configs["Database Pass"], host=Configs["Database Host"], port=Configs["Database Port"])
+DBC = databases.DBC(database=Configs["Database Name"], user=Configs["Database User"], password=Configs["Database Pass"], host=Configs["Database Host"], port=Configs["Database Port"])
 
-if Configs["Dev Mode"]:
+if not Configs["Dev Mode"]:
     currentToken = Configs["Dev Token"]
     currentLog = Configs["Dev Log"]
     currentWelcome = Configs["Dev Welcome"]
@@ -124,10 +124,10 @@ async def on_message(message):
         bot.messages.remove(message)
         print("BOT")
         return
-    #if author.id or server.id or channel.id in Configs["Ignored IDs"]:
-    #    bot.messages.remove(message)
-    #    print("Ignored")
-    #    return
+    if message.author.id in Configs["Ignored IDs"] or message.server.id in Configs["Ignored IDs"] or message.channel.id in Configs["Ignored IDs"]:
+        bot.messages.remove(message)
+        print("Ignored")
+        return
     if len(msg.split()) > 1: # This is to make so that commands aren't case sensitive
         msg = msg.split(maxsplit=1)
         msg[0] = msg[0].lower()
@@ -240,6 +240,14 @@ async def find(ctx, user=None):
         await bot.say("User %s was found" % (member))
 
 def main():
+    #Set Global Vars Before Setting Up Cogs
+    bot.currentLog = currentLog
+    bot.currentDB = currentDB
+    bot.currentDIR = defaultDir
+    bot.Configs = Configs
+    bot.DBC = DBC
+
+    #Setup Main Cogs
     for extension in Configs["Cogs"]:
         try:
             bot.load_extension(extension)
@@ -248,6 +256,7 @@ def main():
         else:
             print("Loaded Extension: ", extension)
 
+    #Setup Dev Cogs
     if Configs["Dev Mode"]:
         for dextension in Configs["Dev Cogs"]:
             try:
@@ -258,10 +267,6 @@ def main():
                 print("Loaded Development Extension: ", dextension)
 
     #Setup Global Vars
-    bot.currentLog = currentLog
-    bot.currentDB = currentDB
-    bot.currentDIR = defaultDir
-    bot.Configs = Configs
 
     #Run Bot
     bot.run(currentToken)

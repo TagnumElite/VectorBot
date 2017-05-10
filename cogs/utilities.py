@@ -41,6 +41,7 @@ class Utilities:
             await self.bot.say("{}".format(e))
 
     @commands.command(pass_context=True)
+    @commands.cooldown(rate=2, per=3600.0)
     @checks.admin_or_permissions(manage_server=True)
     async def setavatar(self, ctx, url=None):
         """Sets the bots avatar! BROKEN!"""
@@ -52,12 +53,13 @@ class Utilities:
         if url == None:
             await self.bot.say("Please give a url to change to!")
             return
-        if self.bot.is_bot == True:
+        if self.bot.user.bot:
             image = urllib.urlretrieve(url, "avatar.png")
             await self.bot.edit_profile(avatar=image)
             await self.bot.say("This script may be broken, don't expect it to work!")
 
     @commands.command(pass_context=True)
+    @commands.cooldown(rate=2, per=3600.0)
     @checks.admin_or_permissions(manage_server=True)
     async def setusername(self, ctx, username=None):
         message = ctx.message
@@ -68,7 +70,7 @@ class Utilities:
         if username == None:
             await self.bot.say("Please specify a username to give!")
             return
-        if self.bot.is_bot == True:
+        if self.bot.user.bot:
             try:
                 await self.bot.edit_profile(username=username)
             except Exception as e:
