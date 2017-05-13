@@ -54,14 +54,14 @@ Steams
 
 
 Support
------
+-------
 
 .. autoclass:: Support
     :members:
 
 
 Utilities
------
+---------
 
 .. autoclass:: Utilities
     :members:

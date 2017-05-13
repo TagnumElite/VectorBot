@@ -11,6 +11,7 @@ import json
 import datetime
 from collections import Counter
 
+# Decorator to defined deprecated functions
 def deprecated(func):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emmitted
@@ -41,37 +42,43 @@ class DBC():
         Default to `localhost`. Only use this if the database is on a different server!
     port : Optional[int]
         Defauts to `3306`. Only use this if the database is on a different port"""
+    Buffer = []
+
     def __init__(self, database: str, user: str, password: str="", host: str="localhost", port: int=3306):
         self.Connection = MySQLdb.connect(host=host, user=user, passwd=password, db=database, port=port)
         self.Cursor = self.Connection.cursor()
+        self.query("SET SQL_SAFE_UPDATES = 0;")
 
     def close(self):
         """Closes the connection."""
+        self.query("SET SQL_SAFE_UPDATES = 1;")
         self.Connection.close()
 
     def query(self, query):
         try:
+            print("Query: ", query)
             self.Cursor.execute(query)
             self.Connection.commit()
         except Exception as me:
             print("Query Exception: {}".format(me))
+            self.Buffer.append(query)
             self.Connection.rollback()
             return me
         else:
-            print("Query: ", query)
             return True
 
     def queryOne(self, query):
         try:
+            print("QueryOne: ", query)
             self.Cursor.execute(query)
             result = self.Cursor.fetchone()
             self.Connection.commit()
         except Exception as me:
             print("QueryOne Exception: {}".format(me))
+            self.Buffer.append(query)
             self.Connection.rollback()
             return me
         else:
-            print("QueryOne: ", query)
             if isinstance(result, list):
                 for value in result:
                     print("Result: ", result)
@@ -79,15 +86,16 @@ class DBC():
 
     def queryAll(self, query):
         try:
+            print("QueryAll: ", query)
             self.Cursor.execute(query)
             result = self.Cursor.fetchall()
             self.Connection.commit()
         except Exception as me:
             print("QueryAll Exception: {}".format(me))
+            self.Buffer.append(query)
             self.Connection.rollback()
             return me
         else:
-            print("QueryAll: ", query)
             if isinstance(result, list):
                 for row in result:
                     for value in row:
@@ -166,10 +174,8 @@ class errorType():
 class MessageDB():
     """Message Database!"""
     createMessageDBIfNot = cTableIfNot+" %s_messages ("+cID+", "+cMessageID+", "+cServerID+", "+cChannelID+", "+cAuthorID+", "+cContent+", "+cMentionEveryone+", "+cMentions+", "+cChannelMentions+", "+cRoleMentions+", "+cAttachments+", "+cPinned+", "+cReactions+", "+PKID+");"
-    print("Create MessageDB If Not: ", createMessageDBIfNot)
 
     insertMessageLog = iInto+" %s_messages(`message_id`, `server_id`, `channel_id`, `author_id`, `content`, `mention_everyone`, `mentions`, `channel_mentions`, `role_mentions`, `attachments`, `pinned`, `reactions`) VALUES('%s', '%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s', %s, '%s');"
-    print("Insert MessageLog: ", insertMessageLog)
 
     def __init__(self, DBC, DB):
         self.DBC = DBC
@@ -189,7 +195,6 @@ class MessageDB():
         return ids
 
     def createTable(self):
-        print("CreateTable: ", self.createMessageDBIfNot % (self.DB))
         self.DBC.query(self.createMessageDBIfNot % (self.DB))
 
     def exists(self, message):
@@ -200,24 +205,16 @@ class MessageDB():
             return True
 
     def create(self, message):
-        print("Creating Table vd_messages")
-        self.createTable()
-        print("Checking if message Exists")
-        if self.exists(message):
-            print("Message Exists")
+        self.createTable() # we need to make sure the table exists
+        if self.exists(message): # This should never happen
             return False
         msg = "{}"
-        if message.type == discord.MessageType.default:
-            print("Message Type: Default")
-            msg = message.content.replace("\\", "\\\\")
-            msg = msg.replace('\'','\\\'')
-            msg = msg.replace("\\","\\\\")
-            msg = "{\"content\":[{\"content\":\""+msg+"\", \"timestamp\":\""+str(message.timestamp.utcnow())+"\"}]}"
+        if message.type == discord.MessageType.default: #Check if the message is a normal message
+            msg = parser.MessageDBReplace(message.content)
+            msg = '{"content":[{"content":"'+msg+'", "timestamp":"'+str(message.timestamp.utcnow())+'"}]}'
         elif message.type == discord.MessageType.pins_add:
-            print("Message Type: Pin Add")
-            msg = "{\"content\":[{\"content\":\"%s pinned a message to this channel.\", \"timestamp\":\"%s\"}]}" % (message.author.name, str(message.timestamp.utcnow()))
+            msg = '{"content":[{"content":"%s pinned a message to this channel.", "timestamp":"%s"}]}' % (message.author.name, str(message.timestamp.utcnow()))
         else:
-            print("Message Type: None")
             return False
         print("Create Message : ", self.insertMessageLog % (self.DB, message.id, message.server.id, message.channel.id, message.author.id, msg, int(message.mention_everyone), str(self.mentions(message.mentions)).replace("'", "\""), str(self.mentionsNamed(message.channel_mentions, "channels")).replace("'", "\""), str(self.mentionsNamed(message.role_mentions, "roles")).replace("'", "\""), json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}", int(message.pinned), str(parser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"))
         return self.DBC.query(self.insertMessageLog % (self.DB, message.id, message.server.id, message.channel.id, message.author.id, msg, int(message.mention_everyone), str(self.mentions(message.mentions)).replace("'", "\""), str(self.mentionsNamed(message.channel_mentions, "channels")).replace("'", "\""), str(self.mentionsNamed(message.role_mentions, "roles")).replace("'", "\""), json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}", int(message.pinned), str(parser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"))
@@ -241,20 +238,18 @@ class MessageDB():
         length = len(updates)
         search = ""
         if length == 1:
+            json_data = {}
             results = self.DBC.queryOne("SELECT %s FROM %s_messages WHERE message_id = '%s'" % (updates[0], self.DB, after.id))
             search = updates[0]
-            if updates[0] in ['content']:
+            if search is 'content':
                 json_data = json.loads(results[0])
-            elif updates[0] in ['pinned']:
+            elif search is 'pinned':
                 if self.DBC.query("UPDATE `%s_messages` SET `pinned`='%s' WHERE `message_id`='%s';" % (self.DB, int(after.pinned), after.id)):
                     return True
                 else:
                     return False
             json_update = parser.messageDBUpdate(after, json_data, updates)
-            if self.DBC.query("UPDATE `%s_messages` SET `%s`='%s' WHERE `message_id`='%s';" % (self.DB, search, str(json_update).replace("'", "\""), after.id)):
-                return True
-            else:
-                return False
+            return self.DBC.query("UPDATE `%s_messages` SET `%s`='%s' WHERE `message_id`='%s';" % (self.DB, search, parser.MessageDBReplace(str(json_update).replace("'", '"')), after.id))
         else:
             for idx, value in enumerate(updates):
                 if idx == length-1:
@@ -263,8 +258,6 @@ class MessageDB():
                     search += value+", "
             results = self.DBC.queryOne("SELECT %s FROM %s_messages WHERE message_id = '%s'" % (search, self.DB, after.id))
             string_data = parser.messageDBUpdate(after, results, updates)
-            print(string_data)
-            print("UPDATE `%s_messages` SET %s WHERE `message_id`='%s';" % (self.DB, string_data, after.id))
             return self.DBC.query("UPDATE `%s_messages` SET %s WHERE `message_id`='%s';" % (self.DB, string_data, after.id))
 
     def update(self, before, after):
@@ -274,25 +267,30 @@ class MessageDB():
             return self._update(before, after)
         else:
             if not self.create(before):
-                return False
+                return False  # I will raise an error here later but for now it is fine
             else:
                 if self.exists(after):
                     return self._update(after)
                 else:
-                    return False
+                    return False  # I will raise an error here later but for now it is fine
 
     def delete(self, message, time):
-        """Adds when message was deleted!"""
+        """Called when a message is deleted.
+
+        Parameters
+        ----------
+        message: discord.Message
+            The discord message that was deleted
+        time: datetime.datetime.utcnow()
+            UTC Time when message was deleted"""
         self.createTable()
         if self.exists(message):
             results = self.DBC.queryOne("SELECT content FROM %s_messages WHERE message_id = '%s'" % (self.DB, message.id))
-            print(results[0])
             data = json.loads(results[0])
-            print(data)
-            json_react = parser.messageDBDelete(message, results, time)
-            return self.DBC.query("UPDATE `%s_messages` SET `content`='%s' WHERE `message_id`='%s';" % (self.DB, json_react, message.id))
+            json_react = parser.messageDBDelete(data, time)
+            return self.DBC.query("UPDATE `%s_messages` SET `content`='%s' WHERE `message_id`='%s';" % (self.DB, str(json_react).replace("'", '"').replace("None", "null"), message.id))
         else:
-            return False
+            return False # I will raise an error here later but for now it is fine
 
     def addReaction(self, reaction, user):
         if self.exists(reaction.message):
