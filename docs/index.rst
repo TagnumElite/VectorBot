@@ -8,7 +8,10 @@ Welcome to VectorBot's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   
+   bot
+   cogs
+   faq
 
 
 

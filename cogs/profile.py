@@ -30,7 +30,7 @@ class Profile:
         self.bot = bot
         self.Splash = draw.Splash(WebsitePath=bot.Configs["Splash Path"], BotPath=bot.currentDIR)
 
-    @commands.command(pass_context=True, alias=["sub"])
+    @commands.command(pass_context=True, aliases=["sub"])
     async def subscribe(self, ctx, Mth: str=None, *, Role: str=None):
         """Subscribe to a role to get updates from the role!
         NOTE: That you need to write the exact name of the role!
@@ -61,11 +61,10 @@ class Profile:
     @commands.command(pass_context=True)
     async def banner(self, ctx):
         """Gets your own banner! Main Server Only!"""
-        msgs = []
         message = ctx.message
-        msgs.append(message)
         author = message.author
         server = message.server
+        await self.bot.delete_message(message)
         if server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
             if author.game == None:
                 game = "Not Playing"
@@ -81,11 +80,9 @@ class Profile:
                 b = author.top_role.colour.b
             await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))))
         else:
-            msgs.append(await self.bot.say("That is not permitted here!"))
+            msg = await self.bot.say("That is not permitted here!")
             await asyncio.sleep(4)
-            return await self.bot.delete_messages(msgs)
-        await asyncio.sleep(4)
-        return await self.bot.delete_message(msgs[0])
+            await self.bot.delete_message(msg)
 
     async def on_member_join(self, member):
         if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:

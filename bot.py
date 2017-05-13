@@ -7,7 +7,7 @@ __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.10'
+__version__ = '0.6.12'
 
 from discord.ext import commands
 import discord
@@ -17,7 +17,7 @@ import json, asyncio
 import copy
 import logging
 import traceback
-import sys, os
+import sys, os, atexit
 import discord.errors
 from collections import Counter
 
@@ -40,6 +40,7 @@ except FileNotFoundError:
 defaultDir = os.getcwd()
 
 DBC = databases.DBC(database=Configs["Database Name"], user=Configs["Database User"], password=Configs["Database Pass"], host=Configs["Database Host"], port=Configs["Database Port"])
+startup_time = datetime.datetime.utcnow()
 
 if not Configs["Dev Mode"]:
     currentToken = Configs["Dev Token"]
@@ -161,7 +162,7 @@ async def logout(ctx):
     """Logs Bot out of Discord"""
     await log_message("Logging Out!", datetime.datetime.utcnow())
     await bot.say("Logging Out")
-    await asyncio.sleep(3)
+    await asyncio.sleep(4)
     await bot.logout()
 
 @bot.event
@@ -239,6 +240,15 @@ async def find(ctx, user=None):
     else:
         await bot.say("User %s was found" % (member))
 
+@atexit.register
+def onExit():
+    DBC.close()
+    if len(DBC.Buffer) > 0:
+        with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
+            for query in DBC.Buffer:
+                buffer.write(query)
+            buffer.close()
+
 def main():
     #Set Global Vars Before Setting Up Cogs
     bot.currentLog = currentLog
@@ -246,6 +256,7 @@ def main():
     bot.currentDIR = defaultDir
     bot.Configs = Configs
     bot.DBC = DBC
+    bot.startup_time = startup_time
 
     #Setup Main Cogs
     for extension in Configs["Cogs"]:
@@ -266,8 +277,6 @@ def main():
             else:
                 print("Loaded Development Extension: ", dextension)
 
-    #Setup Global Vars
-
     #Run Bot
     bot.run(currentToken)
 
@@ -277,4 +286,4 @@ def main():
     #    log.removeHandler(hdlr)
 
 if __name__ == '__main__':
-    main() # just doing this so I can run the bot easier
+    main() # Needed this to stop the autodoc!

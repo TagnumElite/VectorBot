@@ -10,7 +10,7 @@ class Support:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True, alias=["bug"])
+    @commands.command(pass_context=True, aliases=["bug"])
     @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
     async def bugreport(self, ctx, *, bug):
         msgs = []

@@ -47,7 +47,7 @@ class Database:
     @database.command(pass_content=True)
     async def fetch(self, user: discord.Member, date: datetime=None):
         if date is None:
-            message = self.MessageDB.fetch(user)[1]
+            message = self.MembersDB.fetch(user)[1]
             await self.bot.say(message)
 
     # @database.command(pass_content=True)

@@ -18,8 +18,6 @@ class Splash():
             ga = ga[:22]+"..."
         if len(un) > 28:
             un = un[:28]+"..."
-        if isinstance(st, discord.Status):
-            print("True")
         # Font
         textFnt = ImageFont.truetype('font.ttf', 16)
         textFntB = ImageFont.truetype('font_bold.ttf', 16)
@@ -75,8 +73,8 @@ class Splash():
         else:
             statusEllipse.ellipse((60, 60, 76, 76), (67, 67, 67))
             print("error")
-        # Output
         out = Image.alpha_composite(banner, txt)
+        # Remember to check if directory exists and do stuff from that
         os.chdir(self.WebsitePath+"/members")
         out.save(uid+".png")
 

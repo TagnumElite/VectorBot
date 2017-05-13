@@ -105,3 +105,5 @@ ENV/
 /logs/
 /configs.json
 *.pdf
+
+buffer_*.txt

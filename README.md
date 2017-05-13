@@ -22,6 +22,9 @@ I don't have any rules yet but I will in the future!
 - [ ] Music Player (Will be done in the future)
 - [ ] Record Player (Prep. Not Possible right now)
 
+## Discord
+<iframe src="https://discordapp.com/widget?id=285864807775600641&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0"></iframe>
+
 ### Image Extension?
 This will be used for a few things like when adding a new team on a website (WORDPRESS API SUPPORT) and it has an avatar. We will take that avatar and find the most used color and make them a role on discord with that color. Like I said, experimental and will not be enabled by default means.
 

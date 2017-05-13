@@ -2,6 +2,12 @@ import json
 import discord
 
 #MessageDB
+def MessageDBReplace(content):
+    content.replace("\\", "\\\\\\\\") #This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
+    content.replace('\'', '\\\'')
+    content.replace("\"", "\\\"")
+    return content
+
 def jsonToDB(to: dict):
     return json.dumps(to)
 
@@ -39,10 +45,10 @@ def reactionDB(reaction: discord.Reaction, results: dict, user = None, add: bool
     else:
         return "{}"
 
-def messageDBDelete(message: discord.Message, results, time):
-    """Appends {'content':'null', 'timestamp':'%s' % (time)"""
-    results['content'].append({'content':'null', 'timestamp':'%s' % (time)})
-    return results
+def messageDBDelete(data, time):
+    """Appends {"content":None, "timestamp":"%s" % (time)}"""
+    data['content'].append({"content":None, "timestamp":"%s" % (time)})
+    return data
 
 def messageDBUpdate(message: discord.Message, results, updates):
     """NO DOC YET"""
@@ -50,7 +56,7 @@ def messageDBUpdate(message: discord.Message, results, updates):
     if length == 1:
         if updates[0] == "content":
             print(message.content, str(message.edited_timestamp))
-            results['content'].append({"content":"%s"% (message.content.replace("\\", "\\\\")), "timestamp":"%s" % (str(message.edited_timestamp))})
+            results['content'].append({"content":"%s"% (MessageDBReplace(message.content)), "timestamp":"%s" % (str(message.edited_timestamp))})
             return results
         elif updates[0] == "pinned":
             return int(message.pinned)
@@ -67,7 +73,7 @@ def messageDBUpdate(message: discord.Message, results, updates):
         if 'content' in updates:
             idx = updates.index('content')
             before = json.loads(results[idx])
-            before['content'].append({"content":"%s"% (message.content.replace("\\", "\\\\")), "timestamp":"%s" % (str(message.edited_timestamp))})
+            before['content'].append({"content":"%s"% (MessageDBReplace(message.content)), "timestamp":"%s" % (str(message.edited_timestamp))})
             content = before
         for idx, value in enumerate(message.mentions):
             mentions['mentions'].append(value.id)

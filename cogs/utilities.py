@@ -58,7 +58,7 @@ class Utilities:
             await self.bot.edit_profile(avatar=image)
             await self.bot.say("This script may be broken, don't expect it to work!")
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, aliases=["setname"])
     @commands.cooldown(rate=2, per=3600.0)
     @checks.admin_or_permissions(manage_server=True)
     async def setusername(self, ctx, username=None):
