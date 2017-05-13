@@ -8,7 +8,15 @@ Check the [Wiki](https://github.com/TagnumElite/VectorBot/wiki)
 I don't have any rules yet but I will in the future!
 
 ## TODO:
-- [ ] Database Extension (Message Logging, Server Config, MOAR)
+- [ ] Database Extension
+    - [x] MessageDB
+    - [ ] UserDB `Plan To Deprecate`
+    - [ ] ServerDB
+    - [ ] EmojisDB `Deprecated`
+    - [ ] RolesDB `Deprecated`
+    - [ ] MembersDB
+    - [ ] ChannelsDB `Plan To Deprecate`
+    - [ ] ConfigDB
 - [ ] Multi Server Support (Requires Database Extension to be done)
 - [x] Splash (Member Splash Management)
 - [ ] Steam Extension ([SteamRep API](https://github.com/EliteKast/libzaek.py))
