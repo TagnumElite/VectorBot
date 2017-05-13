@@ -42,7 +42,7 @@ defaultDir = os.getcwd()
 DBC = databases.DBC(database=Configs["Database Name"], user=Configs["Database User"], password=Configs["Database Pass"], host=Configs["Database Host"], port=Configs["Database Port"])
 startup_time = datetime.datetime.utcnow()
 
-if not Configs["Dev Mode"]:
+if Configs["Dev Mode"]:
     currentToken = Configs["Dev Token"]
     currentLog = Configs["Dev Log"]
     currentWelcome = Configs["Dev Welcome"]
