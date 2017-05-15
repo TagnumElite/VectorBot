@@ -3,23 +3,29 @@
 # This software is released under an GPL-3.0 license.
 # See LICENSE.md for full details.
 
+"""
+VectorBot
+"""
+
 __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.12'
+__version__ = '0.6.13pre'
 
-from discord.ext import commands
-import discord
-from cogs.utils import checks, databases
-import datetime, re
-import json, asyncio
+import asyncio
+import datetime
+import json
 import copy
-import logging
+#import logging #Unsed for now, should make it work though. Logging is importent
 import traceback
-import sys, os, atexit
+import sys
+import os
+import atexit
 import discord.errors
-from collections import Counter
+import discord
+from discord.ext import commands
+from cogs.utils import checks, databases
 
 Configs = {}
 try:
@@ -39,7 +45,13 @@ except FileNotFoundError:
 
 defaultDir = os.getcwd()
 
-DBC = databases.DBC(database=Configs["Database Name"], user=Configs["Database User"], password=Configs["Database Pass"], host=Configs["Database Host"], port=Configs["Database Port"])
+DBC = databases.DBC(
+    database=Configs["Database Name"],
+    user=Configs["Database User"],
+    password=Configs["Database Pass"],
+    host=Configs["Database Host"],
+    port=Configs["Database Port"]
+)
 startup_time = datetime.datetime.utcnow()
 
 if Configs["Dev Mode"]:
@@ -55,12 +67,12 @@ else:
     currentDB = Configs["Bot Database Prefix"]
     #currentNotification = botNotification
 
-try:
-    import uvloop
-except ImportError:
-    pass
-else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+#try:
+#    import uvloop
+#except ImportError:
+#    pass
+#else:
+#    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 #I will fix this at some point
 #discord_logger = logging.getLogger('discord')
@@ -73,21 +85,30 @@ else:
 
 help_attrs = dict(hidden=True)
 
-bot = commands.Bot(command_prefix=Configs["Prefix"], description=Configs["Description"], pm_help=Configs["PM Help"], help_attrs=help_attrs)
+bot = commands.Bot(
+    command_prefix=Configs["Prefix"],
+    description=Configs["Description"],
+    pm_help=Configs["PM Help"],
+    help_attrs=help_attrs
+)
 
 def isHelpCommand(query):
+    """Checks if the text starts with any of the prefixes"""
     for pre in Configs["Prefix"]:
         if query.lower().startswith(pre+"help"):
             return True
     return False
 
 async def log_message(message, timeOfMessage=datetime.datetime.utcnow()):
+    """This is called when a message must be logged to the logs channel.
+    I want to remove this at one stage because I want to move everything to MySQL"""
     print(message)
     channel = discord.Object(id=currentLog)
     await bot.send_message(channel, message + " | " + str(timeOfMessage))
 
 @bot.event
 async def on_command_error(error, ctx):
+    """This is called when an error has occured when running a command"""
     if isinstance(error, commands.NoPrivateMessage):
         await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
     elif isinstance(error, commands.DisabledCommand):
@@ -99,6 +120,7 @@ async def on_command_error(error, ctx):
 
 @bot.event
 async def on_ready():
+    """This is called when the bot has logged in and can run all of its functions"""
     print('Logged in as:')
     print('Username: ' + bot.user.name)
     print('ID: ' + bot.user.id)
@@ -113,10 +135,12 @@ async def on_ready():
 
 @bot.event
 async def on_resumed():
+    """I don't know yet."""
     await log_message("Resumed...")
 
 @bot.event
 async def on_message(message):
+    """Called when the bot recieves a message. Either through t a private/group/guild/server message"""
     msg = message.content
     author = message.author
     server = message.server
@@ -143,13 +167,19 @@ async def on_message(message):
         except discord.errors.Forbidden():
             await databases.log_message(message)
         except:
-            await log_message("""Error deleteing command `help` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: {0}""".format(Forbidden) % (author, author.id, server, server.id, channel, channel.id))
+            await log_message(
+                """Error deleteing command `help` run by %s(%s) on server %s(%s) in channel %s(%s)
+Error: {0}""".format(Forbidden) % (
+                    author, author.id,
+                    server, server.id,
+                    channel, channel.id
+                )
+            )
     print("MESSAGE: %s"%(message.content))
 
 @bot.command(pass_context=True, hidden=True)
 @checks.is_owner()
-async def do(ctx, times : int, *, command):
+async def do(ctx, times: int, *, command):
     """Repeats a command a specified number of times."""
     msg = copy.copy(ctx.message)
     msg.content = command
@@ -167,81 +197,121 @@ async def logout(ctx):
 
 @bot.event
 async def on_member_join(member):
-    await log_message("Member: %s(%s) has gone joined the server %s(%s)" % (member.name, member.id, member.server.name, member.server.id), datetime.datetime.utcnow())
+    """Called when a member has joined the server. This function handles the Welcome messages"""
+    await log_message(
+        "Member: %s(%s) has gone joined the server %s(%s)" % (
+            member.name, member.id,
+            member.server.name, member.server.id
+        ),
+        datetime.datetime.utcnow()
+    )
     channel = discord.Object(id=currentWelcome)
-    em = discord.Embed(title='Welcome to %s!' % (member.server.name), description="""
-Use these commands %s!
+    em = discord.Embed(
+        title='Welcome to %s!' % (member.server.name),
+        description="""Use these commands %s!
 - V!help to get a PM about my commands!
-- V!rules to see the rules!""" % (member.mention), color=0x2ecc71)
-    em.set_author(name=member.name, icon_url=member.avatar_url)
+- V!rules to see the rules!""" % (member.mention),
+        color=0x2ecc71
+    )
+    em.set_author(
+        name=member.name,
+        icon_url=member.avatar_url
+    )
     em.set_thumbnail(url=member.avatar_url)
     await bot.send_message(channel, embed=em)
 
 @bot.command(pass_context=True)
 async def rules(ctx):
+    """Get the rules of the current server! BROKEN"""
     msg = ctx.message
     server = msg.server
     author = msg.author
     channel = msg.channel
     #TODO: Remember to make an if statement to check if the server has overridden rules!
-    em = discord.Embed(title=Configs["Rules"]["Title"].format(server=server.name, channel=channel.name, author=author.name), description=Configs["Rules"]["Description"].format(server=server.name, channel=channel.name, author=author.name), color=0xff0000, url=Configs["Rules"]["Url"])
-    em.set_footer(text=Configs["Rules"]["Footer"]["Text"].format(server=server.name), icon_url=discord.Embed.Empty if Configs["Rules"]["Footer"]["Icon Url"] is "" else Configs["Rules"]["Footer"]["Icon Url"])
-    em.set_author(name=Configs["Rules"]["Author"]["Name"].format(server=server.name), icon_url=discord.Embed.Empty if Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url) is "" else Configs["Rules"]["Author"]["Avatar Url"])
+    em = discord.Embed(
+        title=Configs["Rules"]["Title"].format(
+            server=server.name,
+            channel=channel.name,
+            author=author.name
+        ),
+        description=Configs["Rules"]["Description"].format(
+            server=server.name,
+            channel=channel.name,
+            author=author.name
+        ),
+        color=0xff0000,
+        url=Configs["Rules"]["Url"]
+    )
+    em.set_footer(
+        text=Configs["Rules"]["Footer"]["Text"].format(server=server.name),
+        icon_url=Configs["Rules"]["Footer"]["Icon Url"]
+    )
+    em.set_author(
+        name=Configs["Rules"]["Author"]["Name"].format(server=server.name),
+        icon_url=Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
+    )
     for rule in Configs["Rules"]["Rules"]:
-        em.add_field(name=rule["Name"], value=rule["Rule"], inline=rule["Inline"] if "Inline" in rule else False)
+        em.add_field(
+            name=rule["Name"],
+            value=rule["Rule"],
+            inline=rule["Inline"] if "Inline" in rule else False
+        )
     try:
         await bot.delete_message(msg)
-    except discord.errors.Forbidden():
-        await log_message("""Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: {0}""".format(Forbidden) % (author, author.id, server, server.id, channel, channel.id), datetime.datetime.utcnow())
-    except ValueError:
-         await log_message("""Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: Could not convert data to an integer""" % (author, author.id, server, server.id, channel, channel.id), datetime.datetime.utcnow())
     except:
-         await log_message("""Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: {0}""".format(Forbidden) % (author, author.id, server, server.id, channel, channel.id), datetime.datetime.utcnow())
+        await log_message(
+            """Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
+Error: {0}""".format(Forbidden) % (
+                author, author.id,
+                server, server.id,
+                channel, channel.id
+            ),
+            datetime.datetime.utcnow()
+        )
     await bot.send_message(author, embed=em)
 
-@bot.command(pass_context=True)
-async def find(ctx, user=None):
-    """Finds User"""
-    return # NO, I don't want to use this for now until I make a better user finder
-    await log_message("Command `find` was run")
-    if user == None:
-        await bot.say("Please specify user to find")
-        return
-    else:
-        await bot.say("User is " + str(user))
-
-    server = ctx.message.server
-    if server == None:
-        await bot.say("Server not found")
-        return
-    else:
-        await bot.say("Server is %s" % (server.name))
-
-    members = server.members
-    mems = []
-    if members == None:
-        await bot.say("Members not found")
-        return
-    else:
-        for member in members:
-            mems.append(member.name)
-        await bot.say("Members are %s" % (mems))
-
-    #member = checks.find_user(user, members)
-    member = server.get_member_named(user)
-
-    if member == None:
-        print(member)
-        await bot.say("User not found")
-        return
-    else:
-        await bot.say("User %s was found" % (member))
+#@bot.command(pass_context=True)
+#async def find(ctx, user=None):
+#    """Finds User a user with the name provided. Really badly setup"""
+#    return # NO, I don't want to use this for now until I make a better user finder
+#    await log_message("Command `find` was run")
+#    if user == None:
+#        await bot.say("Please specify user to find")
+#        return
+#    else:
+#        await bot.say("User is " + str(user))
+#
+#    server = ctx.message.server
+#    if server == None:
+#        await bot.say("Server not found")
+#        return
+#    else:
+#        await bot.say("Server is %s" % (server.name))
+#
+#    members = server.members
+#    mems = []
+#    if members == None:
+#        await bot.say("Members not found")
+#        return
+#    else:
+#        for member in members:
+#            mems.append(member.name)
+#        await bot.say("Members are %s" % (mems))
+#
+#    #member = checks.find_user(user, members)
+#    member = server.get_member_named(user)
+#
+#    if member == None:
+#        print(member)
+#        await bot.say("User not found")
+#        return
+#    else:
+#        await bot.say("User %s was found" % (member))
 
 @atexit.register
 def onExit():
+    """Called when the programs crashes or shutsdown normally.
+    Won't work if the window/screen/tmux is shut down forcefully."""
     DBC.close()
     if len(DBC.Buffer) > 0:
         with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
@@ -250,6 +320,7 @@ def onExit():
             buffer.close()
 
 def main():
+    """This runs the magic and everything else!"""
     #Set Global Vars Before Setting Up Cogs
     bot.currentLog = currentLog
     bot.currentDB = currentDB

@@ -1,23 +1,315 @@
-import io, os, shutil, discord
+"""
+Drawing Module
+
+I need to cleanup a lot of the code here as well improve my understanding of pillow.
+That way in the future I can make this more resource efficient
+"""
+import io
+import os
+import shutil
+import discord
 import PIL
 from PIL import ImageFont, Image, ImageDraw
 from urllib.request import Request, urlopen, URLopener
+from operator import attrgetter
+from pathlib import Path
+
+def getS(status: discord.Status):
+    """Returns a str of the Status
+
+    Parameters
+    ----------
+    status: discord.Status
+        The Discord Status"""
+    if status == discord.Status.online:
+        return "Online"
+    elif status == discord.Status.offline:
+        return "Offline"
+    elif status == discord.Status.idle:
+        return "IDLE"
+    elif status == discord.Status.do_not_disturb:
+        return "DnD"
+    elif status == discord.Status.invisible:
+        return "Invisible"
+    else:
+        return "None"
+
+def getG(game: discord.Game):
+    """Returns a str of the Status
+
+    Parameters
+    ----------
+    game: discord.Game
+        The Discord Game"""
+    if game is None:
+        return "Not Playing Anything"
+    else:
+        return game
+
+def getR(role: discord.Role, default: discord.Role):
+    """Returns a (r, g, b) of the role
+
+    Parameters
+    ----------
+    role: discord.Role
+        The Users role
+    default: discord.Role
+        The Servers Default Role"""
+    if role == default:
+        return (
+            255,
+            255,
+            255,
+            255
+        )
+    else:
+        return (
+            role.colour.r,
+            role.colour.g,
+            role.colour.b,
+            255
+        )
 
 class Splash():
-    """Splash Creation And Management API"""
+    """Splash Creation And Management API
 
-    def __init__(self, WebsitePath, BotPath):
+    Paramaters
+    ----------
+    WebsitePath: str
+        Configs["Splash Site"]
+    BotPath: str
+        self.bot.currentDIR"""
+
+    def __init__(self, WebsitePath, BotPath, StatusColors={"online": (0, 221, 17), "offline": (114, 114, 114), "idle": (234, 149, 32), "dnd": (227, 0, 0), "outline": (67, 67, 67)}):
         self.WebsitePath = WebsitePath
         self.BotPath = BotPath
+        self.SES = (62, 62, 74, 74)
+        self.SC = StatusColors
 
-    def Update(self, uid: str, un: str, au: str, ga: str, st: str, rc):
-        """Used to update and create Splashes"""
+    def Update(self, member: discord.Member):
+        """Updates Splash
+
+        .. note::
+            I would not let all servers use this and only your main server.
+            The reason why is memory usage will be extremely high.
+            Also MultiServer Splash Support is not planned and won't be.
+
+        Parameters
+        ----------
+        member: discord.Member
+            The member that was updated/created"""
+
+        # Set Directory To Default
+        default = self.BotPath+"/files"
+        os.chdir(default)
+
+        # Stop the letters from carrying on over off the banner
+        if len(getG(member.game)) > 25:
+            game = getG(member.game)[:22]+"..."
+        if len(member.Name) > 28:
+            name = member.Name[:28]+"..."
+
+        # Setup Vars
+        avatar = None
+        banner = None
+        fontName = None
+        fontGame = None
+
+        # Check if the user has more that the default role
+        if len(member.roles) > 1:
+            # First lets sorts the roles by ranking just incase!
+            roles = sorted(member.roles, key=attrgetter('position'))
+            # Run roles in reverse so that the highest ranking role goes first
+            for role in reversed(roles):
+                if role is not member.server.default_role:
+                    fontNameP = Path(default+role.name.lower()+"_font_name.ttf")
+                    fontGameP = Path(default+role.name.lower()+"_font_game.ttf")
+                    bannerP = Path(default+role.name.lower()+"_banner.png")
+                    avatarP = Path(default+role.name.lower()+"_avatar.png")
+                    # Check if there is a custom font for the name
+                    if fontNameP.exists():
+                        fontName = ImageFont.truetype(role.name.lower()+"_font_name.ttf", 16)
+                    # Check if there is a custom font for the game
+                    if fontGameP.exists():
+                        fontGame = ImageFont.truetype(role.name.lower()+"_font_game.ttf", 16)
+                    # Check if there is a custom banner
+                    if bannerP.exists():
+                        banner = Image.open(role.name.lower()+"_banner.png")
+                    # Check if there is a custom avatar
+                    if avatarP.exists():
+                        banner = Image.open(role.name.lower()+"_avatar.png")
+                else: # We have hit the last role. Let's make sure everything is working
+                    # If there isn't a custom avatar set default
+                    if avatar is None:
+                        avatar = Image.open("default_avatar.png")
+                    # If there isn't a custom banner set default
+                    if banner is None:
+                        banner = Image.open("default_banner.png")
+                    # If there isn't a custom name font set default
+                    if fontName is None:
+                        fontName = ImageFont.truetype("default_font_name.ttf", 16)
+                    # If there isn't a custom game font set default
+                    if fontGame is None:
+                        fontGame = ImageFont.truetype("default_font_game.ttf", 16)
+        else:
+            # Set Avatar
+            avatar = Image.open("default_avatar.png")
+            # Set Banner
+            banner = Image.open("default_banner.png")
+            # Set Fonts
+            fontName = ImageFont.truetype('default_font_name.ttf', 16)
+            fontGame = ImageFont.truetype('default_font_game.ttf', 16)
+
+        avatarSize = (70, 70)
+        maskSize = (avatarSize[0]*3, avatarSize[1]*3)
+        if member.avatar_url is not "":
+            avreq = Request(au, headers={'User-Agent': 'Mozilla/5.0'})
+            with urlopen(avreq) as response, open(uid+".png", 'wb') as out_file:
+                shutil.copyfileobj(response, out_file)
+            avatar = Image.open(uid+".png")
+
+        #background
+        background = Image.new('RGBA', banner.size, (0, 0, 0, 0))
+        banner_w, banner_h = banner.size
+        mask = Image.new('L',  maskSize, 0)
+        draw = ImageDraw.Draw(mask)
+        draw.ellipse((0, 0) + maskSize, fill=255)
+        mask = mask.resize(avatar.size, Image.ANTIALIAS)
+        avatar.putalpha(mask)
+        avatar.thumbnail(avatarSize, Image.ANTIALIAS)
+        avatar_w, avatar_h = avatar.size
+        a_offset = (int(5), int((banner_h-avatar_h)/2))
+        background.paste(avatar, a_offset)
+        banner.paste(background, (0, 0), background)
+
+        #Text
+        txt = Image.new('RGBA', banner.size, (255, 255, 255, 0))
+        text = ImageDraw.Draw(txt)
+        text.line(
+            (80, 17, 360, 17),
+            fill=(0, 0, 0, 175),
+            width=25
+        )
+        text.text(
+            (85,8),
+            un,
+            font=textFntB,
+            fill=getR(
+                member.top_role,
+                member.server.default_role
+            )
+        )
+        text.line(
+            (80, 58, 270, 58),
+            fill=(0, 0, 0, 175),
+            width=20
+        )
+        text.text(
+            (84,50),
+            ga,
+            font=textFntI,
+            fill=(255, 255, 255, 255)
+        )
+
+        # Status
+        statusEllipse = ImageDraw.Draw(txt)
+        st = getS(member.status)
+        if st == "Online":
+            statusEllipse.ellipse
+            (xy=self.SES,
+             fill=self.SC["online"],
+             outline=self.SC["outline"]
+            )
+        elif st == "Offline":
+            statusEllipse.ellipse(
+                xy=self.SES,
+                fill=self.SC["offline"],
+                outline=self.SC["outline"]
+            )
+        elif st == "Idle":
+            statusEllipse.ellipse(
+                xy=self.SES,
+                fill=self.SC["idle"],
+                outline=self.SC["outline"]
+            )
+        elif st == "DnD":
+            statusEllipse.ellipse(
+                xy=self.SES,
+                fill=self.SC["dnd"],
+                outline=self.SC["outline"]
+            )
+        else:
+            statusEllipse.ellipse(xy=(60, 60, 76, 76), fill=self.SC["outline"])
+
+        # Output
+        out = Image.alpha_composite(banner, txt)
+
+        # Check if the Path leads to a working directory if not, create one
+        if os.path.exists(self.WebsitePath+"/members") and os.path.isdir(self.WebsitePath+"/members"):
+            os.chdir(self.WebsitePath+"/members")
+        else:
+            try: # Python3
+                os.makedirs(name=self.WebsitePath+"/members", exist_ok=True)
+            except:
+                try: # Python2
+                    os.makedirs(name=self.WebsitePath+"/members")
+                except:
+                    print("ERROR: CREATING SPLASH SITE DIR")
+                    pass
+                else:
+                    os.chdir(self.WebsitePath+"/members")
+            else:
+                os.chdir(self.WebsitePath+"/members")
+
+        # Save Splash
+        out.save(uid+".png")
+
+        # Save Storage
+        if au is not None:
+            os.chdir(default)
+            os.remove(uid+".png")
+        return uid+".png"
+
+    def Check(member: discord.Member):
+        """Checks if the user has changed details since the last run
+
+        .. warning::
+            NOT SETUP
+
+        Parameters
+        ----------
+        member: discord.Member
+            The Discord Member"""
+        pass
+
+    def Remove(self, userID):
+        os.chdir(self.WebsitePath+"/members")
+        os.remove(userID+".png")
+
+    def UpdateOld(self, uid: str, un: str, au: str, ga: str, st: str, rc):
+        """Used to update and create Splashes
+
+        Parameters
+        ----------
+        uid: str
+            User ID
+        un: str
+            User Name
+        au: str
+            Avatar URL
+        ga: str
+            Game
+        st: str
+            Status
+        rc: (r, g, b)
+            Role Colour"""
+
         default = self.BotPath+"/cogs/utils/default"
         os.chdir(default)
         if len(ga) > 25:
             ga = ga[:22]+"..."
-        if len(un) > 28:
-            un = un[:28]+"..."
+        if len(un) > 32:
+            un = un[:32]+"..."
         # Font
         textFnt = ImageFont.truetype('font.ttf', 16)
         textFntB = ImageFont.truetype('font_bold.ttf', 16)
@@ -79,100 +371,8 @@ class Splash():
         out.save(uid+".png")
 
         # Save Storage
-        if au is None:
+        if au is not None:
             os.chdir(default)
             os.remove(uid+".png")
         return uid+".png"
 
-    def remove(self, userID):
-        os.chdir(self.WebsitePath+"/members")
-        os.remove(userID+".png")
-
-#TESTS!!!!!!!
-def testDONOTRUNUNLESSMAIN():
-    os.chdir("./default")
-    default = os.getcwd()
-
-    au = None
-    au = "https://images.discordapp.net/avatars/179891973795086336/8dd27f5aee2f81cd480f11929a517233.webp?size=1024"
-    uid = "179891973795086336"
-    if au is not None:
-        au = au.replace("webp", "png")
-    st = "Online"
-    un = "TagnumElite TagnumElite TagnumElite TagnumElite"
-    ga = "Massive Effective Testive Extreme Digital Deluxe Ultimate Version"
-    rc = (255, 186, 0)
-    if len(ga) > 25:
-        ga = ga[:22]+"..."
-    if len(un) > 36:
-        ga = ga[:22]+"..."
-    if isinstance(st, discord.Status):
-        print("True")
-    # Font
-    textFnt = ImageFont.truetype('font.ttf', 16)
-    textFntB = ImageFont.truetype('font_bold.ttf', 16)
-    textFntI = ImageFont.truetype('font_italic.ttf', 16)
-    # Banner
-    banner = Image.open("banner.png")
-    banner_w, banner_h = banner.size
-    #Text
-    txt = Image.new('RGBA', banner.size, (255, 255, 255, 0))
-    text = ImageDraw.Draw(txt)
-    text.line((80, 16, 380, 16), fill=(0, 0, 0, 175), width=20)
-    text.text((85,8), un, font=textFntB, fill=(rc[0], rc[1], rc[2], 255))
-    text.line((80, 58, 270, 58), fill=(0, 0, 0, 175), width=20)
-    text.text((84,50), ga, font=textFntI, fill=(255, 255, 255, 255))
-    #background
-    background = Image.new('RGBA', banner.size, (0, 0, 0, 0))
-    # Avatar
-    avatarSize = (70, 70)
-    maskSize = (avatarSize[0]*3, avatarSize[1]*3)
-    if au is None:
-        avatar = Image.open("avatar.png")
-        avatar.thumbnail(avatarSize, Image.ANTIALIAS)
-        avatar_w, avatar_h = avatar.size
-    else:
-        avreq = Request(au, headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(avreq) as response, open(uid+".png", 'wb') as out_file:
-            shutil.copyfileobj(response, out_file)
-        avatar = Image.open(uid+".png")
-    mask = Image.new('L',  maskSize, 0)
-    draw = ImageDraw.Draw(mask)
-    draw.ellipse((0, 0) + maskSize, fill=255)
-    mask = mask.resize(avatar.size, Image.ANTIALIAS)
-    avatar.putalpha(mask)
-    avatar.thumbnail(avatarSize, Image.ANTIALIAS)
-    avatar_w, avatar_h = avatar.size
-    a_offset = (int(5), int((banner_h-avatar_h)/2))
-    background.paste(avatar, a_offset)
-    # Status
-    statusEllipse = ImageDraw.Draw(txt)
-    if st == "Online":
-        statusEllipse.ellipse((0, 0, avatar_w+10, avatar_h+10), (0, 221, 17), (67, 67, 67))
-        print("online")
-    elif st == "Offline":
-        statusEllipse.ellipse((10, 10,7, 80), (114, 114, 114), (67, 67, 67))
-        print("offline")
-    elif st == "Idle":
-        statusEllipse.ellipse((10, 10, 80, 80), (234, 149, 32), (67, 67, 67))
-        print("idle")
-    elif st == "DnD":
-        statusEllipse.ellipse((10, 10, 80, 80), (227, 0, 0), (67, 67, 67))
-        print("dnd")
-    else:
-        statusEllipse.ellipse((5, 5, 80, 80), (67, 67, 67))
-        print("error")
-    app = Image.alpha_composite(banner, txt)
-    app.paste(background, (0, 0), background)
-    out = app.resize((splashS[0], splashS[1]), Image.ANTIALIAS)
-    # Output
-    out.save("test.png")
-
-    # Save Storage
-    if au is None:
-        os.chdir(default)
-        os.remove(uid+".png")
-    return uid+".png"
-
-if __name__ == "__main__":
-    testDONOTRUNUNLESSMAIN()

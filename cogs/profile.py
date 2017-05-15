@@ -28,7 +28,10 @@ class Profile:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Splash = draw.Splash(WebsitePath=bot.Configs["Splash Path"], BotPath=bot.currentDIR)
+        self.Splash = draw.Splash(
+            WebsitePath=bot.Configs["Splash Path"],
+            BotPath=bot.currentDIR
+        )
 
     @commands.command(pass_context=True, aliases=["sub"])
     async def subscribe(self, ctx, Mth: str=None, *, Role: str=None):
@@ -36,6 +39,8 @@ class Profile:
         NOTE: That you need to write the exact name of the role!
 
         Example: V!sub (c)reate/(a)dd/(r)emove/(d)elete CSGO to have the CSGO role created/addded/removed/deleted (to/from your profile)/(to/from the server)"""
+
+        pass
 
         msgs = []
         MTHL = Mth.lower()
@@ -59,70 +64,56 @@ class Profile:
         await self.bot.delete_messages(msgs)
 
     @commands.command(pass_context=True)
-    async def banner(self, ctx):
-        """Gets your own banner! Main Server Only!"""
+    async def banner(self, ctx, *):
+        """Get your own banner! Main Server Only!"""
         message = ctx.message
         author = message.author
         server = message.server
         await self.bot.delete_message(message)
-        if server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            if author.game == None:
-                game = "Not Playing"
-            else:
-                game = author.game.name
-            if author.top_role == server.default_role:
-                r = 255
-                g = 255
-                b = 255
-            else:
-                r = author.top_role.colour.r
-                g = author.top_role.colour.g
-                b = author.top_role.colour.b
-            await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))))
+        if server.id is self.bot.Configs["Bot Server"]:
+            await self.bot.send_message(
+                author,
+                "Here is your custom splash! {}/members/{}".format(
+                    self.bot.Configs["Splash Site"],
+                    self.Splash.Check(member) # I won't do Update because in large servers that can cause the bot to crash
+                )
+            )
+        elif server.id is self.bot.Configs["Dev Server"]:
+            print("Check Splash: banner")
         else:
             msg = await self.bot.say("That is not permitted here!")
             await asyncio.sleep(4)
             await self.bot.delete_message(msg)
 
     async def on_member_join(self, member):
-        if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            if member.game == None:
-                game = "Not Playing"
-            else:
-                game = member.game.name
-            if member.top_role == member.server.default_role:
-                r = 255
-                g = 255
-                b = 255
-            else:
-                r = member.top_role.colour.r
-                g = member.top_role.colour.g
-                b = member.top_role.colour.b
-            await self.bot.send_message(author, "Here is your custom splash! {}/members/{}".format(self.bot.Configs["Splash Site"], self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))))
-
-    async def on_member_remove(self, member):
-        if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            self.Splash.remove(member.id)
+        if member.server.id is self.bot.Configs["Bot Server"]:
+            await self.bot.send_message(
+                author,
+                "Here is your custom splash! {}/members/{}".format(
+                    self.bot.Configs["Splash Site"],
+                    self.Splash.Update(member)
+                )
+            )
+        elif member.server.id is self.bot.Configs["Dev Server"]:
+            print("Create Splash: Member Joined")
 
     async def on_member_update(self, before, after):
-        if after.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            if after.game == None:
-                game = "Not Playing"
-            else:
-                game = after.game.name
-            if after.top_role == after.server.default_role:
-                r = 255
-                g = 255
-                b = 255
-            else:
-                r = after.top_role.colour.r
-                g = after.top_role.colour.g
-                b = after.top_role.colour.b
-            self.Splash.Update(author.id, author.name, author.avatar_url, game, getS(author.status), (r,g,b))
+        if after.server.id == self.bot.Configs["Bot Server"]:
+            self.Splash.Update(after)
+        elif member.server.id is self.bot.Configs["Dev Server"]:
+            print("Create Splash: Member Update")
 
     async def on_member_ban(self, member):
-        if member.server.id == self.bot.Configs["Bot Server"] or self.bot.Configs["Dev Server"]:
-            self.Splash.remove(member.id)
+        if member.server.id == self.bot.Configs["Bot Server"]:
+            self.Splash.Remove(member.id)
+        elif member.server.id is self.bot.Configs["Dev Server"]:
+            print("Remove Splash: Banned")
+
+    async def on_member_remove(self, member):
+        if member.server.id == self.bot.Configs["Bot Server"]:
+            self.Splash.Remove(member.id)
+        elif member.server.id is self.bot.Configs["Dev Server"]:
+            print("Remove Splash: Kicked")
 
 def setup(bot):
     bot.add_cog(Profile(bot))

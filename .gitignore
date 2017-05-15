@@ -106,4 +106,10 @@ ENV/
 /configs.json
 *.pdf
 
+# I don't want your stuff
 buffer_*.txt
+files/*
+!files/default_avatar.png
+!files/default_banner.png
+!files/default_font_name.ttf
+!files/default_font_game.ttf

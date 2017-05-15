@@ -7,15 +7,15 @@ Check the [Wiki](https://github.com/TagnumElite/VectorBot/wiki)
 ## Contributing
 I don't have any rules yet but I will in the future!
 
-## TODO:
+## Features:
 - [ ] Database Extension
     - [x] MessageDB
-    - [ ] UserDB `Plan To Deprecate`
+    - [ ] UserDB
     - [ ] ServerDB
-    - [ ] EmojisDB `Deprecated`
-    - [ ] RolesDB `Deprecated`
-    - [ ] MembersDB
-    - [ ] ChannelsDB `Plan To Deprecate`
+    - [ ] EmojisDB `Plan to Merge into ServerDB`
+    - [ ] RolesDB `Plan to Merge into ServerDB`
+    - [ ] MembersDB `Plan to Merge into ServerDB`
+    - [ ] ChannelsDB `Plan To Merge into ServerDB`
     - [ ] ConfigDB
 - [ ] Multi Server Support (Requires Database Extension to be done)
 - [x] Splash (Member Splash Management)
@@ -30,6 +30,10 @@ I don't have any rules yet but I will in the future!
 - [ ] Music Player (Will be done in the future)
 - [ ] Record Player (Prep. Not Possible right now)
 
+## TODO:
+- [ ] Clean Out Code
+- [ ] Flesh Out Documentation
+
 ## Discord
 [![Join me on discord](http://splash.vectoresports.co.za/members/179891973795086336.png 'Join me on discord')](https://discord.gg/qJbwA7d)
 
@@ -43,11 +47,7 @@ In the [Wiki](https://github.com/TagnumElite/VectorBot/wiki)!
 Thats because to understand discord.py I forked @Rapptz RoboDanny and built off on that.
 ### I want to report a bug:heavy_exclamation_mark:
 Make an issue, same goes for suggestions!
-### I like anime! :heavy_check_mark:
-That's not even a question... but so do I! Recommened Your Favs!
-### Why do put random pieces of text in your code and elsewhere:question:
-Because I get bored. That's it.
 ### How did you learn to code? :coffee:
 Self taught. Going around, looking at docs and taking apart existing code to see how everything works.
-### I got an JSON with the configs.json!
+### I got an JSON Error with the configs.json!
 Please remove all 'comments' EG `//This is a comment` from the configs.json. These comments are for guidelines and break the JSONDecoder
