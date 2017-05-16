@@ -64,7 +64,7 @@ class Profile:
         await self.bot.delete_messages(msgs)
 
     @commands.command(pass_context=True)
-    async def banner(self, ctx, *):
+    async def banner(self, ctx, *, args):
         """Get your own banner! Main Server Only!"""
         message = ctx.message
         author = message.author
