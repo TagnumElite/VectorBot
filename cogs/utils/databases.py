@@ -207,7 +207,6 @@ class MessageDB():
             ids["mentions"].append(value.id)
         return ids
 
-    @deprecated
     def mentionsNamed(self, mentions, name):
         """Have I ever used this?
 
@@ -279,9 +278,9 @@ class MessageDB():
                 CON=msg,
                 MENE=int(message.mention_everyone),
                 MENS=str(self.mentions(message.mentions)).replace("'", "\""),
-                CMEN=str(self.mentionsNamed(message.channel_mentions, "channels")).replace("'", "\""),
+                CMENS=str(self.mentionsNamed(message.channel_mentions, "channels")).replace("'", "\""),
                 RMENS=str(self.mentionsNamed(message.role_mentions, "roles")).replace("'", "\""),
-                ATTACHS=json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}",
+                ATTCHS=json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}",
                 PIN=int(message.pinned),
                 REACTS=str(parser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"
             )

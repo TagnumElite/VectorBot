@@ -86,7 +86,7 @@ class Profile:
             await self.bot.delete_message(msg)
 
     async def on_member_join(self, member):
-        if member.server.id is self.bot.Configs["Bot Server"]:
+        if member.server.id is self.bot.Configs["Bot Server"] and not member.bot:
             await self.bot.send_message(
                 author,
                 "Here is your custom splash! {}/members/{}".format(
@@ -94,13 +94,22 @@ class Profile:
                     self.Splash.Update(member)
                 )
             )
-        elif member.server.id is self.bot.Configs["Dev Server"]:
+        elif member.server.id is self.bot.Configs["Dev Server"] and not member.bot:
             print("Create Splash: Member Joined")
 
     async def on_member_update(self, before, after):
-        if after.server.id == self.bot.Configs["Bot Server"]:
-            self.Splash.Update(after)
-        elif member.server.id is self.bot.Configs["Dev Server"]:
+        if after.server.id == self.bot.Configs["Bot Server"] and not after.bot:
+            if before.name is not after.name:
+                self.Splash.Update(after)
+            elif before.game is not after.game:
+                self.Splash.Update(after)
+            elif before.roles is not after.roles:
+                self.Splash.Update(after)
+            elif before.avatar_url is not after.avatar_url:
+                self.Splash.Update(after)
+            elif before.status is not after.status:
+                self.Splash.Update(after)
+        elif after.server.id is self.bot.Configs["Dev Server"] and not after.bot:
             print("Create Splash: Member Update")
 
     async def on_member_ban(self, member):

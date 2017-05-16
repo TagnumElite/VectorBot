@@ -23,16 +23,12 @@ def getS(status: discord.Status):
         The Discord Status"""
     if status == discord.Status.online:
         return "Online"
-    elif status == discord.Status.offline:
-        return "Offline"
     elif status == discord.Status.idle:
-        return "IDLE"
+        return "Idle"
     elif status == discord.Status.do_not_disturb:
         return "DnD"
-    elif status == discord.Status.invisible:
-        return "Invisible"
     else:
-        return "None"
+        return "Offline"
 
 def getG(game: discord.Game):
     """Returns a str of the Status
@@ -100,14 +96,18 @@ class Splash():
             The member that was updated/created"""
 
         # Set Directory To Default
-        default = self.BotPath+"/files"
+        default = self.BotPath+"/files/"
         os.chdir(default)
 
         # Stop the letters from carrying on over off the banner
-        if len(getG(member.game)) > 25:
-            game = getG(member.game)[:22]+"..."
-        if len(member.Name) > 28:
-            name = member.Name[:28]+"..."
+        # Members Name
+        name = member.name
+        if len(name) > 28:
+            name = name[:28]+"..."
+        # Members Games Name
+        game = getG(member.game.name) if member.game is not None else ""
+        if len(game) > 25:
+            game = game[:22]+"..."
 
         # Setup Vars
         avatar = None
@@ -115,58 +115,48 @@ class Splash():
         fontName = None
         fontGame = None
 
-        # Check if the user has more that the default role
-        if len(member.roles) > 1:
-            # First lets sorts the roles by ranking just incase!
-            roles = sorted(member.roles, key=attrgetter('position'))
-            # Run roles in reverse so that the highest ranking role goes first
-            for role in reversed(roles):
-                if role is not member.server.default_role:
-                    fontNameP = Path(default+role.name.lower()+"_font_name.ttf")
-                    fontGameP = Path(default+role.name.lower()+"_font_game.ttf")
-                    bannerP = Path(default+role.name.lower()+"_banner.png")
-                    avatarP = Path(default+role.name.lower()+"_avatar.png")
-                    # Check if there is a custom font for the name
-                    if fontNameP.exists():
-                        fontName = ImageFont.truetype(role.name.lower()+"_font_name.ttf", 16)
-                    # Check if there is a custom font for the game
-                    if fontGameP.exists():
-                        fontGame = ImageFont.truetype(role.name.lower()+"_font_game.ttf", 16)
-                    # Check if there is a custom banner
-                    if bannerP.exists():
-                        banner = Image.open(role.name.lower()+"_banner.png")
-                    # Check if there is a custom avatar
-                    if avatarP.exists():
-                        banner = Image.open(role.name.lower()+"_avatar.png")
-                else: # We have hit the last role. Let's make sure everything is working
-                    # If there isn't a custom avatar set default
-                    if avatar is None:
-                        avatar = Image.open("default_avatar.png")
-                    # If there isn't a custom banner set default
-                    if banner is None:
-                        banner = Image.open("default_banner.png")
-                    # If there isn't a custom name font set default
-                    if fontName is None:
-                        fontName = ImageFont.truetype("default_font_name.ttf", 16)
-                    # If there isn't a custom game font set default
-                    if fontGame is None:
-                        fontGame = ImageFont.truetype("default_font_game.ttf", 16)
-        else:
-            # Set Avatar
-            avatar = Image.open("default_avatar.png")
-            # Set Banner
-            banner = Image.open("default_banner.png")
-            # Set Fonts
-            fontName = ImageFont.truetype('default_font_name.ttf', 16)
-            fontGame = ImageFont.truetype('default_font_game.ttf', 16)
+        # First lets sorts the roles by ranking just incase!
+        roles = sorted(member.roles, key=attrgetter('position'))
+        # Run roles in reverse so that the highest ranking role goes first
+        for role in reversed(roles):
+            if role is not member.server.default_role:
+                fontNameP = Path(default+role.name.lower()+"_font_name.ttf")
+                fontGameP = Path(default+role.name.lower()+"_font_game.ttf")
+                bannerP = Path(default+role.name.lower()+"_banner.png")
+                avatarP = Path(default+role.name.lower()+"_avatar.png")
+                # Check if there is a custom font for the name
+                if fontNameP.exists() and fontName is None:
+                    fontName = ImageFont.truetype(role.name.lower()+"_font_name.ttf", 16)
+                # Check if there is a custom font for the game
+                if fontGameP.exists() and fontGame is None:
+                    fontGame = ImageFont.truetype(role.name.lower()+"_font_game.ttf", 16)
+                # Check if there is a custom banner
+                if bannerP.exists() and banner is None:
+                    banner = Image.open(role.name.lower()+"_banner.png")
+                # Check if there is a custom avatar
+                if avatarP.exists() and avatar is None:
+                    avatar = Image.open(role.name.lower()+"_avatar.png")
+            else: # We have hit the last role. Let's make sure everything is working
+                # If there isn't a custom avatar set default
+                if avatar is None:
+                    avatar = Image.open("default_avatar.png")
+                # If there isn't a custom banner set default
+                if banner is None:
+                    banner = Image.open("default_banner.png")
+                # If there isn't a custom name font set default
+                if fontName is None:
+                    fontName = ImageFont.truetype("default_font_name.ttf", 16)
+                # If there isn't a custom game font set default
+                if fontGame is None:
+                    fontGame = ImageFont.truetype("default_font_game.ttf", 16)
 
         avatarSize = (70, 70)
         maskSize = (avatarSize[0]*3, avatarSize[1]*3)
         if member.avatar_url is not "":
-            avreq = Request(au, headers={'User-Agent': 'Mozilla/5.0'})
-            with urlopen(avreq) as response, open(uid+".png", 'wb') as out_file:
+            avreq = Request(member.avatar_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urlopen(avreq) as response, open(member.id+".png", 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
-            avatar = Image.open(uid+".png")
+            avatar = Image.open(member.id+".png")
 
         #background
         background = Image.new('RGBA', banner.size, (0, 0, 0, 0))
@@ -192,38 +182,33 @@ class Splash():
         )
         text.text(
             (85,8),
-            un,
-            font=textFntB,
+            name,
+            font=fontName,
             fill=getR(
                 member.top_role,
                 member.server.default_role
             )
         )
-        text.line(
-            (80, 58, 270, 58),
-            fill=(0, 0, 0, 175),
-            width=20
-        )
-        text.text(
-            (84,50),
-            ga,
-            font=textFntI,
-            fill=(255, 255, 255, 255)
-        )
+        if game is not "":
+            text.line(
+                (80, 58, 270, 58),
+                fill=(0, 0, 0, 175),
+                width=20
+            )
+            text.text(
+                (84,50),
+                game,
+                font=fontGame,
+                fill=(255, 255, 255, 255)
+            )
 
         # Status
         statusEllipse = ImageDraw.Draw(txt)
         st = getS(member.status)
         if st == "Online":
-            statusEllipse.ellipse
-            (xy=self.SES,
-             fill=self.SC["online"],
-             outline=self.SC["outline"]
-            )
-        elif st == "Offline":
             statusEllipse.ellipse(
                 xy=self.SES,
-                fill=self.SC["offline"],
+                fill=self.SC["online"],
                 outline=self.SC["outline"]
             )
         elif st == "Idle":
@@ -239,36 +224,48 @@ class Splash():
                 outline=self.SC["outline"]
             )
         else:
-            statusEllipse.ellipse(xy=(60, 60, 76, 76), fill=self.SC["outline"])
+            statusEllipse.ellipse(
+                xy=self.SES,
+                fill=self.SC["offline"],
+                outline=self.SC["outline"]
+            )
 
         # Output
         out = Image.alpha_composite(banner, txt)
 
         # Check if the Path leads to a working directory if not, create one
-        if os.path.exists(self.WebsitePath+"/members") and os.path.isdir(self.WebsitePath+"/members"):
-            os.chdir(self.WebsitePath+"/members")
+        if os.path.exists(self.WebsitePath+"/members/") and os.path.isdir(self.WebsitePath+"/members/"):
+            try:
+                os.chdir(self.WebsitePath+"/members/")
+            except Exception as E:
+                print("{}".format(E))
         else:
             try: # Python3
-                os.makedirs(name=self.WebsitePath+"/members", exist_ok=True)
+                os.makedirs(name=self.WebsitePath+"/members/", exist_ok=True)
             except:
                 try: # Python2
-                    os.makedirs(name=self.WebsitePath+"/members")
-                except:
-                    print("ERROR: CREATING SPLASH SITE DIR")
+                    os.makedirs(name=self.WebsitePath+"/members/")
+                except Exception as E:
+                    print("ERROR: CREATING SPLASH SITE DIR: {}".format(E))
                     pass
                 else:
-                    os.chdir(self.WebsitePath+"/members")
+                    os.chdir(self.WebsitePath+"/members/")
             else:
-                os.chdir(self.WebsitePath+"/members")
+                print("DIR3: CREATED")
+                os.chdir(self.WebsitePath+"/members/")
 
         # Save Splash
-        out.save(uid+".png")
+        try:
+            os.chdir(self.WebsitePath+"/members/")
+            out.save(member.id+".png")
+        except Exception as E:
+            print("{}".format(E))
 
         # Save Storage
-        if au is not None:
+        if member.avatar_url is not "":
             os.chdir(default)
-            os.remove(uid+".png")
-        return uid+".png"
+            os.remove(member.id+".png")
+        return member.id+".png"
 
     def Check(member: discord.Member):
         """Checks if the user has changed details since the last run
@@ -280,7 +277,7 @@ class Splash():
         ----------
         member: discord.Member
             The Discord Member"""
-        pass
+        return(member.id+".png") # For return this so that no problems are caused!
 
     def Remove(self, userID):
         os.chdir(self.WebsitePath+"/members")

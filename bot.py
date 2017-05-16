@@ -11,7 +11,7 @@ __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.13pre'
+__version__ = '0.6.13'
 
 import asyncio
 import datetime
@@ -239,17 +239,21 @@ async def rules(ctx):
             channel=channel.name,
             author=author.name
         ),
-        color=0xff0000,
-        url=Configs["Rules"]["Url"]
+        color=0xff0000
     )
-    em.set_footer(
-        text=Configs["Rules"]["Footer"]["Text"].format(server=server.name),
-        icon_url=Configs["Rules"]["Footer"]["Icon Url"]
-    )
-    em.set_author(
-        name=Configs["Rules"]["Author"]["Name"].format(server=server.name),
-        icon_url=Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
-    )
+    em.set_image(url=Configs["Rules"]["Image"])
+    em.set_thumbnail(url=Configs["Rules"]["Thumbnail"])
+    if Configs["Rules"]["Footer"]["Enabled"]:
+        em.set_footer(
+            text=Configs["Rules"]["Footer"]["Text"].format(server=server.name),
+            icon_url=Configs["Rules"]["Footer"]["Icon Url"].format(server_icon=server.icon_url)
+        )
+    if Configs["Rules"]["Author"]["Enabled"]:
+        em.set_author(
+            name=Configs["Rules"]["Author"]["Name"].format(server=server.name),
+            icon_url=Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
+        )
+
     for rule in Configs["Rules"]["Rules"]:
         em.add_field(
             name=rule["Name"],
@@ -258,10 +262,10 @@ async def rules(ctx):
         )
     try:
         await bot.delete_message(msg)
-    except:
+    except Exception as E:
         await log_message(
             """Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: {0}""".format(Forbidden) % (
+Error: {0}""".format(E) % (
                 author, author.id,
                 server, server.id,
                 channel, channel.id
@@ -312,6 +316,7 @@ Error: {0}""".format(Forbidden) % (
 def onExit():
     """Called when the programs crashes or shutsdown normally.
     Won't work if the window/screen/tmux is shut down forcefully."""
+    os.chdir(defaultDir)
     DBC.close()
     if len(DBC.Buffer) > 0:
         with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
