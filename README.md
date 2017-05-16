@@ -25,10 +25,8 @@ I don't have any rules yet but I will in the future!
 - [ ] Twitch, Twitter, Facebook, etc. `I have no idea how to explain`
 - [ ] Image Extension (Image Manipulation) `Only Enabled In Dev Mode`
 - [ ] Email Support (Send emails when needed) `No Extension, will have no commands.`
-- [ ] Flesh out the wiki
-- [ ] Flesh out the RTD
-- [ ] Music Player (Will be done in the future)
-- [ ] Record Player (Prep. Not Possible right now)
+- [ ] Music Player (Will be done in the future)  `Only Enabled In Dev Mode`
+- [ ] Record Player (Prep. Not Possible right now) `Currently Impossible`
 
 ## TODO:
 - [ ] Clean Out Code
