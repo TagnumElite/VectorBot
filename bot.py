@@ -22,6 +22,7 @@ import traceback
 import sys
 import os
 import atexit
+import re
 import discord.errors
 import discord
 from discord.ext import commands
@@ -39,7 +40,7 @@ except FileNotFoundError:
         exit("Missing ExampleConfig.json! Please download the ExampleConfig.json to setup bot!")
     else:
         with open('configs.json', 'w+') as newconfig:
-            file.write(ExampleConfig)
+            file.write(re.sub(ExampleConfig, '/\/\/[a-zA-Z0-9\s\.\#\'\:\/\!\,\*\-\{\}\;\(\)]+(?=\n)/g', ""))
         exit("Setup configs.json!!!")
 
 
