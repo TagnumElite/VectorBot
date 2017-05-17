@@ -17,7 +17,7 @@
     "Dev Announcements": "123456789101112131", //Discord ID of the channel #Annoucements
     "Dev Database Prefix": "vd",  //Seperate prefix to make sure the databases don't mix
 
-    //"Database Type": "MySQL",     //Only a placeholder for functionality that may come in the future
+    "Database Type": "MySQL",     //Only a placeholder for functionality that may come in the future
     "Database Host": "localhost", //Default: localhost
     "Database Port": "3306",      //Default: 3306
     "Database Name": "vectorbot",    //Name of the Database

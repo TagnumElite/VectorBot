@@ -34,13 +34,13 @@ try:
         Configs = json.load(file)
 except FileNotFoundError:
     try:
-        with open("ExampleConfigs.json", 'r') as example:
+        with open("ExampleConfig.json", 'r') as example:
             ExampleConfig = example.read()
     except FileNotFoundError:
         exit("Missing ExampleConfig.json! Please download the ExampleConfig.json to setup bot!")
     else:
-        with open('configs.json', 'w+') as newconfig:
-            file.write(re.sub(ExampleConfig, '/\/\/[a-zA-Z0-9\s\.\#\'\:\/\!\,\*\-\{\}\;\(\)]+(?=\n)/g', ""))
+        with open('configs.json', 'w') as newconfig:
+            newconfig.write(re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig))
         exit("Setup configs.json!!!")
 
 
