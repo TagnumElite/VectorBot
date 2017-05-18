@@ -11,6 +11,7 @@ Welcome to VectorBot's documentation!
    
    bot
    cogs
+   utils
    faq
 
 
