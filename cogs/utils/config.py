@@ -1,3 +1,7 @@
+"""
+VectorBot Config Utility
+"""
+
 import discord, json, os
 import uuid
 import asyncio

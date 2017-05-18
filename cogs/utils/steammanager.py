@@ -1,5 +1,12 @@
-#!/usr/bin/python3.6
-# This functionallity will change immensly over the next year hopefully. If I get to it!
+"""
+What?
+No.
+What do you mean it escaped?
+Yes.
+Damnit Yes/No Buttom! TELL ME!
+No.
+ARRRRRRRRRRRGGGG
+"""
 
 import discord, asyncio
 import random, steam

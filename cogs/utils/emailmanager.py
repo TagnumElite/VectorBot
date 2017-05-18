@@ -1,3 +1,7 @@
+"""
+VectorBot Email Functionallity
+"""
+
 import smtplib
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart

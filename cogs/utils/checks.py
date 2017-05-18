@@ -1,3 +1,7 @@
+"""
+VectorBot Checking Functions
+"""
+
 from discord.ext import commands
 from difflib import SequenceMatcher
 import datetime

@@ -1,3 +1,7 @@
+"""
+Because JSON
+"""
+
 import json
 import discord
 

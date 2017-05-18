@@ -1,3 +1,7 @@
+"""
+@author: TagnumElite
+"""
+
 from discord.ext import commands
 from . import checks, parser#, salt
 from _mysql_exceptions import OperationalError

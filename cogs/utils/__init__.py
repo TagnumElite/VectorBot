@@ -1,4 +1,4 @@
-"""VectorBot Cogs
+"""VectorBot Utils
 -----------------
 This is just for documentation!"""
 
