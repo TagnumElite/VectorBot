@@ -89,6 +89,20 @@ class Splash():
             I would not let all servers use this and only your main server.
             The reason why is memory usage will be extremely high.
             Also MultiServer Splash Support is not planned and won't be.
+        
+        To make custom roles splashes create files named:
+        `admin_avatar.png` | `admin_banner.png`
+        `admin_font_name.ttf` | `admin_font_game.ttf`
+        
+        To make Custom Users splashes files have to be named:
+        `tagnumelite__avatar.png` | `tagnumelite__banner.png`
+        `tagnumelite__font__name.ttf` | `tagnumelite__font__game.ttf`
+        Or even better:
+        `tagnumelite__9339__avatar.png` | `tagnumelite__9339__banner.png`
+        `tagnumelite__9339__font__name.ttf` | `tagnumelite__9339__font__game.ttf`
+        
+        .. note::
+            Files must be in lowercase otherwise it fails to find it!
 
         Parameters
         ----------
@@ -161,21 +175,29 @@ class Splash():
                 # Check if there is a custom avatar for the member
                 if avatarP.exists():
                     avatar = Image.open(member.name.lower()+"__avatar.png")
+                elif avatarDP.exists():
+                    avatar = Image.open(member.name.lower()+"__"+member.discriminator+"__avatar.png")
                 elif avatar is None: # If there isn't a custom avatar set default
                     avatar = Image.open("default_avatar.png")
                 # Check if there is a custom banner for the member
                 if bannerP.exists():
                     banner = Image.open(member.name.lower()+"__banner.png")
+                elif bannerDP.exists():
+                    banner = Image.open(member.name.lower()+"__"+member.discriminator+"__banner.png")
                 elif banner is None: # If there isn't a custom banner set default
                     banner = Image.open("default_banner.png")
                 # Check if there is a custom name font for the member
                 if fontNameP.exists():
                     fontName = ImageFont.truetype(member.name.lower()+"__font_name.ttf", 16)
+                elif fontNameDP.exists():
+                    fontName = ImageFont.truetype(member.name.lower()+"__"+member.discriminator+"__font_name.ttf", 16)
                 elif fontName is None: # If there isn't a custom name font set default
                     fontName = ImageFont.truetype("default_font_name.ttf", 16)
                 # Check if there is a custom game font for the member
                 if fontGameP.exists():
                     fontGame = ImageFont.truetype(member.name.lower()+"__font_game.ttf", 16)
+                elif fontGameDP.exists():
+                    fontGame = ImageFont.truetype(member.name.lower()+"__"+member.discriminator+"__font_game.ttf", 16)
                 elif fontGame is None: # If there isn't a custom game font set default
                     fontGame = ImageFont.truetype("default_font_game.ttf", 16)
         #
