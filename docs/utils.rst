@@ -1,13 +1,12 @@
 .. currentmodule:: cogs.utils
 
 Utils Documentation
-==================
+===================
 
 Checks
 --------
 
-.. autoclass:: checks
-    :members:
+
 
 Config
 ---------
@@ -15,19 +14,10 @@ Config
 .. autoclass:: Config
     :members:
 
-.. autoclass:: ServerConfig
-    :members:
-
 Databases
 ----------
 
 .. autoclass:: DBC
-    :members:
-
-.. autoclass:: updateTypes
-    :members:
-
-.. autoclass:: errorType
     :members:
 
 .. autoclass:: MessageDB
@@ -67,10 +57,8 @@ Email Manager
     :members:
 
 Parser
-------
+----------
 
-.. autoclass:: parser
-    :members:
 
 Steam Manager
 -------------

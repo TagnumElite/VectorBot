@@ -74,7 +74,14 @@ class Splash():
     WebsitePath: str
         Configs["Splash Site"]
     BotPath: str
-        self.bot.currentDIR"""
+        self.bot.currentDIR
+    StatusColors: Optional[dict]
+        Default: {
+            "online": (0, 221, 17),
+            "offline": (114, 114, 114),
+            "idle": (234, 149, 32),
+            "dnd": (227, 0, 0),
+            "outline": (67, 67, 67)}"""
 
     def __init__(self, WebsitePath, BotPath, StatusColors={"online": (0, 221, 17), "offline": (114, 114, 114), "idle": (234, 149, 32), "dnd": (227, 0, 0), "outline": (67, 67, 67)}):
         self.WebsitePath = WebsitePath
@@ -203,6 +210,8 @@ class Splash():
         #
         avatarSize = (70, 70)
         maskSize = (avatarSize[0]*3, avatarSize[1]*3)
+
+        # If the member has an avatar get that instead!
         if member.avatar_url is not "":
             avreq = Request(member.avatar_url, headers={'User-Agent': 'Mozilla/5.0'})
             with urlopen(avreq) as response, open(member.id+".png", 'wb') as out_file:
@@ -317,7 +326,7 @@ class Splash():
         except Exception as E:
             print("{}".format(E))
 
-        # Save Storage
+        # Delete the members avatar if we no longer need it!
         if member.avatar_url is not "":
             os.chdir(default)
             os.remove(member.id+".png")
@@ -335,6 +344,13 @@ class Splash():
             The Discord Member"""
         return(member.id+".png") # For return this so that no problems are caused!
 
-    def Remove(self, userID):
+    def Remove(self, userID: int):
+        """Removes a users banner/splash
+
+        Parameters
+        ----------
+
+        userID: str
+            The ID of the user"""
         os.chdir(self.WebsitePath+"/members")
         os.remove(userID+".png")

@@ -2,13 +2,9 @@
 @author: TagnumElite
 """
 
-from discord.ext import commands
-from . import checks, parser#, salt
+from . import checks, parser
 from _mysql_exceptions import OperationalError
-#from _mysql.Connector import errorcode
-from enum import Enum
 import warnings, functools
-import hashlib
 import discord
 import MySQLdb
 from MySQLdb import MySQLError
@@ -231,26 +227,6 @@ cServers = "`servers` JSON NULL"
 cStatus = "`status` ENUM('online', 'idle', 'dnd', 'offline') NOT NULL DEFAULT 'offline'"
 cGame = "`game` LONGTEXT NULL"
 
-class updateTypes(Enum):
-    #Global
-    NAME = "name"
-    ROLES = "roles"
-    #Messages
-    CONTENT = "content"
-    #Servers
-    EMOJIS = "emojis"
-    REGION = "region"
-    AFK_TIMEOUT = "afk_timeout"
-    AFK_CHANNEL = "afk_channel"
-
-class errorType():
-    EXISTS = "EXISTS"
-
-#createErrorDBIfNot = createTableIfNot+" %s_errors ("+createID+", "+createError+", "+createCreatedAt+", "+primaryKeyID+");"
-
-#insertErrorLog = insertInto+" %s_errors(server_id, error, created_at) VALUES('%s', '%s', '%s');"
-
-# Message Database
 class MessageDB():
     """Message Database!
 
@@ -274,8 +250,8 @@ class MessageDB():
 
         Parameters
         ----------
-        mensions: list[discord.Mensions]
-            The list of mensions from the message"""
+        Mentions: list[discord.Mentions]
+            The list of Mentions from the message"""
         ids = {"mentions": []}
         for value in mentions:
             ids["mentions"].append(value.id)
@@ -289,8 +265,8 @@ class MessageDB():
 
         Parameters
         ----------
-        mensions: list[discord.Mensions]
-            The list of mensions from the message
+        Mentions: list[discord.Mentions]
+            The list of Mentions from the message
         name: str
             The name of the mension list"""
         ids = '{"%s":[]}'%(name)

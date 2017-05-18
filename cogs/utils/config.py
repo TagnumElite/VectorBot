@@ -101,9 +101,3 @@ class Config:
 
     def all(self):
         return self._db
-
-class ServerConfig(Config):
-    """Server Config, child class of Config"""
-
-    def __init__(self):
-        self.boobies = "BOOOOOOOOOOBIES"
