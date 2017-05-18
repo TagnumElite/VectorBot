@@ -49,3 +49,5 @@ Make an issue, same goes for suggestions!
 Self taught. Going around, looking at docs and taking apart existing code to see how everything works.
 ### I got an JSON Error with the configs.json!
 Please remove all 'comments' EG `//This is a comment` from the configs.json. These comments are for guidelines and break the JSONDecoder
+### Why start on version 6?
+Because this is an continuation of my other bots

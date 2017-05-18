@@ -40,7 +40,7 @@ def getG(game: discord.Game):
     if game is None:
         return "Not Playing Anything"
     else:
-        return game
+        return game.name
 
 def getR(role: discord.Role, default: discord.Role):
     """Returns a (r, g, b) of the role
@@ -105,7 +105,7 @@ class Splash():
         if len(name) > 28:
             name = name[:28]+"..."
         # Members Games Name
-        game = getG(member.game.name) if member.game is not None else ""
+        game = getG(member.game)
         if len(game) > 25:
             game = game[:22]+"..."
 
@@ -120,36 +120,65 @@ class Splash():
         # Run roles in reverse so that the highest ranking role goes first
         for role in reversed(roles):
             if role is not member.server.default_role:
+                avatarP = Path(default+role.name.lower()+"_avatar.png")
+                bannerP = Path(default+role.name.lower()+"_banner.png")
                 fontNameP = Path(default+role.name.lower()+"_font_name.ttf")
                 fontGameP = Path(default+role.name.lower()+"_font_game.ttf")
-                bannerP = Path(default+role.name.lower()+"_banner.png")
-                avatarP = Path(default+role.name.lower()+"_avatar.png")
-                # Check if there is a custom font for the name
-                if fontNameP.exists() and fontName is None:
-                    fontName = ImageFont.truetype(role.name.lower()+"_font_name.ttf", 16)
-                # Check if there is a custom font for the game
-                if fontGameP.exists() and fontGame is None:
-                    fontGame = ImageFont.truetype(role.name.lower()+"_font_game.ttf", 16)
-                # Check if there is a custom banner
-                if bannerP.exists() and banner is None:
-                    banner = Image.open(role.name.lower()+"_banner.png")
-                # Check if there is a custom avatar
+                # Check if there is a custom avatar for the role
                 if avatarP.exists() and avatar is None:
                     avatar = Image.open(role.name.lower()+"_avatar.png")
+                # Check if there is a custom banner for the role
+                if bannerP.exists() and banner is None:
+                    banner = Image.open(role.name.lower()+"_banner.png")
+                # Check if there is a custom font for the name for the role
+                if fontNameP.exists() and fontName is None:
+                    fontName = ImageFont.truetype(role.name.lower()+"_font_name.ttf", 16)
+                # Check if there is a custom font for the game for the role
+                if fontGameP.exists() and fontGame is None:
+                    fontGame = ImageFont.truetype(role.name.lower()+"_font_game.ttf", 16)
             else: # We have hit the last role. Let's make sure everything is working
-                # If there isn't a custom avatar set default
-                if avatar is None:
+                # Now we check if a user themself has a custom splash
+                # NOTE: Custom banners to each users must have two __ instead of one _
+                # This is to stop users from getting the the custom role splashes by
+                # changing their name!
+                avatarP = Path(default+member.name.lower()+"__avatar.png")
+                bannerP = Path(default+member.name.lower()+"__banner.png")
+                fontNameP = Path(default+member.name.lower()+"__font_name.ttf")
+                fontGameP = Path(default+member.name.lower()+"__font_game.ttf")
+                # Check if the user is using a discriminator
+                avatarDP = Path(
+                    default+member.name.lower()+"__"+member.discriminator+"__avatar.png"
+                )
+                bannerDP = Path(
+                    default+member.name.lower()+"__"+member.discriminator+"__banner.png"
+                )
+                fontNameDP = Path(
+                    default+member.name.lower()+"__"+member.discriminator+"__font_name.ttf"
+                )
+                fontGameDP = Path(
+                    default+member.name.lower()+"__"+member.discriminator+"__font_game.ttf"
+                )
+                # Check if there is a custom avatar for the member
+                if avatarP.exists():
+                    avatar = Image.open(member.name.lower()+"__avatar.png")
+                elif avatar is None: # If there isn't a custom avatar set default
                     avatar = Image.open("default_avatar.png")
-                # If there isn't a custom banner set default
-                if banner is None:
+                # Check if there is a custom banner for the member
+                if bannerP.exists():
+                    banner = Image.open(member.name.lower()+"__banner.png")
+                elif banner is None: # If there isn't a custom banner set default
                     banner = Image.open("default_banner.png")
-                # If there isn't a custom name font set default
-                if fontName is None:
+                # Check if there is a custom name font for the member
+                if fontNameP.exists():
+                    fontName = ImageFont.truetype(member.name.lower()+"__font_name.ttf", 16)
+                elif fontName is None: # If there isn't a custom name font set default
                     fontName = ImageFont.truetype("default_font_name.ttf", 16)
-                # If there isn't a custom game font set default
-                if fontGame is None:
+                # Check if there is a custom game font for the member
+                if fontGameP.exists():
+                    fontGame = ImageFont.truetype(member.name.lower()+"__font_game.ttf", 16)
+                elif fontGame is None: # If there isn't a custom game font set default
                     fontGame = ImageFont.truetype("default_font_game.ttf", 16)
-
+        #
         avatarSize = (70, 70)
         maskSize = (avatarSize[0]*3, avatarSize[1]*3)
         if member.avatar_url is not "":
@@ -161,14 +190,20 @@ class Splash():
         #background
         background = Image.new('RGBA', banner.size, (0, 0, 0, 0))
         banner_w, banner_h = banner.size
+        #
         mask = Image.new('L',  maskSize, 0)
+        #
         draw = ImageDraw.Draw(mask)
         draw.ellipse((0, 0) + maskSize, fill=255)
+        #
         mask = mask.resize(avatar.size, Image.ANTIALIAS)
+        #
         avatar.putalpha(mask)
         avatar.thumbnail(avatarSize, Image.ANTIALIAS)
         avatar_w, avatar_h = avatar.size
+        #
         a_offset = (int(5), int((banner_h-avatar_h)/2))
+        #
         background.paste(avatar, a_offset)
         banner.paste(background, (0, 0), background)
 
@@ -189,18 +224,17 @@ class Splash():
                 member.server.default_role
             )
         )
-        if game is not "":
-            text.line(
-                (80, 58, 270, 58),
-                fill=(0, 0, 0, 175),
-                width=20
-            )
-            text.text(
-                (84,50),
-                game,
-                font=fontGame,
-                fill=(255, 255, 255, 255)
-            )
+        text.line(
+            (80, 58, 270, 58),
+            fill=(0, 0, 0, 175),
+            width=20
+        )
+        text.text(
+            (84,50),
+            game if getS(member.status) is not "Offline" else "Currently Offline",
+            font=fontGame,
+            fill=(255, 255, 255, 255)
+        )
 
         # Status
         statusEllipse = ImageDraw.Draw(txt)
@@ -282,94 +316,3 @@ class Splash():
     def Remove(self, userID):
         os.chdir(self.WebsitePath+"/members")
         os.remove(userID+".png")
-
-    def UpdateOld(self, uid: str, un: str, au: str, ga: str, st: str, rc):
-        """Used to update and create Splashes
-
-        Parameters
-        ----------
-        uid: str
-            User ID
-        un: str
-            User Name
-        au: str
-            Avatar URL
-        ga: str
-            Game
-        st: str
-            Status
-        rc: (r, g, b)
-            Role Colour"""
-
-        default = self.BotPath+"/cogs/utils/default"
-        os.chdir(default)
-        if len(ga) > 25:
-            ga = ga[:22]+"..."
-        if len(un) > 32:
-            un = un[:32]+"..."
-        # Font
-        textFnt = ImageFont.truetype('font.ttf', 16)
-        textFntB = ImageFont.truetype('font_bold.ttf', 16)
-        textFntI = ImageFont.truetype('font_italic.ttf', 16)
-        # Banner
-        banner = Image.open("banner.png")
-        banner_w, banner_h = banner.size
-        #background
-        background = Image.new('RGBA', banner.size, (0, 0, 0, 0))
-        # Avatar
-        avatarSize = (70, 70)
-        maskSize = (avatarSize[0]*3, avatarSize[1]*3)
-        if au is None:
-            avatar = Image.open("avatar.png")
-            avatar.thumbnail(avatarSize, Image.ANTIALIAS)
-            avatar_w, avatar_h = avatar.size
-        else:
-            avreq = Request(au, headers={'User-Agent': 'Mozilla/5.0'})
-            with urlopen(avreq) as response, open(uid+".png", 'wb') as out_file:
-                shutil.copyfileobj(response, out_file)
-            avatar = Image.open(uid+".png")
-        mask = Image.new('L',  maskSize, 0)
-        draw = ImageDraw.Draw(mask)
-        draw.ellipse((0, 0) + maskSize, fill=255)
-        mask = mask.resize(avatar.size, Image.ANTIALIAS)
-        avatar.putalpha(mask)
-        avatar.thumbnail(avatarSize, Image.ANTIALIAS)
-        avatar_w, avatar_h = avatar.size
-        a_offset = (int(5), int((banner_h-avatar_h)/2))
-        background.paste(avatar, a_offset)
-        banner.paste(background, (0, 0), background)
-        #Text
-        txt = Image.new('RGBA', banner.size, (255, 255, 255, 0))
-        text = ImageDraw.Draw(txt)
-        text.line((80, 16, 380, 16), fill=(0, 0, 0, 175), width=20)
-        text.text((85,8), un, font=textFntB, fill=(rc[0], rc[1], rc[2], 255))
-        text.line((80, 58, 270, 58), fill=(0, 0, 0, 175), width=20)
-        text.text((84,50), ga, font=textFntI, fill=(255, 255, 255, 255))
-        # Status
-        statusEllipse = ImageDraw.Draw(txt)
-        if st == "Online":
-            statusEllipse.ellipse((62, 62, 74, 74), (0, 221, 17), (67, 67, 67))
-            print("online")
-        elif st == "Offline":
-            statusEllipse.ellipse((62, 62, 74, 74), (114, 114, 114), (67, 67, 67))
-            print("offline")
-        elif st == "Idle":
-            statusEllipse.ellipse((62, 62, 74, 74), (234, 149, 32), (67, 67, 67))
-            print("idle")
-        elif st == "DnD":
-            statusEllipse.ellipse((62, 62, 74, 74), (227, 0, 0), (67, 67, 67))
-            print("dnd")
-        else:
-            statusEllipse.ellipse((60, 60, 76, 76), (67, 67, 67))
-            print("error")
-        out = Image.alpha_composite(banner, txt)
-        # Remember to check if directory exists and do stuff from that
-        os.chdir(self.WebsitePath+"/members")
-        out.save(uid+".png")
-
-        # Save Storage
-        if au is not None:
-            os.chdir(default)
-            os.remove(uid+".png")
-        return uid+".png"
-

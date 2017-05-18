@@ -1,10 +1,13 @@
 from discord.ext import commands
 from . import checks, parser#, salt
+from _mysql_exceptions import OperationalError
+#from _mysql.Connector import errorcode
 from enum import Enum
 import warnings, functools
 import hashlib
 import discord
 import MySQLdb
+from MySQLdb import MySQLError
 import json
 
 # to expose to the eval command
@@ -41,19 +44,67 @@ class DBC():
     host : Optional[str]
         Default to `localhost`. Only use this if the database is on a different server!
     port : Optional[int]
-        Defauts to `3306`. Only use this if the database is on a different port"""
+        Defauts to `3306`. Only use this if the database is on a different port
+    retries: Optional[int]
+        Defaults to `20`. This is the amount of times it will try to reconnect to the Database"""
     Buffer = []
 
-    def __init__(self, database: str, user: str, password: str="", host: str="localhost", port: int=3306):
-        self.Connection = MySQLdb.connect(
-            host=host,
-            user=user,
-            passwd=password,
-            db=database,
-            port=port
-        )
+    def __init__(self, database: str, user: str, password: str="", host: str="localhost", port: int=3306, retries: int=20):
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
+        self.port = port
+        self.retries = retries
+        self.Connecting = False
+        self._connect()
+
+    def _connect(self):
+        if self.Connecting:
+            return
+        else:
+            self.Connecting = False
+            for trie in range(self.retries):
+                if trie is not self.retires-1:
+                    try:
+                        self.Connection = MySQLdb.connect(
+                            host=self.host,
+                            user=self.user,
+                            passwd=self.password,
+                            db=self.database,
+                            port=self.port
+                        )
+                    except Exception as E:
+                        errno = E.args[0]
+                        if errno is 2003:
+                            return
+                        else:
+                            self.Conntection = False
+                            raise(E)
+                else: #Last Try
+                    try:
+                        self.Connection = MySQLdb.connect(
+                            host=self.host,
+                            user=self.user,
+                            passwd=self.password,
+                            db=self.database,
+                            port=self.port
+                        )
+                    except Exception as E:
+                        errno = E.args[0]
+                        if errno is 2003:
+                            exit("Couldn't Connect to the MySQL Server")
+                        else:
+                            self.Conntection = False
+                            raise(E)
         self.Cursor = self.Connection.cursor()
         self.query("SET SQL_SAFE_UPDATES = 0;")
+
+    def reconnect(self):
+        try:
+            self._connect()
+        except Exception as E:
+            raise(E)
 
     def close(self):
         """Closes the connection."""
@@ -65,11 +116,20 @@ class DBC():
             print("Query: ", query)
             self.Cursor.execute(query)
             self.Connection.commit()
-        except Exception as me:
-            print("Query Exception: {}".format(me))
-            self.Buffer.append(query)
-            self.Connection.rollback()
-            return me
+        except MySQLError as me:
+            print("Exception Args", me.args)
+            if me.args[0] in [2006, 2013]:
+                try:
+                    self.reconnect()
+                except Exception as E:
+                    raise(E)
+                else:
+                    return self.query(query)
+            else:
+                print("Query Exception: {}".format(me))
+                self.Buffer.append(query)
+                self.Connection.rollback()
+                raise me
         else:
             return True
 
@@ -79,11 +139,16 @@ class DBC():
             self.Cursor.execute(query)
             result = self.Cursor.fetchone()
             self.Connection.commit()
-        except Exception as me:
-            print("QueryOne Exception: {}".format(me))
-            self.Buffer.append(query)
-            self.Connection.rollback()
-            return me
+        except MySQLError as me:
+            print("Exception Args", me.args)
+            if me.args[0] in [2006, 2013]:
+                self.reconnect()
+                return self.query(query) # I know infinite loop.
+            else:
+                print("Query Exception: {}".format(me))
+                self.Buffer.append(query)
+                self.Connection.rollback()
+                raise me
         else:
             if isinstance(result, list):
                 for value in result:
@@ -96,11 +161,16 @@ class DBC():
             self.Cursor.execute(query)
             result = self.Cursor.fetchall()
             self.Connection.commit()
-        except Exception as me:
-            print("QueryAll Exception: {}".format(me))
-            self.Buffer.append(query)
-            self.Connection.rollback()
-            return me
+        except MySQLError as me:
+            print("Exception Args", me.args)
+            if me.args[0] in [2006, 2013]:
+                self.reconnect()
+                return self.query(query) # I know infinite loop.
+            else:
+                print("Query Exception: {}".format(me))
+                self.Buffer.append(query)
+                self.Connection.rollback()
+                raise me
         else:
             if isinstance(result, list):
                 for row in result:

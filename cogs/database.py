@@ -156,13 +156,13 @@ class Database:
     async def on_member_join(self, member):
         if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
             return
-        self.MembersDB.create(before, after)
+        self.MembersDB.create(member)
 
     #@Todo
     async def on_member_remove(self, member):
         if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
             return
-        self.MembersDB.delete(before, after)
+        self.MembersDB.delete(member)
 
     #@Todo
     async def on_member_update(self, before, after):

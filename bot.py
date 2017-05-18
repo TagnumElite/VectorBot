@@ -318,12 +318,12 @@ def onExit():
     """Called when the programs crashes or shutsdown normally.
     Won't work if the window/screen/tmux is shut down forcefully."""
     os.chdir(defaultDir)
-    DBC.close()
     if len(DBC.Buffer) > 0:
         with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
             for query in DBC.Buffer:
                 buffer.write(query)
             buffer.close()
+    DBC.close()
 
 def main():
     """This runs the magic and everything else!"""
