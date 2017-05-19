@@ -65,7 +65,7 @@ class DBC():
         else:
             self.Connecting = False
             for trie in range(self.retries):
-                if trie is not self.retires-1:
+                if trie is not self.retries-1:
                     try:
                         self.Connection = MySQLdb.connect(
                             host=self.host,
@@ -101,6 +101,7 @@ class DBC():
         self.query("SET SQL_SAFE_UPDATES = 0;")
 
     def reconnect(self):
+        """Reconnects to the database"""
         try:
             self._connect()
         except Exception as E:
@@ -112,6 +113,12 @@ class DBC():
         self.Connection.close()
 
     def query(self, query):
+        """Make an query but doesn't return anything
+
+        Parameters
+        ----------
+        query: str
+            The MySQL query you want to make"""
         try:
             print("Query: ", query)
             self.Cursor.execute(query)
@@ -134,6 +141,12 @@ class DBC():
             return True
 
     def queryOne(self, query):
+        """Make an query but returns the first result
+
+        Parameters
+        ----------
+        query: str
+            The MySQL query you want to make"""
         try:
             print("QueryOne: ", query)
             self.Cursor.execute(query)
@@ -156,6 +169,12 @@ class DBC():
             return result
 
     def queryAll(self, query):
+        """Make an query but returns all results
+
+        Parameters
+        ----------
+        query: str
+            The MySQL query you want to make"""
         try:
             print("QueryAll: ", query)
             self.Cursor.execute(query)
@@ -259,9 +278,6 @@ class MessageDB():
 
     def mentionsNamed(self, mentions, name):
         """Have I ever used this?
-
-        .. warning::
-            deprecated
 
         Parameters
         ----------
