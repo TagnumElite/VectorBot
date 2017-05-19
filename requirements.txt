@@ -12,7 +12,7 @@ sphinx>=1.5.6
 #Optional: Comment out what you don't want enabled!
 #uvloop
 #oauthlib
-#feedparser
+feedparser
 Pillow>=4.0.0 #Image and Profile Extension Require It
 #cleverbot=1.1.1 #NO JUST NO
 #bcrypt #Encryption. Because we will be storing passwords
