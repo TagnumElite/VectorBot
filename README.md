@@ -10,13 +10,8 @@ I don't have any rules yet but I will in the future!
 ## Features:
 - [ ] Database Extension
     - [x] MessageDB
-    - [ ] UserDB
     - [ ] ServerDB
-    - [ ] EmojisDB `Plan to Merge into ServerDB`
-    - [ ] RolesDB `Plan to Merge into ServerDB`
     - [ ] MembersDB `Plan to Merge into ServerDB`
-    - [ ] ChannelsDB `Plan To Merge into ServerDB`
-    - [ ] ConfigDB
 - [ ] Multi Server Support (Requires Database Extension to be done)
 - [x] Splash (Member Splash Management)
 - [ ] Steam Extension ([SteamRep API](https://github.com/EliteKast/libzaek.py))

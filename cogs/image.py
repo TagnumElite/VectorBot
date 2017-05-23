@@ -5,7 +5,10 @@ import discord
 import inspect
 
 class Image:
-    """Image Manipulation - NOT SETUP"""
+    """Image Manipulation
+
+    .. warning::
+        NOT SETUP"""
 
     def __init__(self, bot):
         self.bot = bot

@@ -5,13 +5,14 @@
 
 """
 VectorBot
+@author: TagnumElite
 """
 
 __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.14'
+__version__ = '0.6.15pre'
 
 import asyncio
 import datetime
@@ -75,14 +76,23 @@ else:
 #else:
 #    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-#I will fix this at some point
-#discord_logger = logging.getLogger('discord')
-#discord_logger.setLevel(logging.CRITICAL)
-#log = logging.getLogger()
-#log.setLevel(logging.DEBUG)
-#handler = logging.FileHandler(filename='vectordev %s.log' % (datetime.datetime.utcnow()), encoding='utf-8', mode='w')
-#handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-#log.addHandler(handler)
+discord_logger = logging.getLogger('discord')
+discord_logger.setLevel(logging.CRITICAL)
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
+handler = logging.FileHandler(
+    filename='vectordev_{:%Y-%m-%d_%H;%M}.log'.format(
+        datetime.datetime.utcnow()
+    ),
+    encoding='utf-8',
+    mode='w'
+)
+handler.setFormatter(
+    logging.Formatter(
+        '%(asctime)s:%(levelname)s:%(name)s: %(message)s'
+    )
+)
+log.addHandler(handler)
 
 help_attrs = dict(hidden=True)
 

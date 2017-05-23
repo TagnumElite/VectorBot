@@ -130,6 +130,9 @@ def find_user(username, members):
     else:
         return list(members)[indexNumber]
 
+class Checks():
+    """TO BE SETUP"""
+    pass
 async def log_message(message, bot, timeOfMessage=datetime.datetime.utcnow()):
     print(message)
     channel = discord.Object(id=bot.currentLog)

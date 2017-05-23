@@ -1,6 +1,6 @@
 from discord.ext import commands
 from .utils import config, checks
-from .utils.databases import DBC, MessageDB, ServerDB, MembersDB, ChannelsDB, RolesDB, EmojisDB
+from .utils.databases import DBC, MessageDB, ServerDB, MembersDB
 import warnings, functools
 import discord
 import inspect
@@ -11,8 +11,7 @@ import asyncio
 import datetime
 from collections import Counter
 
-#NOTE: Most will be disabled because of discord audit logs but this does not mean the functions don't work. Uncomment the functions to make them work!
-#NOTE: THESE THINGS WILL CHANGE BECAUSE I CHANGED THE WAY THE BOT WILL BE LOGGING INTO THE DB
+#NOTE: Most will be disabled because of discord audit logs.
 
 # Discord Audit Logs:
 # Server Update
@@ -26,16 +25,24 @@ from collections import Counter
 # Messages Remove
 
 class Database:
-    """Database Functionallity"""
+    """Database Functionallity
+
+    Parameters
+    ----------
+    bot: discord.ext.commands.Bot
+        The bot
+
+    Variables
+    ---------
+    MessageDB: MessageDB
+    ServerDB: ServerDB
+    MembersDB: MembersDB"""
 
     def __init__(self, bot):
         self.bot = bot
         self.MessageDB = MessageDB(bot.DBC, bot.currentDB)
         self.ServerDB = ServerDB(bot.DBC, bot.currentDB)
         self.MembersDB = MembersDB(bot.DBC, bot.currentDB)
-        self.ChannelsDB = ChannelsDB(bot.DBC, bot.currentDB)
-        self.RolesDB = RolesDB(bot.DBC, bot.currentDB)
-        self.EmojisDB = EmojisDB(bot.DBC, bot.currentDB)
 
     @commands.group(pass_context=True, aliases=['db'])
     @checks.admin_or_permissions(administrator=True)
@@ -46,13 +53,20 @@ class Database:
 
     @database.command(pass_content=True)
     async def fetch(self, user: discord.Member, date: datetime=None):
+        """Fetches all the messages a user has sent or something
+
+        .. warning::
+            NOT SETUP"""
         if date is None:
             message = self.MembersDB.fetch(user)[1]
             await self.bot.say(message)
 
     # @database.command(pass_content=True)
     async def sexists(self, ctx, *, args):
-        """Checks if server exists in the DB and not it is not!"""
+        """Checks if server exists in the DB and not it is not!
+
+        .. warning::
+            NOT SETUP"""
         message = ctx.message
         author = message.author
         server = message.server
@@ -75,146 +89,190 @@ class Database:
                     msg.append(await self.bot.edit_message(msg, "Failed to Create Server"))
         await self.bot.delete_messages(msg)
 
-    #async def on_ready(self):
-        #databases.log_ready(self.bot)
+    async def on_ready_todo(self):
+        """Called when the bot is ready
 
-    #async def on_resumed(self):
-        #databases.log_resumed(self.bot)
+        .. note::
+            TODO"""
+        pass
 
-    #async def on_error(self, error):
-        #databases.log_error(self.bot, error)
+    async def on_resumed_todo(self):
+        """Called when the bot resumes
 
-    #async def on_socket_raw_recieve(self, msg):
-        #databases.log_raw_recieve(self.bot, msg)
+        .. note::
+            TODO"""
+        pass
 
-    #async def on_socket_raw_send(self, payload):
-        #databases.log_raw_senf(self.bot, payload)
+    async def on_error_todo(self, error):
+        """Called when the bot encounters an error.
+
+        .. note::
+            TODO"""
+        pass
+
+    async def on_socket_raw_recieve_todo(self, msg):
+        """Called when the bot recieves data. RAW
+
+        .. note::
+            TODO"""
+        pass
+
+    async def on_socket_raw_send_todo(self, payload):
+        """Called when the bot sends data. RAW
+
+        .. note::
+            TODO"""
+        pass
 
     async def on_message(self, message):
+        """Called when a message is create. This adds the message
+        if it is not an ignored ID to the database."""
         if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
             return
         self.MessageDB.create(message)
 
     async def on_message_delete(self, message):
+        """Called when a message is deleted. This makes it so that the
+        message JSON in the database leads to null as it's last update
+        if it is not an ignored ID to the database."""
         if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
             return
         self.MessageDB.delete(message, datetime.datetime.utcnow())
 
     async def on_message_edit(self, before, after):
+        """Called when a message is updates. This adds the message new
+        content while still keeping the old content if it is not an
+        ignored ID to the database."""
         if checks.is_an_ignored([before.author.id, before.server.id, before.channel.id], self.bot.Configs["Ignored IDs"]):
             return
         self.MessageDB.update(before, after)
 
-    #async def on_reaction_add(self, reaction, user):
-        #self.MessageDB.addReaction(reaction, user)
+    async def on_reaction_add_todo(self, reaction, user):
+        """Called when a message gets an reaction.
 
-    #async def on_reaction_remove(self, reaction, user):
-        #self.MessageDB.deleteReaction(reaction, user)
+        .. note::
+            TODO"""
+        self.MessageDB.addReaction(reaction, user)
 
-    #async def on_reaction_clear(self, message, reactions):
-        #if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
-        #    return
-        #self.MessageDB.clearReaction(reaction, user)
+    async def on_reaction_remove_todo(self, reaction, user):
+        """Called when a reaction gets removed from a message.
 
-    #@Todo
-    async def on_server_join_todo(self, server):
+        .. note::
+            TODO"""
+        self.MessageDB.deleteReaction(reaction, user)
+
+    async def on_reaction_clear(self, message, reactions):
+        """Called when the reactions on a message get cleared.
+
+        .. note::
+            TODO"""
+        if checks.is_an_ignored_todo([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
+            return
+        self.MessageDB.clearReaction(reaction, user)
+
+    async def on_server_join_todo(self, server: discord.Server):
+        """Called when the bot joins a server.
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.create(server)
 
-    #@Todo
-    async def on_server_remove_todo(self, server):
+    async def on_server_remove_todo(self, server: discord.Server):
+        """Called when the bot Leaves/Kicked From/Banned From a server.
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.delete(server)
 
-    #async def on_server_update(self, before, after):
-        #if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
-        #    return
-        #self.ServerDB.update(before, after)
+    async def on_server_update_todo(self, before: discord.Server, after: discord.Server):
+        """Called when server updates that the bot is in.
 
-    #@Todo
-    async def on_server_available(self, server):
+        .. note::
+            TODO"""
+        if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
+            return
+        self.ServerDB.update(before, after)
+
+    async def on_server_available_todo(self, server: discord.Server):
+        """Called when a server comes back online
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.updateStatus(server, "Online")
 
-    #@Todo
-    async def on_server_unavailable(self, server):
+    async def on_server_unavailable_todo(self, server):
+        """Called when a server goes offline
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.updateStatus(server, "Offline")
 
-    # DUSCIRD ABIT LOGS (Discord Audit Logs)
+    # Disabled Logging Because Of Audit Logs:
     #async def on_member_ban(self, member):
-    #    self.MembersDB.ban(member)
-
     #async def on_member_unban(self, server, user):
-    #    self.MembersDB.unban(server, user)
 
-    #@Todo
-    async def on_member_join(self, member):
+    async def on_member_join_todo(self, member: discord.Member):
+        """Called when a member joins a server the bot is in.
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
             return
         self.MembersDB.create(member)
 
-    #@Todo
-    async def on_member_remove(self, member):
+    async def on_member_remove_todo(self, member: discord.Member):
+        """Called when a member (leaves/kicked from/banned from) a server
+        the bot is in.
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
             return
         self.MembersDB.delete(member)
 
-    #@Todo
-    async def on_member_update(self, before, after):
+    async def on_member_update_todo(self, before: discord.Member, after: discord.Member):
+        """Called when a member calls an update the server the bot is in.
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
             return
         self.MembersDB.update(before, after)
 
-    #@Todo
-    async def on_voice_state_update(self, before, after):
+    async def on_voice_state_update_todo(self, before, after):
+        """Called when a voicestate is updated
+
+        .. note::
+            TODO"""
         if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
             return
         self.MembersDB.updateVoiceState(before, after)
 
-    # Discord Audit Logs
+    # Disabled Logging Because Of Audit Logs:
     #async def on_server_emojis_update(self, before, after):
-    #    self.EmojisDB.update(before, after)
-
     #async def on_server_role_create(self, role):
-    #    DB = RolesDB(self.bot.currentDB, after.server)
-    #    DB.create(before, after)
-
     #async def on_server_role_delete(self, role):
-    #    DB = RolesDB(self.bot.currentDB, after.server)
-    #    DB.delete(before, after)
-
     #async def on_server_role_update(self, before, after):
-    #    DB = RolesDB(self.bot.currentDB, after.server)
-    #    DB.update(before, after)
-
     #async def on_channel_delete(self, channel):
-    #    DB = ChannelsDB(self.bot.currentDB, after.server)
-    #    DB.delete(before, after)
-
     #async def on_channel_create(self, channel):
-    #    DB = ChannelsDB(self.bot.currentDB, after.server)
-    #    DB.create(before, after)
 
-    #async def on_channel_update(self, before, after):
-    #    DB = ChannelsDB(self.bot.currentDB, after.server)
-    #    DB.update(before, after)
-
-    #Remind why me why we need to log this?
+    # Remind why me why we need to log this? THATS RIGHT WE DONT!
     #async def on_typing(self, channel, user, when):
-        #databases.log_typing(self.bot, channel, user, when)
 
-    #Or This?
+    # Or This? Nope, not an conference bot
     #async def on_group_join(self, channel, user):
-        #databases.log_group_join(self.bot, channel, user)
 
-    #Until someone tells me, I won't add support for it!
+    # If you really need then maybe, but this isn't a conference bot!
     #async def on_group_remove(self, channel, user):
-        #databases.log_group_remove(self.bot, channel, user)
 
 def setup(bot):
     bot.add_cog(Database(bot))
+# Unless you want me to make a conference bot? But why though. WHY?

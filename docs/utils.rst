@@ -6,7 +6,8 @@ Utils Documentation
 Checks
 --------
 
-
+.. autoclass:: Checks
+    :members:
 
 Config
 ---------
@@ -23,25 +24,10 @@ Databases
 .. autoclass:: MessageDB
     :members:
 
-.. autoclass:: UserDB
-    :members:
-
 .. autoclass:: ServerDB
     :members:
 
-.. autoclass:: EmojisDB
-    :members:
-
-.. autoclass:: RolesDB
-    :members:
-
 .. autoclass:: MembersDB
-    :members:
-
-.. autoclass:: ChannelsDB
-    :members:
-
-.. autoclass:: ConfigDB
     :members:
 
 Draw
@@ -59,6 +45,8 @@ Email Manager
 Parser
 ----------
 
+.. autoclass:: Parser
+    :members:
 
 Steam Manager
 -------------
@@ -71,3 +59,7 @@ Steam Manager
 
 .. autoclass:: SteamY
     :members:
+
+.. rubric:: Footnotes
+
+.. [#SPACER] This is only a spacer for when I need to do the documentation to remind me!
