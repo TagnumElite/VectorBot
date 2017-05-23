@@ -367,10 +367,10 @@ def main():
     #Run Bot
     bot.run(currentToken)
 
-    #handlers = log.handlers[:]
-    #for hdlr in handlers:
-    #    hdlr.close()
-    #    log.removeHandler(hdlr)
+    handlers = log.handlers[:]
+    for hdlr in handlers:
+        hdlr.close()
+        log.removeHandler(hdlr)
 
 if __name__ == '__main__':
     main() # Needed this to stop the autodoc!
