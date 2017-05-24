@@ -169,11 +169,11 @@ class Parser():
         else:
             if channelType is discord.ChannelType.text:
                 return "Text"
-            elf channelType is discord.ChannelType.voice:
+            elif channelType is discord.ChannelType.voice:
                 return "Voice"
-            elf channelType is discord.ChannelType.private:
+            elif channelType is discord.ChannelType.private:
                 return "Private"
-            elf channelType is discord.ChannelType.group:
+            elif channelType is discord.ChannelType.group:
                 return "Group"
 
     def ServerMembers(members):
