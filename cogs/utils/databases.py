@@ -202,7 +202,7 @@ getTable = "SELECT * FROM"
 PKID = "primary key(id)"
 iInto = "INSERT INTO"
 cTableIfNot = "CREATE TABLE IF NOT EXISTS"
-cID = "`id` INT NOT NULL"
+cID = "`id` BIGINT(18) NOT NULL"
 cName = "`name` VARCHAR(100) NOT NULL"
 cServerID = "`server_id` VARCHAR(20) NOT NULL"
 cMessageID = "`message_id` VARCHAR(20) NOT NULL"
@@ -212,6 +212,7 @@ cChannelID = "`channel_id` VARCHAR(20) NOT NULL"
 cContent = "`content` JSON NOT NULL"
 cCreatedAt = "`created_at` DATETIME NOT NULL"
 cRemovedAt = "`removed_at` DATETIME NULL"
+cConfig = "`config` JSON NULL"
 cEditedAt = "`edited_at` DATE NOT NULL"
 cError = "`error` VARCHAR(1000) NOT NULL"
 cMembers = "`members` JSON NOT NULL"
@@ -223,7 +224,7 @@ cAfkChannel = "`afk_channel` VARCHAR(20)"
 cChannels = "`channels` JSON NOT NULL"
 cIconUrl = "`icon_url` TEXT(30) NULL"
 cOwner = "`server_owner` VARCHAR(20) NOT NULL"
-cOffline = "`offline` TINYINT NOT NULL DEFAULT 1"
+cStatus = "`status` TINYINT NOT NULL DEFAULT 1"
 cLarge = "`large` TINYINT NOT NULL DEFAULT 0"
 cMFA = "`mfa` TINYINT NOT NULL DEFAULT 0"
 cVerficationLevel = "`verfication_level` ENUM('None', 'Low', 'Medium', 'High', 'Table Flip') NOT NULL DEFAULT 'None'"
@@ -255,40 +256,12 @@ class MessageDB():
         The Table Prefix"""
     createMessageDBIfNot = cTableIfNot+" {PRE}_messages ("+cID+", "+cServerID+", "+cChannelID+", "+cAuthorID+", "+cContent+", "+cMentions+", "+cAttachments+", "+cPinned+", "+cReactions+", "+PKID+");"
 
-    insertMessageLog = iInto+" {PRE}_messages(`id`, `server_id`, `channel_id`, `author_id`, `content`, `mentions`, `attachments`, `pinned`, `reactions`) VALUES('{MID}', '{SID}', '{CID}', '{AID}', '{CON}', '{MENS}', '{ATTCHS}', {PIN}, '{REACTS}');"
+    insertMessageLog = iInto+" {PRE}_messages(`id`, `server_id`, `channel_id`, `author_id`, `content`, `mentions`, `attachments`, `pinned`, `reactions`) VALUES({MID}, '{SID}', '{CID}', '{AID}', '{CON}', '{MENS}', '{ATTCHS}', {PIN}, '{REACTS}');"
 
     def __init__(self, DBC, DB):
         self.DBC = DBC
         self.DB = DB
         self.createTable() # Create Table on startup. Only creates a table if one doesn't exist
-
-    def mentions(self, mentions):
-        """Converts a list of Menstions to a list of ids of the users mentioned
-
-        Parameters
-        ----------
-        Mentions: list[discord.Mentions]
-            The list of Mentions from the message"""
-        ids = {"mentions": []}
-        for value in mentions:
-            ids["mentions"].append(value.id)
-        return ids
-
-    def mentionsNamed(self, mentions, name):
-        """Have I ever used this?
-
-        Parameters
-        ----------
-        Mentions: list[discord.Mentions]
-            The list of Mentions from the message
-        name: str
-            The name of the mension list"""
-        ids = '{"%s":[]}'%(name)
-        ids = json.loads(ids)
-        for idx, value in enumerate(mentions):
-            ids[name].append(value.id)
-        return ids
-
     def createTable(self):
         """Used to create the table"""
         self.DBC.query(self.createMessageDBIfNot.format(PRE=self.DB))
@@ -301,9 +274,9 @@ class MessageDB():
         message: discord.Message
             The message that was sent"""
         result = self.DBC.queryOne(
-            "SELECT * FROM {PRE}_messages WHERE message_id = '{MID}';".format(
+            "SELECT * FROM {PRE}_messages WHERE `id`={MID};".format(
                 PRE=self.DB,
-                MID=message.id
+                MID=int(message.id)
             )
         )
         if not result:
@@ -335,7 +308,7 @@ class MessageDB():
         return self.DBC.query(
             self.insertMessageLog.format(
                 PRE=self.DB,
-                MID=message.id,
+                MID=int(message.id),
                 SID=message.server.id,
                 CID=message.channel.id,
                 AID=message.author.id,
@@ -351,14 +324,11 @@ class MessageDB():
         updates = []
         if before.content != after.content:
             updates.append('content')
-        if before.mention_everyone != after.mention_everyone:
-            updates.append('mention_everyone')
-        if sorted(before.mentions) != sorted(after.mentions):
+        if (before.mention_everyone is not after.mention_everyone or
+            sorted(before.mentions) is not sorted(after.mentions) or
+            before.channel_mentions is not after.channel_mentions or
+            before.role_mentions is not after.role_mentions):
             updates.append('mentions')
-        if before.channel_mentions != after.channel_mentions:
-            updates.append('channel_mentions')
-        if before.role_mentions != after.role_mentions:
-            updates.append('role_mentions')
         if before.attachments != after.attachments:
             updates.append('attachments')
         if before.pinned != after.pinned:
@@ -368,10 +338,10 @@ class MessageDB():
         if length == 1:
             json_data = {}
             results = self.DBC.queryOne(
-                "SELECT {UP} FROM {PRE}_messages WHERE message_id = '{MID}'".format(
+                "SELECT {UP} FROM {PRE}_messages WHERE `id`={MID}".format(
                     UP=updates[0],
                     PRE=self.DB,
-                    MID=after.id
+                    MID=int(after.id)
                 )
             )
             search = updates[0]
@@ -379,19 +349,19 @@ class MessageDB():
                 json_data = json.loads(results[0])
             elif search is 'pinned':
                 return self.DBC.query(
-                    "UPDATE `{PRE}_messages` SET `pinned`='{PIN}' WHERE `message_id`='{MID}';".format(
+                    "UPDATE `{PRE}_messages` SET `pinned`='{PIN}' WHERE `id`={MID};".format(
                         PRE=self.DB,
                         PIN=int(after.pinned),
-                        MID=after.id
+                        MID=int(after.id)
                     )
                 )
             json_update = Parser.messageDBUpdate(after, json_data, updates)
             return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `message_id`='{MID}';".format(
+                "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
                     KEY=search,
                     VAL=Parser.MessageDBReplace(str(json_update).replace("'", '"')),
-                    MID=after.id
+                    MID=int(after.id)
                 )
             )
         else:
@@ -401,18 +371,18 @@ class MessageDB():
                 else:
                     search += value+", "
             results = self.DBC.queryOne(
-                "SELECT {KEY} FROM {PRE}_messages WHERE message_id = '{MID}'".format(
+                "SELECT {KEY} FROM {PRE}_messages WHERE `id`={MID}".format(
                     KEY=search,
                     PRE=self.DB,
-                    MID=after.id
+                    MID=int(after.id)
                 )
             )
             string_data = Parser.messageDBUpdate(after, results, updates)
             return self.DBC.query(
-                "UPDATE `%s_messages` SET %s WHERE `message_id`='%s';" % (
-                    self.DB,
-                    string_data,
-                    after.id
+                "UPDATE `{PRE}_messages` SET {DATA} WHERE `id`={MID};".format(
+                    PRE=self.DB,
+                    DATA=string_data,
+                    MID=int(after.id)
                 )
             )
 
@@ -447,18 +417,18 @@ class MessageDB():
         self.createTable()
         if self.exists(message):
             results = self.DBC.queryOne(
-                "SELECT content FROM {PRE}_messages WHERE message_id = '{MID}'".format(
+                "SELECT content FROM {PRE}_messages WHERE `id`={MID}".format(
                     PRE=self.DB,
-                    MID=message.id
+                    MID=int(message.id)
                 )
             )
             data = json.loads(results[0])
             json_react = Parser.messageDBDelete(data, time)
             return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET `content`='{VAL}' WHERE `message_id`='{MID}';".format(
+                "UPDATE `{PRE}_messages` SET `content`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
                     VAL=str(json_react).replace("'", '"').replace("None", "null"),
-                    MID=message.id
+                    MID=int(message.id)
                 )
             )
         else:
@@ -475,9 +445,9 @@ class MessageDB():
             The User"""
         if self.exists(reaction.message):
             results = self.DBC.queryAll(
-                "SELECT reactions FROM {PRE}_messages WHERE message_id = '{MID}'".format(
+                "SELECT reactions FROM {PRE}_messages WHERE `id`='{MID}'".format(
                     PRE=self.DB,
-                    MID=reaction.message.id
+                    MID=int(reaction.message.id)
                 )
             )
             print(results[0][0])
@@ -486,10 +456,10 @@ class MessageDB():
             json_react = Parser.reactionDB(reaction, data, user)
             print(Parser.jsonToDB(json_react))
             return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET `reactions`='{VAL}' WHERE `message_id`='{MID}';".format(
+                "UPDATE `{PRE}_messages` SET `reactions`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
                     VAL=str(json_react),
-                    MID=reaction.message.id
+                    MID=int(reaction.message.id)
                 )
             )
         else:
@@ -497,6 +467,9 @@ class MessageDB():
 
     def deleteReaction(self, reaction: discord.Reaction, user):
         """Called when a reaction is deleted
+
+        .. note::
+            TODO
 
         Parameters
         ----------
@@ -509,6 +482,9 @@ class MessageDB():
     def clearReaction(self, message: discord.Message, reactions):
         """Called when all reaction on a message is deleted
 
+        .. note::
+            TODO
+
         Parameters
         ----------
         message: discord.Message
@@ -518,14 +494,16 @@ class MessageDB():
         return
 
     def fetch(self, *, Query):
-        """Fetches data from DB. NOT SETUP"""
+        """Fetches data from DB.
+
+        .. note::
+            TODO
+
+        Parameters
+        ----------
+        Query: str
+            Honestly I don't know"""
         pass
-        #return self.DBC.queryOne(
-        #    "SELECT id, content FROM {PRE}_messages WHERE author_id = '{AID}' ORDER BY id DESC".format(
-        #        PRE=self.DB,
-        #        AID=user.id
-        #    )
-        #)
 
 @deprecated
 class UserDB():
@@ -655,9 +633,9 @@ class ServerDB():
     DB: str
         This is the table prefix to denote whether we are running in dev mode or not!"""
 
-    createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cOffline+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
+    createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cConfig+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cOffline+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
 
-    ServerUpdate = " {PRE}_server(`id`, `server_name`, `members`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `server_icon`, `server_owner`, `server_availibity`, `server_large`, `server_mfa`, `verfication_level`, `default_role`, `server_splash`, `server_size`, `default_channel`, `created_at`) VALUES({SID}', '{NAM}', '{MEM}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{AVA}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
+    createServer = " {PRE}_server(`id`, `server_name`, `members`, `config`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `server_icon`, `server_owner`, `status`, `server_large`, `server_mfa`, `verfication_level`, `default_role`, `server_splash`, `server_size`, `default_channel`, `created_at`) VALUES({SID}', '{NAM}', '{MEM}', '{CON}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{STS}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
 
     def __init__(self, DBC, DB):
         self.DBC = DBC
@@ -671,32 +649,57 @@ class ServerDB():
         )
 
     def exists(self, server):
-        return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE server_id = '{ID}';".format(
+        return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
             PRE=self.DB,
-            ID=server.id
+            SID=server.id
         )) == 0
 
     def create(self, server):
         if self.exists(server):
-            return True
-        members = "NOT SETUP"#server.members
-        roles = "NOT SETUP"#server.roles
-        emojis = "NOT SETUP"#server.emojis
-        channels = "NOT SETUP"#server.channels
+            return
+        members = Parser.ServerMembers(server.members)
+        roles = Parser.ServerRoles(server.roles)
+        emojis = Parser.ServerEmojis(server.emojis)
+        channels = Parser.ServerChannels(server.channels)
+        config = {
+
+        }
         if server.afk_channel == None:
             afk_channel = None
         else:
             afk_channel = server.afk_channel.id
-        #if query("INSERT INTO"+self.ServerUpdate % (DB, server.id, server.name, members, roles, emojis, server.afk_timeout, server.region, afk_channel, channels, server.icon_url, server.owner.id, server.unavailable, server.large, server.mfa_level, checks.getVerficationLevel(server.verification_level), server.default_role.id, server.splash_url, server.member_count, server.default_channel.id, server.created_at)):
-        #    return True
-        #else:
-        #    return False
-        return False
+        return self.DBC.query(
+            createServer.format(
+                PRE = self.DB,
+                SID = int(server.id),
+                NAM = server.name,
+                MEM = members,
+                CON = config,
+                ROL = roles,
+                EMO = emojis,
+                AFT = server.afk_timeout,
+                REG = str(server.region),
+                AFC = server.afk_channel.id,
+                CHA = channels,
+                ICO = server.icon_url,
+                OWN = server.owner.id,
+                STS = int(server.availibity),
+                LAR = int(server.large),
+                MFA = server.mfa_level,
+                VLV = verification_level,
+                DRL = server.default_role.id,
+                SPL = server.splash,
+                SIZ = server.size,
+                DCH = server.default_channel.id,
+                CAT = server.created_at
+            )
+        )
 
     def _update(self, before, after):
         if not self.exists(before):
             self.create(before)
-        return False
+        else:
+            return False
 
     def update(self, before, after):
         """Update a server"""
@@ -718,15 +721,18 @@ class ServerDB():
     def delete(self, server):
         """Adds when message was deleted!"""
         self.createTable(server)
-        if self.exists(server):
-            return self.DBC.query("DELETE FROM %s_servers WHERE server_id=%s"%(self.DB, server.id))
-        else:
-            return False
+        return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
 
     def updateStatus(bot, server, status):
         if not self.exists(server):
             return self.create(server)
-        #TODO
+        return self.DBC.query(
+            "UPDATE `{PRE}_server` SET `status`='{VAL}' WHERE `id`={SID};".format(
+                PRE=self.DB,
+                VAL=int(status),
+                SID=int(server.id)
+            )
+        )
 
     def addMember(self, member: discord.Member):
         #YES

@@ -26,6 +26,7 @@ I don't have any rules yet but I will in the future!
 ## TODO:
 - [ ] Clean Out Code
 - [ ] Flesh Out Documentation
+- [ ] Change database logging to be similar to wordpress meta system `This allows me to change the database without having to drop tables or modify them`
 
 ## Discord
 [![Join me on discord](http://splash.vectoresports.co.za/members/179891973795086336.png 'Join me on discord')](https://discord.gg/qJbwA7d)

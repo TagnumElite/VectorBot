@@ -10,6 +10,25 @@ import discord
 
 class Parser():
     """PARSER!"""
+    #MemberDB
+    def getStatus(status):
+        if isinstance(status, str):
+            return status
+        else:
+            if status is discord.Status.online:
+                return "Online"
+            elif status is discord.Status.offline:
+                return "Offline"
+            elif status is discord.Status.idle:
+                return "IDLE"
+            elif status is discord.Status.dnd:
+                return "DND"
+            elif status is discord.Status.do_not_disturb:
+                return "Do Not Disturb"
+            elif status is discord.Status.invisible:
+                return "Invisible"
+            else:
+                return "Error"
     #MessageDB
     def MessageDBReplace(content):
         """Replaces the contents `\` `"` `'` to something more
@@ -91,7 +110,7 @@ class Parser():
         if len(roles) > 0:
             for role in roles:
                 data["roles"].append(role.id)
-        return data
+        return str(data).replace("True", "true").replace("False", "false")
     def messageDBDelete(data, time):
         """Appends {"content":None, "timestamp":"%s" % (time)}"""
         return data['content'].append({"content":None, "timestamp":"%s" % (time)})
@@ -130,15 +149,113 @@ class Parser():
                 content = before
             if "content" in updates:
                 query = "`content`='%s'" % (str(content).replace("'", "\""))
-                query += ", `menstions`='%s'"%(str(self.MessageMentions(message)))
-            else:
-                query = "`mentions'='%s'"%(str(self.MessageMentions(message)))
             if "attachments" in updates:
                 if "content" in updates:
                     query += ", `attachments`='%s'"%(str(attachments).replace("'", "\""))
                 else:
                     query = "`attachments`='%s'"%(str(attachments).replace("'", "\""))
+            if "mentions" in updates:
+                if "content" in updates:
+                    query += ", `mentions`='%s'"%(str(self.MessageMentions(message)))
+                else:
+                    query = "`mentions'='%s'"%(self.MessageMentions(message))
             return query
 
-#ServerDB
+    #ServerDB
+    def getChannelType(channelType):
+        """YEAH"""
+        if isinstance(channelType, str):
+            return channelTyle
+        else:
+            if channelType is discord.ChannelType.text:
+                return "Text"
+            elf channelType is discord.ChannelType.voice:
+                return "Voice"
+            elf channelType is discord.ChannelType.private:
+                return "Private"
+            elf channelType is discord.ChannelType.group:
+                return "Group"
+
+    def ServerMembers(members):
+        """Returns a dict with the members and their details
+
+        Parameters
+        ----------
+        members: list of discord.Member"""
+        data = {}
+        for member in members:
+            data[member.id] = [
+                "roles": [],
+                "joined_at": str(member.joined_at),
+                "status": self.getStatus(member.status),
+                "game": member.game.name,
+                "nick": member.nick,
+                "top_role": member.top_role.id,
+                "perms": {}# Usage explained in RTD FAQ!
+            ]
+            data[member.id]["roles"] = []
+            for role in member.roles:
+                data[member.id]["roles"].append(role.id)
+        return data
+
+    def ServerRoles(roles):
+        """Returns a dict with the roles and their details
+
+        Parameters
+        ----------
+        roles: list of discord.Role"""
+        data = {}
+        for role in roles:
+            data[role.id] = [
+                "name": role.name,
+                "perms": {}, # Usage explained in RTD FAQ!
+                "colour": role.colour.to_tuple(),
+                "hoist": role.hoist,
+                "position": role.position,
+                "managed": role.managed,
+                "default": role.is_everyone,
+                "timestamp": str(role.created_at)
+            ]
+        return data
+
+
+    def ServerEmojis(emojis):
+        """Returns a dict with the channels and their details
+
+        Parameters
+        ----------
+        emojis: list of discord.Emoji"""
+        data = {}
+        for emoji in emojis:
+            data[emoji.id] = [
+                "name": emoji.name,
+                "require_colons": emoji.require_colons,
+                "managed": emoji.managed,
+                "timestamp": str(emoji.created_at),
+                "url": str(emoji.url)
+            ]
+        return data
+
+
+    def ServerChannels(channels):
+        """Returns a dict with the channels and their details
+
+        Parameters
+        ----------
+        channels: list of discord.Channel"""
+        data = {}
+        for channel in channels:
+            data[channel.id] = [
+                "name": channel.name,
+                "topic": channel.topic if channel.topic is not None else "",
+                "position": channel.position,
+                "type": self.getChannelType(channel.type),
+                "bitrate": channel.bitrate,
+                "connected": len(channel.voice_members),
+                "user_limit": channel.user_limit,
+                "default": channel.is_default,
+                "timestamp": str(channel.created_at),
+                "perms": {}
+            ]
+        return data
 

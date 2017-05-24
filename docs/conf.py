@@ -19,6 +19,7 @@
 
 import os
 import sys
+import re
 sys.path.insert(0, os.path.abspath('..'))
 
 on_rtd = os.getenv('READTHEDOCS') == 'True'
@@ -32,8 +33,14 @@ needs_sphinx = '1.5.6'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-import re
-extensions = ['sphinx.ext.autodoc']
+extensions = [
+    'sphinx.ext.autodoc',
+    'sphinx.ext.intersphinx'
+]
+
+intersphinx_mapping = {
+    'discord': ('http://discordpy.readthedocs.io/en/latest', None)
+}
 
 if on_rtd:
     extensions.append('sphinxcontrib.napoleon')

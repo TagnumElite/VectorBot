@@ -18,7 +18,7 @@ import asyncio
 import datetime
 import json
 import copy
-#import logging #Unsed for now, should make it work though. Logging is importent
+import logging
 import traceback
 import sys
 import os

@@ -170,50 +170,58 @@ class Database:
             return
         self.MessageDB.clearReaction(reaction, user)
 
-    async def on_server_join_todo(self, server: discord.Server):
+    async def on_server_join(self, server: discord.Server):
         """Called when the bot joins a server.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.create(server)
 
-    async def on_server_remove_todo(self, server: discord.Server):
+    async def on_server_remove(self, server: discord.Server):
         """Called when the bot Leaves/Kicked From/Banned From a server.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.delete(server)
 
-    async def on_server_update_todo(self, before: discord.Server, after: discord.Server):
+    async def on_server_update(self, before: discord.Server, after: discord.Server):
         """Called when server updates that the bot is in.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        before: discord.Server
+            Before Update
+        after:  discord.Server
+            After Update"""
         if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.update(before, after)
 
-    async def on_server_available_todo(self, server: discord.Server):
+    async def on_server_available(self, server: discord.Server):
         """Called when a server comes back online
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
-        self.ServerDB.updateStatus(server, "Online")
+        self.ServerDB.updateStatus(server, 1)
 
-    async def on_server_unavailable_todo(self, server):
+    async def on_server_unavailable(self, server: discord.Server):
         """Called when a server goes offline
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
-        self.ServerDB.updateStatus(server, "Offline")
+        self.ServerDB.updateStatus(server, 0)
 
     # Disabled Logging Because Of Audit Logs:
     #async def on_member_ban(self, member):
