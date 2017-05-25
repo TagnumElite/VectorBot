@@ -39,7 +39,8 @@ extensions = [
 ]
 
 intersphinx_mapping = {
-    'discord': ('http://discordpy.readthedocs.io/en/latest', None)
+    'discord': ('http://discordpy.readthedocs.io/en/latest', None),
+    'python': ('https://docs.python.org/3/', None)
 }
 
 if on_rtd:

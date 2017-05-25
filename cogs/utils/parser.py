@@ -13,6 +13,12 @@ class Parser():
     """PARSER!"""
     """MemberDB Parsing"""
     def getStatus(status):
+        """Gets a string from the status.
+
+        Paramters
+        ---------
+        status: str or discord.Status
+            If a string is put in it will return the string."""
         if isinstance(status, str):
             return status
         else:
@@ -32,7 +38,7 @@ class Parser():
                 return "Error"
     """MessageDB Parsing"""
     def MessageDBReplace(content):
-        """Replaces the contents `\` `"` `'` to something more
+        """Replaces the contents ``\`` ``"`` ``'`` to something more
         understandable by MySQL"""
         content.replace("\\", "\\\\\\\\")  # This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
         content.replace('\'', '\\\'')
@@ -41,7 +47,7 @@ class Parser():
 
     def jsonToDB(to: dict):
         """I don't remember what this was for....
-        but is esentially just `json.dumps(to)`
+        but is esentially just ``json.dumps(to)``
 
         Parameters
         ----------
@@ -132,7 +138,7 @@ class Parser():
                 data["roles"].append(role.id)
         return str(data).replace("True", "true").replace("False", "false")
     def messageDBDelete(data: dict, time):
-        """Appends {"content":None, "timestamp":"%s" % (time)}
+        """Appends ``{"content":None, "timestamp":"%s" % (time)}``
 
         Parameters
         ----------
