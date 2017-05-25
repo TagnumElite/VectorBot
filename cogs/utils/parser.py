@@ -8,9 +8,10 @@ Because JSON
 import json
 import discord
 
+
 class Parser():
     """PARSER!"""
-    #MemberDB
+    """MemberDB Parsing"""
     def getStatus(status):
         if isinstance(status, str):
             return status
@@ -29,24 +30,32 @@ class Parser():
                 return "Invisible"
             else:
                 return "Error"
-    #MessageDB
+    """MessageDB Parsing"""
     def MessageDBReplace(content):
         """Replaces the contents `\` `"` `'` to something more
         understandable by MySQL"""
-        content.replace("\\", "\\\\\\\\") #This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
+        content.replace("\\", "\\\\\\\\")  # This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
         content.replace('\'', '\\\'')
         content.replace("\"", "\\\"")
         return content
 
     def jsonToDB(to: dict):
-        """I don't remember what this was for...."""
+        """I don't remember what this was for....
+        but is esentially just `json.dumps(to)`
+
+        Parameters
+        ----------
+        to: dict
+            Turns the dict into a string"""
         return json.dumps(to)
 
     def getReactionsJSON(reactions):
-        """YOU HEARD ME
+        """Turns reactions on a message to MySQL readable json
 
-        .. note::
-            Write Docs like they weren't jokes"""
+        Parameters
+        ----------
+        reactions: list of reactions
+            An iterable of reactions that get converted into json data"""
         json_data = {'reactions':[]}
         for idx, value in enumerate(reactions):
             data = {"emoji":reactions.emoji.id, "custom":int(reactions.custom_emoji), "count":str(reactions.count)}
@@ -54,7 +63,18 @@ class Parser():
 
     def reactionDB(reaction: discord.Reaction, results: dict, user = None, add: bool = True):
         """If no user is added it automatically assumes the reactions were cleared even if add bool is parsed.
-        If add is false will remove reaction and reaction doesn't exists returns orginal results"""
+        If add is false will remove reaction and reaction doesn't exists returns orginal results
+
+        Parameters
+        ----------
+        reaction: discord.Reaction
+            Reaction
+        results: dict
+
+        user: discord.User/Member
+            Default: None
+        add: bool
+            Default: True."""
         exists = False
         if user is not None:
             for key, value in results.items():
@@ -111,9 +131,16 @@ class Parser():
             for role in roles:
                 data["roles"].append(role.id)
         return str(data).replace("True", "true").replace("False", "false")
-    def messageDBDelete(data, time):
-        """Appends {"content":None, "timestamp":"%s" % (time)}"""
-        return data['content'].append({"content":None, "timestamp":"%s" % (time)})
+    def messageDBDelete(data: dict, time):
+        """Appends {"content":None, "timestamp":"%s" % (time)}
+
+        Parameters
+        ----------
+        data: dict
+            The current existing data
+        time: datetime or str
+            The time of when the message was deleted"""
+        return data['content'].append({"content":None, "timestamp":"%s" % (str(time))})
 
     def messageDBUpdate(message: discord.Message, results, updates):
         """This updates the message using the originally stored on the Database and
@@ -131,7 +158,12 @@ class Parser():
         if length == 1:
             if updates[0] == "content":
                 print(message.content, str(message.edited_timestamp))
-                results['content'].append({"content":"%s"% (self.MessageDBReplace(message.content)), "timestamp":"%s" % (str(message.edited_timestamp))})
+                results['content'].append(
+                    {
+                        "content":"%s"% (self.MessageDBReplace(message.content)),
+                        "timestamp":"%s" % (str(message.edited_timestamp))
+                    }
+                )
                 return results
             elif updates[0] == "pinned":
                 return int(message.pinned)
@@ -160,10 +192,14 @@ class Parser():
                 else:
                     query = "`mentions'='%s'"%(self.MessageMentions(message))
             return query
-
-    #ServerDB
+    """ServerDB Parsing"""
     def getChannelType(channelType):
-        """YEAH"""
+        """Gets a channels type and returns a string.
+
+        Paramters
+        ---------
+        channelType: str or discord.ChannelType
+            If a string is put in it will return the string."""
         if isinstance(channelType, str):
             return channelTyle
         else:
@@ -184,15 +220,15 @@ class Parser():
         members: list of discord.Member"""
         data = {}
         for member in members:
-            data[member.id] = [
-                "roles": [],
+            data[member.id] = {
+                "nick": member.nick,
+                "roles": [None],
                 "joined_at": str(member.joined_at),
                 "status": self.getStatus(member.status),
                 "game": member.game.name,
-                "nick": member.nick,
                 "top_role": member.top_role.id,
-                "perms": {}# Usage explained in RTD FAQ!
-            ]
+                "perms": {}  # Usage explained in RTD FAQ!
+            }
             data[member.id]["roles"] = []
             for role in member.roles:
                 data[member.id]["roles"].append(role.id)
@@ -206,18 +242,17 @@ class Parser():
         roles: list of discord.Role"""
         data = {}
         for role in roles:
-            data[role.id] = [
+            data[role.id] = {
                 "name": role.name,
-                "perms": {}, # Usage explained in RTD FAQ!
+                "perms": {},  # Usage explained in RTD FAQ!
                 "colour": role.colour.to_tuple(),
                 "hoist": role.hoist,
                 "position": role.position,
                 "managed": role.managed,
                 "default": role.is_everyone,
                 "timestamp": str(role.created_at)
-            ]
+            }
         return data
-
 
     def ServerEmojis(emojis):
         """Returns a dict with the channels and their details
@@ -227,15 +262,14 @@ class Parser():
         emojis: list of discord.Emoji"""
         data = {}
         for emoji in emojis:
-            data[emoji.id] = [
+            data[emoji.id] = {
                 "name": emoji.name,
                 "require_colons": emoji.require_colons,
                 "managed": emoji.managed,
                 "timestamp": str(emoji.created_at),
                 "url": str(emoji.url)
-            ]
+            }
         return data
-
 
     def ServerChannels(channels):
         """Returns a dict with the channels and their details
@@ -245,7 +279,7 @@ class Parser():
         channels: list of discord.Channel"""
         data = {}
         for channel in channels:
-            data[channel.id] = [
+            data[channel.id] = {
                 "name": channel.name,
                 "topic": channel.topic if channel.topic is not None else "",
                 "position": channel.position,
@@ -255,7 +289,6 @@ class Parser():
                 "user_limit": channel.user_limit,
                 "default": channel.is_default,
                 "timestamp": str(channel.created_at),
-                "perms": {}
-            ]
+                "perms": {}  # Usage explained in RTD FAQ!
+            }
         return data
-

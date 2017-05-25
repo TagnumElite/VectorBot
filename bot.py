@@ -81,7 +81,7 @@ discord_logger.setLevel(logging.CRITICAL)
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
-    filename='vectordev_{:%Y-%m-%d_%H;%M}.log'.format(
+    filename='logs/vectordev_{:%Y-%m-%d_%H;%M}.log'.format(
         datetime.datetime.utcnow()
     ),
     encoding='utf-8',

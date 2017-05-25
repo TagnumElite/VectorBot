@@ -633,7 +633,7 @@ class ServerDB():
     DB: str
         This is the table prefix to denote whether we are running in dev mode or not!"""
 
-    createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cConfig+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cOffline+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
+    createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cConfig+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cStatus+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
 
     createServer = " {PRE}_server(`id`, `server_name`, `members`, `config`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `server_icon`, `server_owner`, `status`, `server_large`, `server_mfa`, `verfication_level`, `default_role`, `server_splash`, `server_size`, `default_channel`, `created_at`) VALUES({SID}', '{NAM}', '{MEM}', '{CON}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{STS}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
 
