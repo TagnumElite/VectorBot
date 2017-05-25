@@ -3,7 +3,7 @@
 """
 
 from . import checks, parser
-from .parser import Parser
+from .parser import Parser, MessageParser, MemberParser, ServerParser, ConfigParser
 from _mysql_exceptions import OperationalError
 import warnings, functools
 import discord
@@ -15,20 +15,12 @@ import json
 import datetime
 from collections import Counter
 
-# Decorator to defined deprecated functions
-def deprecated(func):
-    """This is a decorator which can be used to mark functions
-    as deprecated. It will result in a warning being emmitted
-    when the function is used."""
-
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        warnings.simplefilter('always', DeprecationWarning) #turn off filter
-        warnings.warn("Call to deprecated function {}.".format(func.__name__), category=DeprecationWarning, stacklevel=2)
-        warnings.simplefilter('default', DeprecationWarning) #reset filter
-        return func(*args, **kwargs)
-
-    return new_func
+# Setup Parsers
+Parser = Parser()
+MessageParser = MessageParser()
+MemberParser = MemberParser()
+ServerParser = ServerParser()
+ConfigParser = ConfigParser()
 
 class DBC():
     """This is the database connection to a MySQL databse
@@ -219,19 +211,19 @@ cMembers = "`members` JSON NOT NULL"
 cRoles = "`roles` JSON NOT NULL"
 cEmojis = "`emojis` JSON NULL"
 cAfkTimeout = "`afk_timeout` INT NULL"
-cRegion = "`region` ENUM('Brazil', 'Central Europe', 'Hong Kong', 'Russia', 'Singapore', 'Sydney', 'US Central', 'US East', 'US South', 'US West', 'Western Europe') NOT NULL"
+cRegion = "`region` VARCHAR(30) NOT NULL"
 cAfkChannel = "`afk_channel` VARCHAR(20)"
 cChannels = "`channels` JSON NOT NULL"
 cIconUrl = "`icon_url` TEXT(30) NULL"
-cOwner = "`server_owner` VARCHAR(20) NOT NULL"
+cOwner = "`owner` VARCHAR(20) NOT NULL"
 cStatus = "`status` TINYINT NOT NULL DEFAULT 1"
 cLarge = "`large` TINYINT NOT NULL DEFAULT 0"
 cMFA = "`mfa` TINYINT NOT NULL DEFAULT 0"
-cVerficationLevel = "`verfication_level` ENUM('None', 'Low', 'Medium', 'High', 'Table Flip') NOT NULL DEFAULT 'None'"
-cDRole = "default_role VARCHAR(20) NOT NULL"
-cDChannel = "default_channel VARCHAR(20) NOT NULL"
-cSlpash = "splash VARCHAR(45) NULL"
-cSize = "size REAL NOT NULL"
+cVerficationLevel = "`verfication_level` VARCHAR(30) NOT NULL DEFAULT 'None'"
+cDRole = "`default_role` VARCHAR(20) NOT NULL"
+cDChannel = "`default_channel` VARCHAR(20) NOT NULL"
+cSlpash = "`splash` VARCHAR(45) NULL"
+cSize = "`size` REAL NOT NULL"
 cConfig = "config JSON"
 cMentions = "`mentions` JSON NULL"
 cAttachments = "`attachments` LONGTEXT NULL"
@@ -291,12 +283,13 @@ class MessageDB():
         ----------
         message: discord.Message
             The message that was sent"""
-        self.createTable() # we need to make sure the table exists
-        if self.exists(message): # This should never happen
+        self.createTable()        # Make sure the Table Exists
+        if self.exists(message):  # If the message already exists in the database
+            #self.update(message) # Then update the message! TODO
             return False
         msg = "{}"
         if message.type == discord.MessageType.default: #Check if the message is a normal message
-            msg = Parser.MessageDBReplace(message.content)
+            msg = MessageParser.MessageDBReplace(message.content)
             msg = '{"content":[{"content":"'+msg+'", "timestamp":"'+str(message.timestamp.utcnow())+'"}]}'
         elif message.type == discord.MessageType.pins_add:
             msg = '{"content":[{"content":"{author} pinned a message to this channel.", "timestamp":"{timestamp}"}]}'.format(
@@ -313,25 +306,25 @@ class MessageDB():
                 CID=message.channel.id,
                 AID=message.author.id,
                 CON=msg,
-                MENS=str(Parser.MessageMentions(message)).replace("'", "\""),
+                MENS=str(MessageParser.MessageMentions(message)).replace("'", "\""),
                 ATTCHS=json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}",
                 PIN=int(message.pinned),
-                REACTS=str(Parser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"
+                REACTS=str(MessageParser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"
             )
         )
 
-    def _update(self, before: discord.Message, after: discord.Message):
+    def _update(self, before: discord.Message, new: discord.Message):
         updates = []
-        if before.content != after.content:
+        if before.content != new.content:
             updates.append('content')
-        if (before.mention_everyone is not after.mention_everyone or
-            sorted(before.mentions) is not sorted(after.mentions) or
-            before.channel_mentions is not after.channel_mentions or
-            before.role_mentions is not after.role_mentions):
+        if (before.mention_everyone is not new.mention_everyone or
+            sorted(before.mentions) is not sorted(new.mentions) or
+            before.channel_mentions is not new.channel_mentions or
+            before.role_mentions is not new.role_mentions):
             updates.append('mentions')
-        if before.attachments != after.attachments:
+        if before.attachments != new.attachments:
             updates.append('attachments')
-        if before.pinned != after.pinned:
+        if before.pinned != new.pinned:
             updates.append('pinned')
         length = len(updates)
         search = ""
@@ -341,7 +334,7 @@ class MessageDB():
                 "SELECT {UP} FROM {PRE}_messages WHERE `id`={MID}".format(
                     UP=updates[0],
                     PRE=self.DB,
-                    MID=int(after.id)
+                    MID=int(new.id)
                 )
             )
             search = updates[0]
@@ -351,17 +344,17 @@ class MessageDB():
                 return self.DBC.query(
                     "UPDATE `{PRE}_messages` SET `pinned`='{PIN}' WHERE `id`={MID};".format(
                         PRE=self.DB,
-                        PIN=int(after.pinned),
-                        MID=int(after.id)
+                        PIN=int(new.pinned),
+                        MID=int(new.id)
                     )
                 )
-            json_update = Parser.messageDBUpdate(after, json_data, updates)
+            json_update = MessageParser.messageDBUpdate(new, json_data, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
                     KEY=search,
-                    VAL=Parser.MessageDBReplace(str(json_update).replace("'", '"')),
-                    MID=int(after.id)
+                    VAL=MessageParser.MessageDBReplace(str(json_update).replace("'", '"')),
+                    MID=int(new.id)
                 )
             )
         else:
@@ -374,34 +367,34 @@ class MessageDB():
                 "SELECT {KEY} FROM {PRE}_messages WHERE `id`={MID}".format(
                     KEY=search,
                     PRE=self.DB,
-                    MID=int(after.id)
+                    MID=int(new.id)
                 )
             )
-            string_data = Parser.messageDBUpdate(after, results, updates)
+            string_data = MessageParser.messageDBUpdate(new, results, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET {DATA} WHERE `id`={MID};".format(
                     PRE=self.DB,
                     DATA=string_data,
-                    MID=int(after.id)
+                    MID=int(new.id)
                 )
             )
 
-    def update(self, before: discord.Message, after: discord.Message):
+    def update(self, before: discord.Message, new: discord.Message):
         """Update a message
 
         Parameters
         ----------
         before: discord.Message
-        after: discord.Message"""
+        new: discord.Message"""
         self.createTable()
-        if self.exists(after):
-            return self._update(before, after)
+        if self.exists(new):
+            return self._update(before, new)
         else:
             if not self.create(before):
                 return False  # I will raise an error here later but for now it is fine
             else:
-                if self.exists(after):
-                    return self._update(after) #Why do I double check? because I must
+                if self.exists(new):
+                    return self._update(before, new) #Why do I double check? because I must
                 else:
                     return False  # I will raise an error here later but for now it is fine
 
@@ -423,7 +416,7 @@ class MessageDB():
                 )
             )
             data = json.loads(results[0])
-            json_react = Parser.messageDBDelete(data, time)
+            json_react = MessageParser.messageDBDelete(data, time)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET `content`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
@@ -453,7 +446,7 @@ class MessageDB():
             print(results[0][0])
             data = json.loads(results[0][0])
             print(data)
-            json_react = Parser.reactionDB(reaction, data, user)
+            json_react = MessageParser.reactionDB(reaction, data, user)
             print(Parser.jsonToDB(json_react))
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET `reactions`='{VAL}' WHERE `id`={MID};".format(
@@ -505,18 +498,153 @@ class MessageDB():
             Honestly I don't know"""
         pass
 
-@deprecated
-class UserDB():
-    """User Database
+class ServerDB():
+    """Server Databases, contains details for all the channels and config
 
     Parameters
     ----------
     DBC: DBC
-        I am lazy
+        This is the DBC(DataBase Connection) that the bot uses
     DB: str
-        Prefix"""
+        This is the table prefix to denote whether we are running in dev mode or not!"""
 
-    createUserDBIfNot = cTableIfNot+" {PRE}_users ("+cID+", "+cUserID+", "+cUsername+", "+cDiscriminator+", "+cAvatarUrl+", "+cDUrl+", "+cServers+", "+cStatus+", "+cGame+", "+PKID+");"
+    createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cConfig+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cStatus+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
+
+    createServer = "INSERT INTO {PRE}_servers(`id`, `name`, `members`, `config`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `icon_url`, `owner`, `status`, `large`, `mfa`, `verfication_level`, `default_role`, `splash`, `size`, `default_channel`, `created_at`) VALUES({SID}, '{NAM}', '{MEM}', '{CON}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{STS}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
+
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
+        self.DB = DB
+
+    def createTable(self):
+        return self.DBC.query(
+            self.createServerDBIfNot.format(
+                PRE=self.DB
+            )
+        )
+
+    def exists(self, server):
+        return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
+            PRE=self.DB,
+            SID=server.id
+        )) == 0
+
+    def create(self, server):
+        self.createTable()
+        if self.exists(server):
+            return
+        members = json.dumps(ServerParser.ServerMembers(server.members)).replace("'", '"')
+        roles = json.dumps(ServerParser.ServerRoles(server.roles)).replace("'", '"')
+        emojis = json.dumps(ServerParser.ServerEmojis(server.emojis)).replace("'", '"')
+        channels = json.dumps(ServerParser.ServerChannels(server.channels)).replace("'", '"')
+        config = {
+
+        }
+        return self.DBC.query(
+            self.createServer.format(
+                PRE = self.DB,
+                SID = int(server.id),
+                NAM = server.name,
+                MEM = members,
+                CON = config,
+                ROL = roles,
+                EMO = emojis,
+                AFT = server.afk_timeout,
+                REG = ServerParser.getRegion(server.region),
+                AFC = server.afk_channel.id if server.afk_channel is not None else "",
+                CHA = channels,
+                ICO = server.icon_url if server.icon_url is not None else "",
+                OWN = server.owner.id,
+                STS = int(not server.unavailable),
+                LAR = int(server.large),
+                MFA = server.mfa_level,
+                VLV = ServerParser.getVLV(server.verification_level),
+                DRL = server.default_role.id,
+                SPL = server.splash,
+                SIZ = server.member_count,
+                DCH = server.default_channel.id,
+                CAT = server.created_at
+            ).replace("None", "null").replace("True", "true").replace("False", "false")
+        )
+
+    def _update(self, before: discord.Server, new: discord.Server):
+        if not self.exists(before):
+            self.create(before)
+        else:
+
+
+    def update(self, before: discord.Server, new: discord.Server):
+        """Update a server"""
+        self.createTable()
+        if self.exists(new):
+            if self._update(before, new):
+                return True
+            else:
+                return False
+        else:
+            if not self.create(before):
+                return False
+            else:
+                if self.exists(new):
+                    if self._update(new):
+                        return True
+                    else:
+                        return False
+
+    def delete(self, server: discord.Server):
+        """Called when a server is deleted or the
+        bot is kicked!
+
+        Parameters
+        ----------
+        server: discord.Server
+            The Server That was removed"""
+        self.createTable(server)
+        return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
+
+    def updateStatus(self, server: discord.Server, status):
+        """Updates the servers availibility
+
+        Parameters
+        ----------
+        server: discord.Server
+            The Server
+        status: int/bool
+            Online or Offline/True or False/1 or 0"""
+        if isinstance(status, str):
+            if status.lower() is "online":
+                status = 1
+            else:
+                status = 0
+        self.createTable()
+        if not self.exists(server):
+            return self.create(server)
+        return self.DBC.query(
+            "UPDATE `{PRE}_servers` SET `status`='{VAL}' WHERE `id`={SID};".format(
+                PRE=self.DB,
+                VAL=int(status),
+                SID=int(server.id)
+            )
+        )
+
+    def addMember(self, member: discord.Member):
+        #YES
+        pass
+
+    def fetch(self, server, item):
+        return False
+
+class MembersDB():
+    """Members Database Class
+
+    Parameters
+    ----------
+    DBC: DBC
+        This is the DBC(DataBase Connection) that the bot uses
+    DB: str
+        This is the table prefix to denote whether we are running in dev mode or not!"""
+
+    createMemberDBIfNot = cTableIfNot+" {PRE}_users ("+cID+", "+cUserID+", "+cUsername+", "+cDiscriminator+", "+cAvatarUrl+", "+cDUrl+", "+cServers+", "+cStatus+", "+cGame+", "+PKID+");"
 
     userUpdate = " {PRE}_server(`user_id`, `username`, `discriminator`, `avatar_url`, `default_url`, `servers`, `status`, `game`) VALUES('{UID}', '{USN}', '{DIS}', '{AURL}', '{DURL}', '{SERV}', '{STA}', '{GME}');"
 
@@ -526,7 +654,36 @@ class UserDB():
 
     def createTable(self):
         """Creates the table"""
-        return self.DBC.query(self.createUserDBIfNot.format(PRE=self.DB))
+        return self.DBC.query(
+            self.createMemberDBIfNot.format(
+                PRE=self.DB
+            )
+        )
+
+    def create(self, member: discord.Member):
+        """Adds a member to the database
+
+        Parameters
+        ----------
+        member: discord.Member
+            The Member"""
+        self.createTable()
+        if self.exists(member):
+            return True
+        self.addMember(member)
+        pass
+
+    def delete(self, member):
+        return
+
+    def update(self, before, new):
+        return
+
+    def ban(self, member):
+        return
+
+    def unban(self, server, user):
+        return
 
     def exists(self, user):
         """Checks if user exists in the table
@@ -584,27 +741,27 @@ class UserDB():
             )
         )
 
-    def _update(self, before, after):
+    def _update(self, before, new):
         return False
 
-    def update(self, before, after):
+    def update(self, before, new):
         """Update a user
 
         Parameters
         ----------
         before : discord.User
             The Discord User before the update.
-        after : discord.User
-            The Discord User after the update."""
+        new : discord.User
+            The Discord User new the update."""
         self.createTable()
-        if self.exists(after):
-            return self._update(before, after)
+        if self.exists(new):
+            return self._update(before, new)
         else:
             if not self.create(before):
                 return False
             else:
-                if self.exists(after):
-                    return self._update(after)
+                if self.exists(new):
+                    return self._update(new)
                 else:
                     return False
 
@@ -617,132 +774,8 @@ class UserDB():
         server:"""
         return False
 
-class ServerDB():
-    """Server Databases, contains details for all the channels and config
-
-    TODO:
-    1. Members
-    2. Emojis
-    3. Roles
-    4. Channels
-
-    Parameters
-    ----------
-    DBC: DBC
-        This is the DBC(DataBase Connection) that the bot uses
-    DB: str
-        This is the table prefix to denote whether we are running in dev mode or not!"""
-
-    createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cConfig+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cStatus+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
-
-    createServer = " {PRE}_server(`id`, `server_name`, `members`, `config`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `server_icon`, `server_owner`, `status`, `server_large`, `server_mfa`, `verfication_level`, `default_role`, `server_splash`, `server_size`, `default_channel`, `created_at`) VALUES({SID}', '{NAM}', '{MEM}', '{CON}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{STS}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
-
-    def __init__(self, DBC, DB):
-        self.DBC = DBC
-        self.DB = DB
-
-    def createTable(self):
-        return self.DBC.query(
-            self.createServerDBIfNot.format(
-                PRE=self.DB
-            )
-        )
-
-    def exists(self, server):
-        return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
-            PRE=self.DB,
-            SID=server.id
-        )) == 0
-
-    def create(self, server):
-        if self.exists(server):
-            return
-        members = Parser.ServerMembers(server.members)
-        roles = Parser.ServerRoles(server.roles)
-        emojis = Parser.ServerEmojis(server.emojis)
-        channels = Parser.ServerChannels(server.channels)
-        config = {
-
-        }
-        if server.afk_channel == None:
-            afk_channel = None
-        else:
-            afk_channel = server.afk_channel.id
-        return self.DBC.query(
-            createServer.format(
-                PRE = self.DB,
-                SID = int(server.id),
-                NAM = server.name,
-                MEM = members,
-                CON = config,
-                ROL = roles,
-                EMO = emojis,
-                AFT = server.afk_timeout,
-                REG = str(server.region),
-                AFC = server.afk_channel.id,
-                CHA = channels,
-                ICO = server.icon_url,
-                OWN = server.owner.id,
-                STS = int(server.availibity),
-                LAR = int(server.large),
-                MFA = server.mfa_level,
-                VLV = verification_level,
-                DRL = server.default_role.id,
-                SPL = server.splash,
-                SIZ = server.size,
-                DCH = server.default_channel.id,
-                CAT = server.created_at
-            )
-        )
-
-    def _update(self, before, after):
-        if not self.exists(before):
-            self.create(before)
-        else:
-            return False
-
-    def update(self, before, after):
-        """Update a server"""
-        if self.exists(after):
-            if self._update(before, after):
-                return True
-            else:
-                return False
-        else:
-            if not self.create(before):
-                return False
-            else:
-                if self.exists(after):
-                    if self._update(after):
-                        return True
-                    else:
-                        return False
-
-    def delete(self, server):
-        """Adds when message was deleted!"""
-        self.createTable(server)
-        return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
-
-    def updateStatus(bot, server, status):
-        if not self.exists(server):
-            return self.create(server)
-        return self.DBC.query(
-            "UPDATE `{PRE}_server` SET `status`='{VAL}' WHERE `id`={SID};".format(
-                PRE=self.DB,
-                VAL=int(status),
-                SID=int(server.id)
-            )
-        )
-
-    def addMember(self, member: discord.Member):
-        #YES
-        pass
-
-    def fetch(self, server, item):
-        return False
-
-class MembersDB(ServerDB):
-    """Members Database Class
+class ConfigsDB():
+    """Configs Database Class
 
     Parameters
     ----------
@@ -754,25 +787,6 @@ class MembersDB(ServerDB):
     def __init__(self, DBC, DB):
         self.DBC = DBC
         self.DB = DB
-
-    def create(self, member):
-        self.addMember(member)
-        pass
-
-    def delete(self, member):
-        return
-
-    def update(self, before, after):
-        return
-
-    def ban(self, member):
-        return
-
-    def unban(self, server, user):
-        return
-
-    def updateVoiceState(self, before, after):
-        return
 
 def log_ready(bot):
     pass

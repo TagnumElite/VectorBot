@@ -9,12 +9,6 @@ Checks
 .. autoclass:: Checks
     :members:
 
-Config
----------
-
-.. autoclass:: Config
-    :members:
-
 Databases
 ----------
 
@@ -28,6 +22,9 @@ Databases
     :members:
 
 .. autoclass:: MembersDB
+    :members:
+
+.. autoclass:: ConfigsDB
     :members:
 
 Draw
@@ -46,6 +43,18 @@ Parser
 ----------
 
 .. autoclass:: Parser
+    :members:
+
+.. autoclass:: MemberParser
+    :members:
+
+.. autoclass:: MessageParser
+    :members:
+
+.. autoclass:: ServerParser
+    :members:
+
+.. autoclass:: ConfigParser
     :members:
 
 Steam Manager

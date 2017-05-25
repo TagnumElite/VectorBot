@@ -14,15 +14,26 @@ General
 
 General questions!
 
-Don't know what to put here just yet!
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+MultiServer Splash Support
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-GENERALY YEAH
+This is will not be programmed in because of many things.
+
+I will name some:
+
+- High Storage
+    - A user will have a banner per server
+- High CPU/Memory Usage
+    - Each time a user is updated he will get a new splash
+
+I have more, I won't and will not script MultiServer Splash Support.
+If you want me to do it as an example then I will.
+Even then it will not be enabled even in dev mode!
 
 Database
 --------
 
-Questions regarding  database logging will answerd here!
+Questions regarding database logging will answerd here!
 
 Ask a question!
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

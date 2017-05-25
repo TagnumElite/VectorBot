@@ -96,15 +96,20 @@ class Splash():
             I would not let all servers use this and only your main server.
             The reason why is memory usage will be extremely high.
             Also MultiServer Splash Support is not planned and won't be.
+            Check the FAQ why!
         
-        To make custom roles splashes create files named:
+        To make Custom Roles splashes create files named:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         ``admin_avatar.png`` | ``admin_banner.png``
         ``admin_font_name.ttf`` | ``admin_font_game.ttf``
         
         To make Custom Users splashes files have to be named:
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         ``tagnumelite__avatar.png`` | ``tagnumelite__banner.png``
         `tagnumelite__font__name.ttf`` | ``tagnumelite__font__game.ttf``
+
         Or even better:
+        ~~~~~~~~~~~~~~~
         ``tagnumelite__9339__avatar.png`` | ``tagnumelite__9339__banner.png``
         ``tagnumelite__9339__font__name.ttf`` | ``tagnumelite__9339__font__game.ttf``
         

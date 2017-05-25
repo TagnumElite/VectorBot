@@ -12,6 +12,7 @@ I don't have any rules yet but I will in the future!
     - [x] MessageDB
     - [ ] ServerDB
     - [ ] MembersDB
+    - [ ] ConfigsDB
 - [ ] Multi Server Support (Requires Database Extension to be done)
 - [x] Splash (Member Splash Management)
 - [ ] Steam Extension ([SteamRep API](https://github.com/EliteKast/libzaek.py))
