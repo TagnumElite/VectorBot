@@ -102,7 +102,7 @@ ENV/
 *.7z
 
 # Lets ignore files you won't be needing
-/logs/
+*.log
 /configs.json
 *.pdf
 
