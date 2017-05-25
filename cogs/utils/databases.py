@@ -571,7 +571,7 @@ class ServerDB():
         if not self.exists(before):
             self.create(before)
         else:
-
+            pass
 
     def update(self, before: discord.Server, new: discord.Server):
         """Update a server"""
