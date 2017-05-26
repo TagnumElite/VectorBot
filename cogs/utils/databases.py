@@ -609,7 +609,7 @@ class ServerDB():
         ----------
         server: discord.Server
             The Server
-        status: int/bool
+        status: int or bool
             Online or Offline/True or False/1 or 0"""
         if isinstance(status, str):
             if status.lower() is "online":
@@ -765,13 +765,23 @@ class MembersDB():
                 else:
                     return False
 
-    def addMember(self, server: discord.Server):
+    def addMember(self, server: discord.Server, member: discord.Member):
         """Called when a server is joined
+
         WAIT STOP RIGHT HERE.
-        I NEED TO PLAN OUT ServerDB/UserDB/MemberDB Cross compatibility and stuff!
+
+        I NEED TO PLAN OUT ServerDB/MemberDB Cross compatibility and stuff!
+
+        I don't know if when a member joins a server does the add member
+        event get called as well as the server update event?
+
+        If so that makes my life really easy!
+
         Parameters
         ----------
-        server:"""
+        server: discord.Server
+
+        member: discord.Member"""
         return False
 
 class ConfigsDB():
@@ -787,6 +797,156 @@ class ConfigsDB():
     def __init__(self, DBC, DB):
         self.DBC = DBC
         self.DB = DB
+
+    def getServerConfig(self, server: discord.Server, setting: str):
+        """Get Server Config
+
+        Parameters
+        ----------
+        server: discord.Server
+
+        setting: str
+            """
+        if self.DBC.query(
+            "NOT EXISTS"
+        )
+
+    def setServerConfig(self, server: discord.Server, setting: str, value):
+        """Set Server Config
+
+        Parameters
+        ----------
+        server: discord.Server
+
+        setting: str
+
+        value
+            """
+        pass
+
+    def getServerPermission(self, server: discord.Server, permission: str):
+        """Get Server Permission
+
+        Parameters
+        ----------
+        server: discord.Server
+
+        permission: str
+            """
+        pass
+
+    def setServerPermission(self, server: discord.Server, permission: str, value):
+        """Set Server Permission
+
+        Parameters
+        ----------
+        server: discord.Server
+
+        permission: str
+
+        value
+            """
+        pass
+
+    def getChannelConfig(self, server: discord.Channel, setting: str):
+        """Get Channel Config
+
+        Parameters
+        ----------
+        server: discord.Channel
+
+        setting: str
+            """
+        if self.DBC.query(
+            "NOT EXISTS"
+        )
+
+    def setChannelConfig(self, server: discord.Channel, setting: str, value):
+        """Set Channel Config
+
+        Parameters
+        ----------
+        server: discord.Channel
+
+        setting: str
+
+        value
+            """
+        pass
+
+    def getChannelPermission(self, server: discord.Channel, permission: str):
+        """Get Channel Permission
+
+        Parameters
+        ----------
+        server: discord.Channel
+
+        permission: str
+            """
+        pass
+
+    def setChannelPermission(self, server: discord.Channel, permission: str, value):
+        """Set Channel Permission
+
+        Parameters
+        ----------
+        server: discord.Channel
+
+        permission: str
+
+        value
+            """
+        pass
+
+    def getMemberConfig(self, server: discord.Member, setting: str):
+        """Get Member Config
+
+        Parameters
+        ----------
+        server: discord.Member
+
+        setting: str
+            """
+        if self.DBC.query(
+            "NOT EXISTS"
+        )
+
+    def setMemberConfig(self, server: discord.Member, setting: str, value):
+        """Set Member Config
+
+        Parameters
+        ----------
+        server: discord.Member
+
+        setting: str
+
+        value
+            """
+        pass
+
+    def getMemberPermission(self, server: discord.Member, permission: str):
+        """Get Member Permission
+
+        Parameters
+        ----------
+        server: discord.Member
+
+        permission: str
+            """
+        pass
+
+    def setMemberPermission(self, server: discord.Member, permission: str, value):
+        """Set Member Permission
+
+        Parameters
+        ----------
+        server: discord.Member
+
+        permission: str
+
+        value
+            """
+        pass
 
 def log_ready(bot):
     pass

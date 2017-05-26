@@ -285,44 +285,6 @@ Error: {0}""".format(E) % (
         )
     await bot.send_message(author, embed=em)
 
-#@bot.command(pass_context=True)
-#async def find(ctx, user=None):
-#    """Finds User a user with the name provided. Really badly setup"""
-#    return # NO, I don't want to use this for now until I make a better user finder
-#    await log_message("Command `find` was run")
-#    if user == None:
-#        await bot.say("Please specify user to find")
-#        return
-#    else:
-#        await bot.say("User is " + str(user))
-#
-#    server = ctx.message.server
-#    if server == None:
-#        await bot.say("Server not found")
-#        return
-#    else:
-#        await bot.say("Server is %s" % (server.name))
-#
-#    members = server.members
-#    mems = []
-#    if members == None:
-#        await bot.say("Members not found")
-#        return
-#    else:
-#        for member in members:
-#            mems.append(member.name)
-#        await bot.say("Members are %s" % (mems))
-#
-#    #member = checks.find_user(user, members)
-#    member = server.get_member_named(user)
-#
-#    if member == None:
-#        print(member)
-#        await bot.say("User not found")
-#        return
-#    else:
-#        await bot.say("User %s was found" % (member))
-
 @atexit.register
 def onExit():
     """Called when the programs crashes or shutsdown normally.

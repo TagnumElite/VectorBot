@@ -45,8 +45,7 @@ Parser Util
 
 Questions regarding cogs.utils.parser.Parser
 
-Why does some of the Server[Members/Roles/Channels] have blank perms
+Why does some of the Server[Members/Roles/Channels] have blank perms or confs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-That is because I am going to use that for permission management for roles.
-We won't store discord default perms but custom perms for the bots commands!
+That is to do with config and permission handleing for each server separately.

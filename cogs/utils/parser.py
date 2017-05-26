@@ -8,7 +8,9 @@ import discord
 
 
 class Parser():
-    """A Normal Parser"""
+    """A Normal Parser
+
+    I have to put something here later but I forgot what!"""
 
     def jsonToDB(self, to: dict):
         """I don't remember what this was for....
@@ -69,7 +71,7 @@ class MessageParser(Parser):
 
         Parameters
         ----------
-        reactions: list of reactions
+        reactions: list[discord.Reaction]
             An iterable of reactions that get converted into json data"""
         json_data = {'reactions':[]}
         for idx, value in enumerate(reactions):
@@ -161,10 +163,10 @@ class MessageParser(Parser):
         """This updates the message using the originally stored on the Database and
         the new one updated one.
 
-        Paramters
+        Parameters
         ---------
         message: discord.Message
-
+            The Message
         results: dict
             Original Data
         updates: list
@@ -218,7 +220,7 @@ class MessageParser(Parser):
             Reaction
         results: dict
 
-        user: discord.User/Member
+        user: discord.User or discord.Member
             Default: None
         add: bool
             Default: True."""
@@ -440,7 +442,7 @@ class ServerParser(Parser):
                 "status": self.getStatus(member.status),
                 "top_role": member.top_role.id,
                 "perms": {},  # Usage explained in RTD FAQ!
-                "conf": {}  # Explained in RTD FAQ!
+                "confs": {}  # Explained in RTD FAQ!
             }
             data[member.id]["roles"] = []
             for role in member.roles:
@@ -464,7 +466,7 @@ class ServerParser(Parser):
                 "default": role.is_everyone,
                 "timestamp": str(role.created_at),
                 "perms": {},  # Usage explained in RTD FAQ!,  # Usage explained in RTD FAQ!
-                "conf": {}  # Explained in RTD FAQ!
+                "confs": {}  # Explained in RTD FAQ!
             }
         return data
 
@@ -504,7 +506,7 @@ class ServerParser(Parser):
                 "default": channel.is_default,
                 "timestamp": str(channel.created_at),
                 "perms": {},  # Usage explained in RTD FAQ!
-                "conf": {}  # Explained in RTD FAQ!
+                "confs": {}  # Explained in RTD FAQ!
             }
         return data
 

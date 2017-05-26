@@ -32,7 +32,7 @@ class Database:
     bot: discord.ext.commands.Bot
         The bot
 
-    Variables
+    Attributes
     ---------
     MessageDB: MessageDB
     ServerDB: ServerDB
