@@ -807,9 +807,8 @@ class ConfigsDB():
 
         setting: str
             """
-        if self.DBC.query(
-            "NOT EXISTS"
-        )
+        if self.DBC.query("NOT EXISTS"):
+            return
 
     def setServerConfig(self, server: discord.Server, setting: str, value):
         """Set Server Config
@@ -857,9 +856,8 @@ class ConfigsDB():
 
         setting: str
             """
-        if self.DBC.query(
-            "NOT EXISTS"
-        )
+        if self.DBC.query("NOT EXISTS"):
+            return
 
     def setChannelConfig(self, server: discord.Channel, setting: str, value):
         """Set Channel Config
@@ -907,9 +905,8 @@ class ConfigsDB():
 
         setting: str
             """
-        if self.DBC.query(
-            "NOT EXISTS"
-        )
+        if self.DBC.query("NOT EXISTS"):
+            return
 
     def setMemberConfig(self, server: discord.Member, setting: str, value):
         """Set Member Config
