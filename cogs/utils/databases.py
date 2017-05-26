@@ -313,18 +313,18 @@ class MessageDB():
             )
         )
 
-    def _update(self, before: discord.Message, new: discord.Message):
+    def _update(self, before: discord.Message, after: discord.Message):
         updates = []
-        if before.content != new.content:
+        if before.content != after.content:
             updates.append('content')
-        if (before.mention_everyone is not new.mention_everyone or
-            sorted(before.mentions) is not sorted(new.mentions) or
-            before.channel_mentions is not new.channel_mentions or
-            before.role_mentions is not new.role_mentions):
+        if (before.mention_everyone is not after.mention_everyone or
+            sorted(before.mentions) is not sorted(after.mentions) or
+            before.channel_mentions is not after.channel_mentions or
+            before.role_mentions is not after.role_mentions):
             updates.append('mentions')
-        if before.attachments != new.attachments:
+        if before.attachments != after.attachments:
             updates.append('attachments')
-        if before.pinned != new.pinned:
+        if before.pinned != after.pinned:
             updates.append('pinned')
         length = len(updates)
         search = ""
@@ -334,7 +334,7 @@ class MessageDB():
                 "SELECT {UP} FROM {PRE}_messages WHERE `id`={MID}".format(
                     UP=updates[0],
                     PRE=self.DB,
-                    MID=int(new.id)
+                    MID=int(after.id)
                 )
             )
             search = updates[0]
@@ -344,17 +344,17 @@ class MessageDB():
                 return self.DBC.query(
                     "UPDATE `{PRE}_messages` SET `pinned`='{PIN}' WHERE `id`={MID};".format(
                         PRE=self.DB,
-                        PIN=int(new.pinned),
-                        MID=int(new.id)
+                        PIN=int(after.pinned),
+                        MID=int(after.id)
                     )
                 )
-            json_update = MessageParser.messageDBUpdate(new, json_data, updates)
+            json_update = MessageParser.messageDBUpdate(after, json_data, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
                     KEY=search,
                     VAL=MessageParser.MessageDBReplace(str(json_update).replace("'", '"')),
-                    MID=int(new.id)
+                    MID=int(after.id)
                 )
             )
         else:
@@ -367,34 +367,34 @@ class MessageDB():
                 "SELECT {KEY} FROM {PRE}_messages WHERE `id`={MID}".format(
                     KEY=search,
                     PRE=self.DB,
-                    MID=int(new.id)
+                    MID=int(after.id)
                 )
             )
-            string_data = MessageParser.messageDBUpdate(new, results, updates)
+            string_data = MessageParser.messageDBUpdate(after, results, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET {DATA} WHERE `id`={MID};".format(
                     PRE=self.DB,
                     DATA=string_data,
-                    MID=int(new.id)
+                    MID=int(after.id)
                 )
             )
 
-    def update(self, before: discord.Message, new: discord.Message):
+    def update(self, before: discord.Message, after: discord.Message):
         """Update a message
 
         Parameters
         ----------
         before: discord.Message
-        new: discord.Message"""
+        after: discord.Message"""
         self.createTable()
-        if self.exists(new):
-            return self._update(before, new)
+        if self.exists(after):
+            return self._update(before, after)
         else:
             if not self.create(before):
                 return False  # I will raise an error here later but for now it is fine
             else:
-                if self.exists(new):
-                    return self._update(before, new) #Why do I double check? because I must
+                if self.exists(after):
+                    return self._update(before, after) #Why do I double check? because I must
                 else:
                     return False  # I will raise an error here later but for now it is fine
 
@@ -567,17 +567,17 @@ class ServerDB():
             ).replace("None", "null").replace("True", "true").replace("False", "false")
         )
 
-    def _update(self, before: discord.Server, new: discord.Server):
+    def _update(self, before: discord.Server, after: discord.Server):
         if not self.exists(before):
             self.create(before)
         else:
             pass
 
-    def update(self, before: discord.Server, new: discord.Server):
+    def update(self, before: discord.Server, after: discord.Server):
         """Update a server"""
         self.createTable()
-        if self.exists(new):
-            if self._update(before, new):
+        if self.exists(after):
+            if self._update(before, after):
                 return True
             else:
                 return False
@@ -585,8 +585,8 @@ class ServerDB():
             if not self.create(before):
                 return False
             else:
-                if self.exists(new):
-                    if self._update(new):
+                if self.exists(after):
+                    if self._update(after):
                         return True
                     else:
                         return False
@@ -631,6 +631,9 @@ class ServerDB():
         #YES
         pass
 
+    def removeMember(self, member: discord.Member):
+        pass
+
     def fetch(self, server, item):
         return False
 
@@ -660,6 +663,21 @@ class MembersDB():
             )
         )
 
+    def exists(self, member: discord.Member):
+        """Checks if user exists in the table
+
+        Parameters
+        ----------
+        user : discord.Member
+            The user to be looked up."""
+        self.createTable()
+        return not self.DBC.queryOne(
+            "SELECT * FROM %s_users WHERE user_id = '%s';" % (
+                self.DB,
+                member.id
+            )
+        ) == 0
+
     def create(self, member: discord.Member):
         """Adds a member to the database
 
@@ -673,32 +691,38 @@ class MembersDB():
         self.addMember(member)
         pass
 
-    def delete(self, member):
+    def delete(self, member: discord.Member):
         return
 
-    def update(self, before, new):
-        return
+    def _update(self, after: discord.Member):
+        pass
 
-    def ban(self, member):
-        return
-
-    def unban(self, server, user):
-        return
-
-    def exists(self, user):
-        """Checks if user exists in the table
+    def update(self, before: discord.Member, after: discord.Member):
+        """Update a user
 
         Parameters
         ----------
-        user : discord.Member / discord.User
-            The user to be looked up."""
+        before : discord.User
+            The Discord User before the update.
+        after : discord.User
+            The Discord User after the update."""
         self.createTable()
-        return not self.DBC.queryOne(
-            "SELECT * FROM %s_users WHERE user_id = '%s';" % (
-                self.DB,
-                user.id
-            )
-        ) == 0
+        if self.exists(after):
+            return self._update(before, after)
+        else:
+            if not self.create(before):
+                return False
+            else:
+                if self.exists(after):
+                    return self._update(after)
+                else:
+                    return False
+
+    def ban(self, member: discord.Member):
+        return
+
+    def unban(self, server: discord.Server, user: discord.User):
+        return
 
     def hasServer(self, user, server: discord.Server):
         """Checks if the user has the server in it!
@@ -740,30 +764,6 @@ class MembersDB():
                 user.game.name
             )
         )
-
-    def _update(self, before, new):
-        return False
-
-    def update(self, before, new):
-        """Update a user
-
-        Parameters
-        ----------
-        before : discord.User
-            The Discord User before the update.
-        new : discord.User
-            The Discord User new the update."""
-        self.createTable()
-        if self.exists(new):
-            return self._update(before, new)
-        else:
-            if not self.create(before):
-                return False
-            else:
-                if self.exists(new):
-                    return self._update(new)
-                else:
-                    return False
 
     def addMember(self, server: discord.Server, member: discord.Member):
         """Called when a server is joined

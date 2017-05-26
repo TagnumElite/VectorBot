@@ -30,7 +30,7 @@ class MemberParser(Parser):
     def getStatus(self, status):
         """Gets a string from the status.
 
-        Paramters
+        Parameters
         ---------
         status: str or discord.Status
             If a string is put in it will return the string."""

@@ -7,11 +7,33 @@ import io
 import os
 import shutil
 import discord
+import asyncio
 import PIL
 from PIL import ImageFont, Image, ImageDraw
 from urllib.request import Request, urlopen, URLopener
 from operator import attrgetter
 from pathlib import Path
+
+bot = discord.Client()
+
+@bot.event
+async def on_ready():
+    print('Logged in as')
+    print(bot.user.name)
+    print(bot.user.id)
+    print('------')
+
+@bot.event
+async def on_server_update(before, after):
+    print("Server Updated")
+
+@bot.event
+async def on_member_join(member):
+    print("Member Joined")
+
+@bot.event
+async def on_member_remove(member):
+    print("Nember Left")
 
 def getS(status):
     """Make shift get status function"""
@@ -362,24 +384,24 @@ def draw2(member):
         return member.id+".png"
 
 def main():
-    pass
+    #bot.run('')
 
 if __name__ == "__main__":
     #draw()
-    draw2(Member(
-        name="TagnumElite",
-        id="179891973795086336",
-        avatar_url="https://images.discordapp.net/avatars/179891973795086336/8dd27f5aee2f81cd480f11929a517233.webp?size=1024",
-        roles=[
-            Role("it support", Colour(25, 25, 25), 1),
-            Role("admin", Colour(25, 25, 25), 2),
-            Role("bot master", Colour(25, 25, 25), 3),
-            Role("bot masters", Colour(25, 25, 25), 4),
-            Role("senior member", Colour(25, 25, 25), 5),
-            Role("exco", Colour(25, 25, 25), 6),
-            Role("@everyone", Colour(255, 255, 255), 0)
-        ],
-        status = "Online",
-        game=Game("TEsty TeSt TeST ReST")
-    ))
+    #draw2(Member(
+    #    name="TagnumElite",
+    #    id="179891973795086336",
+    #    avatar_url="https://images.discordapp.net/avatars/179891973795086336/8dd27f5aee2f81cd480f11929a517233.webp?size=1024",
+    #    roles=[
+    #        Role("it support", Colour(25, 25, 25), 1),
+    #        Role("admin", Colour(25, 25, 25), 2),
+    #        Role("bot master", Colour(25, 25, 25), 3),
+    #        Role("bot masters", Colour(25, 25, 25), 4),
+    #        Role("senior member", Colour(25, 25, 25), 5),
+    #        Role("exco", Colour(25, 25, 25), 6),
+    #        Role("@everyone", Colour(255, 255, 255), 0)
+    #    ],
+    #    status = "Online",
+    #    game=Game("TEsty TeSt TeST ReST")
+    #))
     main()

@@ -11,7 +11,8 @@ import asyncio
 import datetime
 from collections import Counter
 
-#NOTE: Most will be disabled because of discord audit logs.
+# I though I would have to disable many things because of the
+# Audit Logs but nope, still have to do everything.
 
 # Discord Audit Logs:
 # Server Update
@@ -223,34 +224,118 @@ class Database:
             return
         self.ServerDB.updateStatus(server, 0)
 
-    # Disabled Logging Because Of Audit Logs:
-    #async def on_member_ban(self, member):
-    #async def on_member_unban(self, server, user):
+    async def on_server_emojis_update_todo(self, before, after):
+        """
 
-    async def on_member_join_todo(self, member: discord.Member):
+        Parameters
+        ----------
+        before: list[discord.Emojis]
+            A list of the emojis before the update
+        after: list[discord.Emojis]
+            A list of emojis after the update"""
+        pass
+
+    async def on_server_role_create_todo(self, role: discord.Role):
+        """
+
+        Parameters
+        ----------
+        role: discord.Role
+            The New Role"""
+        pass
+
+    async def on_server_role_delete_todo(self, role: discord.Role):
+        """
+
+        Parameters
+        ----------
+        before: discord.Role
+            The Delted Role"""
+        pass
+
+    async def on_server_role_update_todo(self, before: discord.Role, after: discord.Role):
+        """
+
+        Parameters
+        ----------
+        before: discord.Role
+            Old Role
+        after: discord.Role
+            New Role"""
+        pass
+
+    async def on_channel_delete_todo(self, channel: discord.Channel):
+        """
+
+        Parameters
+        ----------
+        channel: discord.Channel
+            The Delted Channel"""
+        pass
+
+    async def on_channel_create_todo(self, channel: discord.Channel):
+        """
+
+        Parameters
+        ----------
+        channel: discord.Channel
+            The new Channel"""
+        pass
+
+    async def on_member_ban_todo(self, member: discord.Member):
+        """
+
+        Parameters
+        ----------
+        member: discord.Member
+            The banned Member"""
+        pass
+
+    async def on_member_unban_todo(self, server: discord.Server, user: discord.User):
+        """
+
+        Parameters
+        ----------
+        server: discord.Server
+            The server from which the user was unbanned from
+        user: discord.User
+            The User"""
+        pass
+
+    async def on_member_join(self, member: discord.Member):
         """Called when a member joins a server the bot is in.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        memer: discord.Member
+            The Server Member that was added"""
         if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
             return
+        self.ServersDB.addMember(member)
         self.MembersDB.create(member)
 
-    async def on_member_remove_todo(self, member: discord.Member):
+    async def on_member_remove(self, member: discord.Member):
         """Called when a member (leaves/kicked from/banned from) a server
         the bot is in.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        memer: discord.Member
+            The Server Member that was removed"""
         if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
             return
+        self.ServersDB.removeMember(member)
         self.MembersDB.delete(member)
 
-    async def on_member_update_todo(self, before: discord.Member, after: discord.Member):
+    async def on_member_update(self, before: discord.Member, after: discord.Member):
         """Called when a member calls an update the server the bot is in.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        before: discord.Member
+            The Old Member
+        after: discord.Member
+            The New Member"""
         if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
             return
         self.MembersDB.update(before, after)
@@ -263,14 +348,6 @@ class Database:
         if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
             return
         self.MembersDB.updateVoiceState(before, after)
-
-    # Disabled Logging Because Of Audit Logs:
-    #async def on_server_emojis_update(self, before, after):
-    #async def on_server_role_create(self, role):
-    #async def on_server_role_delete(self, role):
-    #async def on_server_role_update(self, before, after):
-    #async def on_channel_delete(self, channel):
-    #async def on_channel_create(self, channel):
 
     # Remind why me why we need to log this? THATS RIGHT WE DONT!
     #async def on_typing(self, channel, user, when):
