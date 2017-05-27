@@ -14,26 +14,27 @@ from urllib.request import Request, urlopen, URLopener
 from operator import attrgetter
 from pathlib import Path
 
-bot = discord.Client()
+def runbot():
+    bot = discord.Client()
 
-@bot.event
-async def on_ready():
-    print('Logged in as')
-    print(bot.user.name)
-    print(bot.user.id)
-    print('------')
+    @bot.event
+    async def on_ready():
+        print('Logged in as')
+        print(bot.user.name)
+        print(bot.user.id)
+        print('------')
 
-@bot.event
-async def on_server_update(before, after):
-    print("Server Updated")
+    @bot.event
+    async def on_server_update(before, after):
+        print("Server Updated")
 
-@bot.event
-async def on_member_join(member):
-    print("Member Joined")
+    @bot.event
+    async def on_member_join(member):
+        print("Member Joined")
 
-@bot.event
-async def on_member_remove(member):
-    print("Nember Left")
+    @bot.event
+    async def on_member_remove(member):
+        print("Nember Left")
 
 def getS(status):
     """Make shift get status function"""
@@ -90,6 +91,7 @@ class Member():
         print(self.top_role.name)
 
 def draw():
+    """Testing Custom Splash Creation"""
     os.chdir("./files")
     default = os.getcwd()
 
@@ -177,7 +179,6 @@ def draw():
     return uid+".png"
 
 def draw2(member):
-        print("Splash: Update")
         """Updates Splash
 
         .. note::
@@ -189,6 +190,7 @@ def draw2(member):
         ----------
         member: discord.Member
             The member that was updated/created"""
+        print("Splash: Update")
 
         class Self():
             def __init__(self, StatusColors={"online": (0, 221, 17), "offline": (114, 114, 114), "idle": (234, 149, 32), "dnd": (227, 0, 0), "outline": (67, 67, 67)}):
@@ -384,7 +386,8 @@ def draw2(member):
         return member.id+".png"
 
 def main():
-    #bot.run('')
+    """Just running default"""
+    print("Runnnig Main")
 
 if __name__ == "__main__":
     #draw()
@@ -405,3 +408,4 @@ if __name__ == "__main__":
     #    game=Game("TEsty TeSt TeST ReST")
     #))
     main()
+    #runbot()

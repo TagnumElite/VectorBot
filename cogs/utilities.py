@@ -16,6 +16,7 @@ class Utilities:
 
     def __init__(self, bot):
         self.bot = bot
+        self.Configs = bot.Configs
 
     @commands.command(pass_context=True)
     @checks.admin_or_permissions(manage_messages=True)
@@ -28,7 +29,6 @@ class Utilities:
         author = message.author
         server = message.server
         channel = message.channel
-        await checks.log_message("User %s(%s) ran command `prune` in channel %s(%s) on server %s(%s)" % (author, author.id, channel.name, channel.id, server.name, server.id), self.bot)
         await self.bot.say("NOT SETUP YET")
         return
         if number == 0:
@@ -49,7 +49,6 @@ class Utilities:
         author = message.author
         server = message.server
         channel = message.channel
-        await checks.log_message("User %s(%s) ran command `setavatar` in channel %s(%s) on server %s(%s)" % (author, author.id, channel.name, channel.id, server.name, server.id), self.bot)
         if url == None:
             await self.bot.say("Please give a url to change to!")
             return
@@ -66,7 +65,6 @@ class Utilities:
         author = message.author
         server = message.server
         channel = message.channel
-        await checks.log_message("User %s(%s) ran command `setusername` in channel %s(%s) on server %s(%s)" % (author, author.id, channel.name, channel.id, server.name, server.id), self.bot)
         if username == None:
             await self.bot.say("Please specify a username to give!")
             return
@@ -89,7 +87,6 @@ class Utilities:
         now = datetime.datetime.utcnow()
         ping = now - created
         await self.bot.say("PING!: %s"+"ms") % (str(ping.microseconds))
-        await checkslog_message("User %s(%s) ran command `test` on server %s(%s) in channel %s(%s)" % (author, author.id, server.name, server.id, channel.name, channel.id), self.bot)
 
     @commands.command(pass_context=True, hidden=True)
     @checks.admin_or_permissions(manage_server=True)
@@ -99,8 +96,69 @@ class Utilities:
         author = message.author
         server = message.server
         channel = message.channel
-        await checks.log_message("User %s(%s) ran command `status` in channel %s(%s) on server %s(%s) String: \"%s\"" % (author, author.id, channel.name, channel.id, server.name, server.id, status), self.bot)
         await self.bot.change_presence(game=discord.Game(name=status))
+
+    @commands.command(pass_context=True)
+    async def rules(self, ctx):
+        """Get the rules of the current server!"""
+        msg = ctx.message
+        server = msg.server
+        author = msg.author
+        channel = msg.channel
+        #TODO: Remember to make an if statement to check if the server has overridden rules!
+        em = discord.Embed(
+            title=self.Configs["Rules"]["Title"].format(
+                server=server.name,
+                channel=channel.name,
+                author=author.name
+            ),
+            description=self.Configs["Rules"]["Description"].format(
+                server=server.name,
+                channel=channel.name,
+                author=author.name
+            ),
+            color=0xff0000
+        )
+        em.set_image(url=self.Configs["Rules"]["Image"])
+        em.set_thumbnail(url=self.Configs["Rules"]["Thumbnail"])
+        if self.Configs["Rules"]["Footer"]["Enabled"]:
+            em.set_footer(
+                text=self.Configs["Rules"]["Footer"]["Text"].format(server=server.name),
+                icon_url=self.Configs["Rules"]["Footer"]["Icon Url"].format(server_icon=server.icon_url)
+            )
+        if self.Configs["Rules"]["Author"]["Enabled"]:
+            em.set_author(
+                name=self.Configs["Rules"]["Author"]["Name"].format(server=server.name),
+                icon_url=self.Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
+            )
+
+        for rule in self.Configs["Rules"]["Rules"]:
+            em.add_field(
+                name=rule["Name"],
+                value=rule["Rule"],
+                inline=rule["Inline"] if "Inline" in rule else False
+            )
+        try:
+            await bot.delete_message(msg)
+        except Exception as E:
+            await log_message(
+                """Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
+    Error: {0}""".format(E) % (
+                    author, author.id,
+                    server, server.id,
+                    channel, channel.id
+                ),
+                datetime.datetime.utcnow()
+            )
+        await self.bot.send_message(author, embed=em)
+
+    @commands.command(pass_context=True, hidden=True)
+    @checks.admin_or_permissions(manage_server=True)
+    async def logout(self, ctx):
+        """Logs Bot out of Discord"""
+        await self.bot.say("Logging Out")
+        await asyncio.sleep(2)
+        await self.bot.logout()
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

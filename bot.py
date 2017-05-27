@@ -128,6 +128,8 @@ async def on_command_error(error, ctx):
         print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
         traceback.print_tb(error.original.__traceback__)
         print('{0.__class__.__name__}: {0}'.format(error.original), file=sys.stderr)
+    elif isinstance(error, commands.CommandOnCooldown):
+        await bot.send_message(ctx.message.author, error)
 
 @bot.event
 async def on_ready():
@@ -188,24 +190,6 @@ Error: {0}""".format(Forbidden) % (
             )
     print("MESSAGE: %s"%(message.content))
 
-@bot.command(pass_context=True, hidden=True)
-@checks.is_owner()
-async def do(ctx, times: int, *, command):
-    """Repeats a command a specified number of times."""
-    msg = copy.copy(ctx.message)
-    msg.content = command
-    for i in range(times):
-        await bot.process_commands(msg)
-
-@bot.command(pass_context=True, hidden=True)
-@checks.admin_or_permissions(manage_server=True)
-async def logout(ctx):
-    """Logs Bot out of Discord"""
-    await log_message("Logging Out!", datetime.datetime.utcnow())
-    await bot.say("Logging Out")
-    await asyncio.sleep(4)
-    await bot.logout()
-
 @bot.event
 async def on_member_join(member):
     """Called when a member has joined the server. This function handles the Welcome messages"""
@@ -230,60 +214,6 @@ async def on_member_join(member):
     )
     em.set_thumbnail(url=member.avatar_url)
     await bot.send_message(channel, embed=em)
-
-@bot.command(pass_context=True)
-async def rules(ctx):
-    """Get the rules of the current server! BROKEN"""
-    msg = ctx.message
-    server = msg.server
-    author = msg.author
-    channel = msg.channel
-    #TODO: Remember to make an if statement to check if the server has overridden rules!
-    em = discord.Embed(
-        title=Configs["Rules"]["Title"].format(
-            server=server.name,
-            channel=channel.name,
-            author=author.name
-        ),
-        description=Configs["Rules"]["Description"].format(
-            server=server.name,
-            channel=channel.name,
-            author=author.name
-        ),
-        color=0xff0000
-    )
-    em.set_image(url=Configs["Rules"]["Image"])
-    em.set_thumbnail(url=Configs["Rules"]["Thumbnail"])
-    if Configs["Rules"]["Footer"]["Enabled"]:
-        em.set_footer(
-            text=Configs["Rules"]["Footer"]["Text"].format(server=server.name),
-            icon_url=Configs["Rules"]["Footer"]["Icon Url"].format(server_icon=server.icon_url)
-        )
-    if Configs["Rules"]["Author"]["Enabled"]:
-        em.set_author(
-            name=Configs["Rules"]["Author"]["Name"].format(server=server.name),
-            icon_url=Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
-        )
-
-    for rule in Configs["Rules"]["Rules"]:
-        em.add_field(
-            name=rule["Name"],
-            value=rule["Rule"],
-            inline=rule["Inline"] if "Inline" in rule else False
-        )
-    try:
-        await bot.delete_message(msg)
-    except Exception as E:
-        await log_message(
-            """Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: {0}""".format(E) % (
-                author, author.id,
-                server, server.id,
-                channel, channel.id
-            ),
-            datetime.datetime.utcnow()
-        )
-    await bot.send_message(author, embed=em)
 
 @atexit.register
 def onExit():
