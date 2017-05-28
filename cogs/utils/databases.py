@@ -489,18 +489,6 @@ class MessageDB():
             The User"""
         return
 
-    def fetch(self, *, Query):
-        """Fetches data from DB.
-
-        .. note::
-            TODO
-
-        Parameters
-        ----------
-        Query: str
-            Honestly I don't know"""
-        pass
-
 class ServerDB():
     """Server Databases, contains details for all the channels and config
 
@@ -560,6 +548,24 @@ class ServerDB():
             PRE=self.DB,
             SID=server.id
         )) == 0
+    def existsEmoji(self, emoji: discord.Emoji):
+        """Checks if an emoji exists
+
+        Parameters
+        ----------
+        emoji: discord.Emoji
+            The Emoji To Check For"""
+        pass
+
+    def existsMember(self, member: discord.Member):
+        """Checks if the member exists in the database
+
+        Parameters
+        ----------
+        member: discord.Member
+            The Member To Check For"""
+        pass
+
     def create(self, server: discord.Server):
         """Adds a server to the table
 
@@ -641,10 +647,27 @@ class ServerDB():
             return self.create(server)
         pass
     def _update(self, before: discord.Server, after: discord.Server):
+        """Updates a server in the database
+
+        Parameters
+        ----------
+        before: discord.Server
+            The Previous Server
+        after: discord.Server
+            The New Server"""
+
         if not self.exists(before):
-            self.create(before)
+            return self.create(after)
         else:
-            pass
+            updates = ServerParser.getUpdates(before, after)
+            string_data = ServerParser.ServerUpdate(after, updates)
+            return self.DBC.query(
+                "UPDATE `{PRE}_servers` SET {DATA} WHERE `id`={SID};".format(
+                    PRE=self.DB,
+                    DATA=string_data,
+                    SID=int(after.id)
+                )
+            )
 
     def update(self, before: discord.Server, after: discord.Server):
         """Update a server

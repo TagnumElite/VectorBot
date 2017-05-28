@@ -307,8 +307,128 @@ class ServerParser(Parser):
             elif VerificationLevel is discord.VerificationLevel.table_flip:
                 return "Table Flip"
 
+    def getUpdates(self, before: discord.Server, after: discord.Server):
+        """Returns a list of string with what has changed
+
+        Parameter
+        ---------
+        before: discord.Server
+            Before the updat
+        after: discord.Server
+            After the update"""
+        updates = []
+        if before.name is not after.name:
+            updates.append("name")
+        if before.region is not after.region:
+            updates.append("region")
+        if before.afk_timeout is not after.afk_timeout:
+            updates.append("afk_timeout")
+        if before.afk_channel is not after.afk_channel:
+            updates.append("afk_channel")
+        if before.icon_url is not after.icon_url:
+            updates.append("icon")
+        if before.owner is not after.owner:
+            updates.append("owner")
+        if before.large is not after.large:
+            updates.append("large")
+        if before.mfa_level is not after.mfa_level:
+            updates.append("mfa_level")
+        if before.verification_level is not after.verification_level:
+            updates.append("verification_level")
+        if before.splash_url is not after.splash_url:
+            updates.append("splash")
+        if before.default_role is not after.default_role:
+            updates.append("default_role")
+        if before.default_channel is not after.default_channel:
+            updates.append("default_channel")
+        if before.member_count is not after.member_count:
+            updates.append("size")
+        return updates
+
+    def ServerUpdate(self, server: discord.Server, updates):
+        """Returns MySQL syntax friendly string
+
+        Parameters
+        ---------
+        server: discord.Server
+            The New Server
+        updates: list
+            The things that were updated"""
+
+        query = ""
+
+        if "name" in updates:
+            if len(query) is 0:
+                "`name`='%s'" % (server.name)
+            else:
+                query += ", `name`='%s'" % (server.name)
+        if "region" in updates:
+            if len(query) is 0:
+                "`region`='%s'" % (self.getRegion(server.region))
+            else:
+                query += ", `region`='%s'" % (self.getRegion(server.region))
+        if "afk_timeout" in updates:
+            if len(query) is 0:
+                "`afk_timeout`=%s" % (server.afk_timeout)
+            else:
+                query += ", `afk_timeout`=%s" % (server.afk_timeout)
+        if "afk_channel" in updates:
+            if len(query) is 0:
+                "`afk_channel`='%s'" % (server.afk_channel.id)
+            else:
+                query += ", `name`='%s'" % (server.afk_channel.id)
+        if "icon" in updates:
+            if len(query) is 0:
+                "`icon_url`='%s'" % (server.icon_url)
+            else:
+                query += ", `icon_url`='%s'" % (server.icon_url)
+        if "owner" in updates:
+            if len(query) is 0:
+                "`owner`='%s'" % (server.owner.id)
+            else:
+                query += ", `owner`='%s'" % (server.owner.id)
+        if "large" in updates:
+            if len(query) is 0:
+                "`large`=%s" % (int(server.large))
+            else:
+                query += ", `large`=%s" % (int(server.large))
+        if "mfa_level" in updates:
+            if len(query) is 0:
+                "`mfa`=%s" % (server.mfa_level)
+            else:
+                query += ", `mfa`=%s" % (server.mfa_level)
+        if "verification_level" in updates:
+            if len(query) is 0:
+                "`verification_level`='%s'" % (self.getVLV(server.verification_level))
+            else:
+                query += ", `verification_level`='%s'" % (self.getVLV(server.verification_level))
+        if "splash" in updates:
+            if len(query) is 0:
+                "`splash`='%s'" % (server.splash_url)
+            else:
+                query += ", `splash`='%s'" % (server.splash_url)
+        if "default_role" in updates:
+            if len(query) is 0:
+                "`default_role`='%s'" % (server.default_role.id)
+            else:
+                query += ", `default_role`='%s'" % (server.default_role.id)
+        if "default_channel" in updates:
+            if len(query) is 0:
+                "`default_channel`='%s'" % (server.default_channel.id)
+            else:
+                query += ", `default_channel`='%s'" % (server.default_channel.id)
+        if "size" in updates:
+            if len(query) is 0:
+                "`size`=%s" % (server.member_count)
+            else:
+                query += ", `size`=%s" % (server.member_count)
+        return query
+
 class ChannelParser(Parser):
-    """discord.Channel parser!"""
+    """Channel Parser: Parser
+
+    This a parser mostly for discord.Channel related things"""
+
     def getChannelType(self, channelType):
         """Gets a channels type and returns a string.
 
@@ -367,7 +487,10 @@ class ChannelParser(Parser):
         return data
 
 class RoleParser(Parser):
-    """discord.Role Parser!"""
+    """Role Parser: Parser
+
+    This a parser mostly for discord.Role related things"""
+
     def ServerRole(self, role: discord.Role):
         """Returns a dict with the role's details
 
@@ -400,7 +523,10 @@ class RoleParser(Parser):
         return data
 
 class EmojiParser(Parser):
-    """discord.Emoji Parser!"""
+    """Emoji Parser: Parser
+
+    This a parser mostly for discord.Emoji related things"""
+
     def ServerEmoji(self, emoji: discord.Emoji):
         """Returns a dict with the emoji's details
 

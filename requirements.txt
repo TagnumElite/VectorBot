@@ -17,3 +17,4 @@ Pillow>=4.0.0 #Image and Profile Extension Require It
 #cleverbot=1.1.1 #NO JUST NO
 #bcrypt #Encryption. Because we will be storing passwords
 #youtube_dl #For When I program the Music Functionality
+Flask #I plan to make this controllable from a website!
