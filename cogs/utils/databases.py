@@ -351,7 +351,7 @@ class MessageDB():
                         MID=int(after.id)
                     )
                 )
-            json_update = MessageParser.messageDBUpdate(after, json_data, updates)
+            json_update = MessageParser.MessageUpdate(after, json_data, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
@@ -373,7 +373,7 @@ class MessageDB():
                     MID=int(after.id)
                 )
             )
-            string_data = MessageParser.messageDBUpdate(after, results, updates)
+            string_data = MessageParser.MessageUpdate(after, results, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET {DATA} WHERE `id`={MID};".format(
                     PRE=self.DB,
@@ -419,7 +419,7 @@ class MessageDB():
                 )
             )
             data = json.loads(results[0])
-            json_react = MessageParser.messageDBDelete(data, time)
+            json_react = MessageParser.MessageDelete(data, time)
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET `content`='{VAL}' WHERE `id`={MID};".format(
                     PRE=self.DB,
@@ -449,7 +449,7 @@ class MessageDB():
             print(results[0][0])
             data = json.loads(results[0][0])
             print(data)
-            json_react = MessageParser.reactionDB(reaction, data, user)
+            json_react = MessageParser.ReactionDB(reaction, data, user)
             print(Parser.jsonToDB(json_react))
             return self.DBC.query(
                 "UPDATE `{PRE}_messages` SET `reactions`='{VAL}' WHERE `id`={MID};".format(
@@ -520,6 +520,7 @@ class ServerDB():
         self.DB = DB
 
     def createTable(self):
+        """Creates the ``prefix_servers`` table"""
         return self.DBC.query(
             self.createServerDBIfNot.format(
                 PRE=self.DB
@@ -527,22 +528,45 @@ class ServerDB():
         )
 
     def exists(self, server: discord.Server):
+        """Check if a server exists in the databaes
+
+        Parameters
+        ----------
+        server: discord.Server
+            The Server"""
         return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
             PRE=self.DB,
             SID=server.id
         )) == 0
 
     def existsRole(self, role: discord.Role):
+        """Checks if the role exists in the server
+
+        Parameters
+        ----------
+        role: discord.Role
+            The Role to be added"""
         return self.DBC.queryOne("SELECT roles FROM {PRE}_servers WHERE `id`={SID};".format(
             PRE=self.DB,
             SID=server.id
         )) == 0
     def existsChannel(self, channel: discord.Channel):
+        """Checks if the channel exists in the server
+
+        Parameters
+        ----------
+        channel: discord.Channel"""
         return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
             PRE=self.DB,
             SID=server.id
         )) == 0
     def create(self, server: discord.Server):
+        """Adds a server to the table
+
+        Parameters
+        ----------
+        server: discord.Server
+            The Server to be created"""
         self.createTable()
         if self.exists(server):
             return False
@@ -591,7 +615,10 @@ class ServerDB():
     def createChannel(self, channel: discord.Channel):
         """Add a channel
 
-        """
+        Parameters
+        ----------
+        channel: discord.Channel
+            The channel to be added"""
         pass
     def createEmoji(self, emoji: discord.Emoji):
         """Add a emoji
@@ -620,7 +647,14 @@ class ServerDB():
             pass
 
     def update(self, before: discord.Server, after: discord.Server):
-        """Update a server"""
+        """Update a server
+
+        Parameters
+        ----------
+        before: discord.Server
+            The Old Server
+        after: discord.Server
+            The New Server"""
         self.createTable()
         if self.exists(after):
             if self._update(before, after):
@@ -735,7 +769,6 @@ class ServerDB():
                 SID=int(server.id)
             )
         )
-
 
 class MembersDB():
     """Members Database Class
