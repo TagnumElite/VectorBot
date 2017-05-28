@@ -179,7 +179,7 @@ class MessageParser(Parser):
         if len(roles) > 0:
             for role in roles:
                 data["roles"].append(role.id)
-        return str(data).replace("True", "true").replace("False", "false")
+        return json.dumps(data).replace("True", "true").replace("False", "false")
     def MessageDelete(self, data: dict, time):
         """Appends ``{"content":None, "timestamp":"%s" % (time)}``
 
@@ -237,9 +237,9 @@ class MessageParser(Parser):
                     query = "`attachments`='%s'"%(str(attachments).replace("'", "\""))
             if "mentions" in updates:
                 if "content" in updates:
-                    query += ", `mentions`='%s'"%(str(self.MessageMentions(message)))
+                    query += ", `mentions`='%s'"%(str(self.MessageMentions(message)).replace("'", '"'))
                 else:
-                    query = "`mentions'='%s'"%(self.MessageMentions(message))
+                    query = "`mentions'='%s'"%(str(self.MessageMentions(message)).replace("'", '"'))
             return query
 
 class ServerParser(Parser):
@@ -359,7 +359,7 @@ class ServerParser(Parser):
 
         if "name" in updates:
             if len(query) is 0:
-                "`name`='%s'" % (server.name)
+                query = "`name`='%s'" % (server.name)
             else:
                 query += ", `name`='%s'" % (server.name)
         if "region" in updates:
@@ -369,32 +369,32 @@ class ServerParser(Parser):
                 query += ", `region`='%s'" % (self.getRegion(server.region))
         if "afk_timeout" in updates:
             if len(query) is 0:
-                "`afk_timeout`=%s" % (server.afk_timeout)
+                query = "`afk_timeout`=%s" % (server.afk_timeout)
             else:
                 query += ", `afk_timeout`=%s" % (server.afk_timeout)
         if "afk_channel" in updates:
             if len(query) is 0:
-                "`afk_channel`='%s'" % (server.afk_channel.id)
+                query = "`afk_channel`='%s'" % (server.afk_channel.id)
             else:
                 query += ", `name`='%s'" % (server.afk_channel.id)
         if "icon" in updates:
             if len(query) is 0:
-                "`icon_url`='%s'" % (server.icon_url)
+                query = "`icon_url`='%s'" % (server.icon_url)
             else:
                 query += ", `icon_url`='%s'" % (server.icon_url)
         if "owner" in updates:
             if len(query) is 0:
-                "`owner`='%s'" % (server.owner.id)
+                query = "`owner`='%s'" % (server.owner.id)
             else:
                 query += ", `owner`='%s'" % (server.owner.id)
-        if "large" in updates:
-            if len(query) is 0:
-                "`large`=%s" % (int(server.large))
-            else:
-                query += ", `large`=%s" % (int(server.large))
+        #if "large" in updates:
+        #    if len(query) is 0:
+        #        query = "`large`=%s" % (int(server.large))
+        #    else:
+        #        query += ", `large`=%s" % (int(server.large))
         if "mfa_level" in updates:
             if len(query) is 0:
-                "`mfa`=%s" % (server.mfa_level)
+                query = "`mfa`=%s" % (server.mfa_level)
             else:
                 query += ", `mfa`=%s" % (server.mfa_level)
         if "verification_level" in updates:
@@ -404,22 +404,22 @@ class ServerParser(Parser):
                 query += ", `verification_level`='%s'" % (self.getVLV(server.verification_level))
         if "splash" in updates:
             if len(query) is 0:
-                "`splash`='%s'" % (server.splash_url)
+                query = "`splash`='%s'" % (server.splash_url)
             else:
                 query += ", `splash`='%s'" % (server.splash_url)
         if "default_role" in updates:
             if len(query) is 0:
-                "`default_role`='%s'" % (server.default_role.id)
+                query = "`default_role`='%s'" % (server.default_role.id)
             else:
                 query += ", `default_role`='%s'" % (server.default_role.id)
         if "default_channel" in updates:
             if len(query) is 0:
-                "`default_channel`='%s'" % (server.default_channel.id)
+                query = "`default_channel`='%s'" % (server.default_channel.id)
             else:
                 query += ", `default_channel`='%s'" % (server.default_channel.id)
         if "size" in updates:
             if len(query) is 0:
-                "`size`=%s" % (server.member_count)
+                query = "`size`=%s" % (server.member_count)
             else:
                 query += ", `size`=%s" % (server.member_count)
         return query

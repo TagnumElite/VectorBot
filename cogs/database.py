@@ -204,7 +204,7 @@ class Database:
             Before Update
         after:  discord.Server
             After Update"""
-        if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
+        if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.update(before, after)
 
@@ -262,7 +262,7 @@ class Database:
             The New Role"""
         if checks.is_an_ignored(role.id, self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.createRole(role)
+        self.ServerDB.createRole(role)
 
     async def on_server_role_delete(self, role: discord.Role):
         """Called when a role is deleted
@@ -273,7 +273,7 @@ class Database:
             The Delted Role"""
         if checks.is_an_ignored(role.id, self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.deleteRole(role)
+        self.ServerDB.deleteRole(role)
 
     async def on_server_role_update(self, before: discord.Role, after: discord.Role):
         """Called when a role is updated
@@ -286,7 +286,7 @@ class Database:
             New Role"""
         if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.updateRole(after)
+        self.ServerDB.updateRole(after)
 
     async def on_channel_delete(self, channel: discord.Channel):
         """Called when a channel is deleted
@@ -297,7 +297,7 @@ class Database:
             The Delted Channel"""
         if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.deleteChannel(channel)
+        self.ServerDB.deleteChannel(channel)
 
     async def on_channel_create(self, channel: discord.Channel):
         """Called when a channel is created!
@@ -308,7 +308,7 @@ class Database:
             The new Channel"""
         if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.createChannel(self, channel)
+        self.ServerDB.createChannel(self, channel)
 
     async def on_channel_update(Self, before: discord.Channel, after: discord.Channel):
         """Called when a channel is updated
@@ -356,7 +356,7 @@ class Database:
             The Server Member that was added"""
         if checks.is_an_ignored([member.id, member.server.id], self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.createMember(member)
+        self.ServerDB.createMember(member)
         self.MembersDB.create(member)
 
     async def on_member_remove(self, member: discord.Member):
@@ -369,7 +369,7 @@ class Database:
             The Server Member that was removed"""
         if checks.is_an_ignored([member.id, member.server.id], self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.deleteMember(member)
+        self.ServerDB.deleteMember(member)
         self.MembersDB.delete(member)
 
     async def on_member_update(self, before: discord.Member, after: discord.Member):
@@ -385,14 +385,7 @@ class Database:
             return
         self.MembersDB.update(before, after)
 
-    async def on_voice_state_update_todo(self, before, after):
-        """Called when a voicestate is updated
-
-        .. note::
-            TODO"""
-        if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
-            return
-        self.MembersDB.updateVoiceState(before, after)
+    #async def on_voice_state_update_todo(self, before, after):
 
     # Remind why me why we need to log this? THATS RIGHT WE DONT!
     #async def on_typing(self, channel, user, when):

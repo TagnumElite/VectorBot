@@ -222,7 +222,7 @@ cOwner = "`owner` VARCHAR(20) NOT NULL"
 cStatus = "`status` TINYINT NOT NULL DEFAULT 1"
 cLarge = "`large` TINYINT NOT NULL DEFAULT 0"
 cMFA = "`mfa` TINYINT NOT NULL DEFAULT 0"
-cVerficationLevel = "`verfication_level` VARCHAR(30) NOT NULL DEFAULT 'None'"
+cVerficationLevel = "`verification_level` VARCHAR(30) NOT NULL DEFAULT 'None'"
 cDRole = "`default_role` VARCHAR(20) NOT NULL"
 cDChannel = "`default_channel` VARCHAR(20) NOT NULL"
 cSlpash = "`splash` VARCHAR(45) NULL"
@@ -501,7 +501,7 @@ class ServerDB():
 
     createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cConfig+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cStatus+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
 
-    createServer = "INSERT INTO {PRE}_servers(`id`, `name`, `members`, `config`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `icon_url`, `owner`, `status`, `large`, `mfa`, `verfication_level`, `default_role`, `splash`, `size`, `default_channel`, `created_at`) VALUES({SID}, '{NAM}', '{MEM}', '{CON}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{STS}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
+    createServer = "INSERT INTO {PRE}_servers(`id`, `name`, `members`, `config`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `icon_url`, `owner`, `status`, `large`, `mfa`, `verification_level`, `default_role`, `splash`, `size`, `default_channel`, `created_at`) VALUES({SID}, '{NAM}', '{MEM}', '{CON}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{STS}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
 
     def __init__(self, DBC, DB):
         self.DBC = DBC
@@ -522,10 +522,14 @@ class ServerDB():
         ----------
         server: discord.Server
             The Server"""
-        return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
+        results = self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
             PRE=self.DB,
             SID=server.id
-        )) == 0
+        ))
+        if not results:
+            return False
+        else:
+            return True
 
     def existsRole(self, role: discord.Role):
         """Checks if the role exists in the server
@@ -660,11 +664,11 @@ class ServerDB():
             return self.create(after)
         else:
             updates = ServerParser.getUpdates(before, after)
-            string_data = ServerParser.ServerUpdate(after, updates)
+            query = ServerParser.ServerUpdate(after, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_servers` SET {DATA} WHERE `id`={SID};".format(
                     PRE=self.DB,
-                    DATA=string_data,
+                    DATA=query,
                     SID=int(after.id)
                 )
             )
@@ -689,7 +693,7 @@ class ServerDB():
                 return False
             else:
                 if self.exists(after):
-                    if self._update(after):
+                    if self._update(before, after):
                         return True
                     else:
                         return False
@@ -827,12 +831,16 @@ class MembersDB():
         user : discord.Member
             The user to be looked up."""
         self.createTable()
-        return not self.DBC.queryOne(
+        results = self.DBC.queryOne(
             "SELECT * FROM %s_users WHERE user_id = '%s';" % (
                 self.DB,
                 member.id
             )
-        ) == 0
+        )
+        if not results:
+            return False
+        else:
+            return True
 
     def create(self, member: discord.Member):
         """Adds a member to the database
@@ -844,21 +852,20 @@ class MembersDB():
         self.createTable()
         if self.exists(member):
             return True
-        self.addMember(member)
         pass
 
-    def _update(self, after: discord.Member):
+    def _update(self, before: discord.Member, after: discord.Member):
         pass
 
     def update(self, before: discord.Member, after: discord.Member):
-        """Update a user
+        """Update a Member
 
         Parameters
         ----------
-        before : discord.User
-            The Discord User before the update.
-        after : discord.User
-            The Discord User after the update."""
+        before : discord.Member
+            The Discord Member before the update.
+        after : discord.Member
+            The Discord Member after the update."""
         self.createTable()
         if self.exists(after):
             return self._update(before, after)
@@ -902,24 +909,6 @@ class MembersDB():
                     if val == server.id:
                         return True
         return False
-
-    def create(self, user):
-        self.createTable()
-        if self.exists(user):
-            return True
-        return self.DBC.query(
-            "INSERT INTO"+self.userUpdate % (
-                DB,
-                user.id,
-                user.name,
-                user.discriminator,
-                user.avatar_url,
-                user.default_url,
-                "{'servers':[]}",
-                str(user.status),
-                user.game.name
-            )
-        )
 
     def ban(self, member: discord.Member):
         """Ban a user from a server
