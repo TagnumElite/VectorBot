@@ -3,7 +3,7 @@
 """
 
 from . import checks, parser
-from .parser import Parser, MessageParser, MemberParser, ServerParser, ConfigParser
+from .parser import Parser, MemberParser, MessageParser, ServerParser, ConfigParser, ChannelParser, RoleParser, EmojiParser
 from _mysql_exceptions import OperationalError
 import warnings, functools
 import discord
@@ -21,6 +21,9 @@ MessageParser = MessageParser()
 MemberParser = MemberParser()
 ServerParser = ServerParser()
 ConfigParser = ConfigParser()
+ChannelParser = ChannelParser()
+RoleParser = RoleParser()
+EmojiParser = EmojiParser()
 
 class DBC():
     """This is the database connection to a MySQL databse
@@ -523,20 +526,30 @@ class ServerDB():
             )
         )
 
-    def exists(self, server):
+    def exists(self, server: discord.Server):
         return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
             PRE=self.DB,
             SID=server.id
         )) == 0
 
-    def create(self, server):
+    def existsRole(self, role: discord.Role):
+        return self.DBC.queryOne("SELECT roles FROM {PRE}_servers WHERE `id`={SID};".format(
+            PRE=self.DB,
+            SID=server.id
+        )) == 0
+    def existsChannel(self, channel: discord.Channel):
+        return self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
+            PRE=self.DB,
+            SID=server.id
+        )) == 0
+    def create(self, server: discord.Server):
         self.createTable()
         if self.exists(server):
-            return
-        members = json.dumps(ServerParser.ServerMembers(server.members)).replace("'", '"')
-        roles = json.dumps(ServerParser.ServerRoles(server.roles)).replace("'", '"')
-        emojis = json.dumps(ServerParser.ServerEmojis(server.emojis)).replace("'", '"')
-        channels = json.dumps(ServerParser.ServerChannels(server.channels)).replace("'", '"')
+            return False
+        members = json.dumps(MemberParser.ServerMembers(server.members)).replace("'", '"')
+        roles = json.dumps(RoleParser.ServerRoles(server.roles)).replace("'", '"')
+        emojis = json.dumps(EmojiParser.ServerEmojis(server.emojis)).replace("'", '"')
+        channels = json.dumps(ChannelParser.ServerChannels(server.channels)).replace("'", '"')
         config = {
 
         }
@@ -567,6 +580,39 @@ class ServerDB():
             ).replace("None", "null").replace("True", "true").replace("False", "false")
         )
 
+    def createRole(self, role: discord.Role):
+        """Add a role
+
+        Parameters
+        ----------
+        role: discord.Role
+            The Role"""
+        pass
+    def createChannel(self, channel: discord.Channel):
+        """Add a channel
+
+        """
+        pass
+    def createEmoji(self, emoji: discord.Emoji):
+        """Add a emoji
+
+        Parameters
+        ----------
+        emoji: discord.Emoji
+            The New Emoji"""
+        pass
+
+    def createMember(self, member: discord.Member):
+        """Called when a server is joined
+
+        Parameters
+        ----------
+        member: discord.Member
+            The Member that was added"""
+        server = member.server
+        if not self.exists(server):
+            return self.create(server)
+        pass
     def _update(self, before: discord.Server, after: discord.Server):
         if not self.exists(before):
             self.create(before)
@@ -591,6 +637,33 @@ class ServerDB():
                     else:
                         return False
 
+    def updateRole(self, role: discord.Role):
+        """Update a role
+
+        Parameters
+        ----------
+        role: discord.Role
+            The New Role"""
+        pass
+
+    def updateChannel(self, channel: discord.Channel):
+        """Update a channel
+
+        Parameters
+        ----------
+        channel: discord.Channel
+            The New Channel"""
+        pass
+
+    def updateEmoji(self, emoji: discord.Emoji):
+        """Update a emoji
+
+        Parameters
+        ----------
+        emoji: discord.Emoji
+            The New Emoji"""
+        pass
+
     def delete(self, server: discord.Server):
         """Called when a server is deleted or the
         bot is kicked!
@@ -601,6 +674,42 @@ class ServerDB():
             The Server That was removed"""
         self.createTable(server)
         return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
+
+    def deleteRole(self, role: discord.Role):
+        """Removes a role
+
+        Parameters
+        ----------
+        role: discord.Role
+            The Old Role"""
+        pass
+    def deleteChannel(self, channel: discord.Role):
+        """Removes a channel
+
+        Parameters
+        ----------
+        channel: discord.Channel"""
+        pass
+
+    def deleteEmoji(self, emoji: discord.Emoji):
+        """Removes an emoji
+
+        Parameters
+        ----------
+        emoji: discord.Emoji"""
+        pass
+
+    def deleteMember(self, member: discord.Member):
+        """Called when a member has been removed
+
+        Parameters
+        ----------
+        member: discord.Member
+            The Member that was removed"""
+        server = member.server
+        if not self.exists(server):
+            return self.create(server)
+        pass
 
     def updateStatus(self, server: discord.Server, status):
         """Updates the servers availibility
@@ -627,15 +736,6 @@ class ServerDB():
             )
         )
 
-    def addMember(self, member: discord.Member):
-        #YES
-        pass
-
-    def removeMember(self, member: discord.Member):
-        pass
-
-    def fetch(self, server, item):
-        return False
 
 class MembersDB():
     """Members Database Class
@@ -691,9 +791,6 @@ class MembersDB():
         self.addMember(member)
         pass
 
-    def delete(self, member: discord.Member):
-        return
-
     def _update(self, after: discord.Member):
         pass
 
@@ -717,6 +814,9 @@ class MembersDB():
                     return self._update(after)
                 else:
                     return False
+
+    def delete(self, member: discord.Member):
+        return
 
     def ban(self, member: discord.Member):
         return
@@ -765,24 +865,25 @@ class MembersDB():
             )
         )
 
-    def addMember(self, server: discord.Server, member: discord.Member):
-        """Called when a server is joined
+    def ban(self, member: discord.Member):
+        """Ban a user from a server
 
-        WAIT STOP RIGHT HERE.
+        Parameters
+        ----------
+        member: discord.Member
+            Thbe Member that was banned"""
+        pass
 
-        I NEED TO PLAN OUT ServerDB/MemberDB Cross compatibility and stuff!
-
-        I don't know if when a member joins a server does the add member
-        event get called as well as the server update event?
-
-        If so that makes my life really easy!
+    def unban(self, server: discord.Server, user: discord.User):
+        """Ban a user from a server
 
         Parameters
         ----------
         server: discord.Server
-
-        member: discord.Member"""
-        return False
+            The server from which the user was unbanned
+        user: discord.User
+            The user that was unbanned"""
+        pass
 
 class ConfigsDB():
     """Configs Database Class

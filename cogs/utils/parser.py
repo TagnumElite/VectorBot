@@ -53,6 +53,38 @@ class MemberParser(Parser):
                 return "Error"
 
 
+    def ServerMember(self, member: discord.Member):
+        """Returns a dict with the member's details
+
+        Parameters
+        ----------
+        member: discord.Member"""
+        data = {}
+        data[member.id] = {
+            "nick": member.nick,
+            "roles": [None],
+            "joined_at": str(member.joined_at),
+            "status": self.getStatus(member.status),
+            "top_role": member.top_role.id,
+            "perms": {},  # Usage explained in RTD FAQ!
+            "confs": {}  # Explained in RTD FAQ!
+        }
+        data[member.id]["roles"] = []
+        for role in member.roles:
+            data[member.id]["roles"].append(role.id)
+        return data
+
+    def ServerMembers(self, members):
+        """Returns a dict with the members and their details
+
+        Parameters
+        ----------
+        members: list of discord.Member"""
+        data = {}
+        for member in members:
+            data[member.id] = self.ServerMember(member)[member.id]
+        return data
+
 class MessageParser(Parser):
     """Message Parser: Parser
 
@@ -342,7 +374,6 @@ class MessageParser(Parser):
                     query = "`mentions'='%s'"%(self.MessageMentions(message))
             return query
 
-
 class ServerParser(Parser):
     """Server Parser: Parser
 
@@ -408,6 +439,8 @@ class ServerParser(Parser):
             elif VerificationLevel is discord.VerificationLevel.table_flip:
                 return "Table Flip"
 
+class ChannelParser(Parser):
+    """discord.Channel parser!"""
     def getChannelType(self, channelType):
         """Gets a channels type and returns a string.
 
@@ -427,64 +460,26 @@ class ServerParser(Parser):
             elif channelType is discord.ChannelType.group:
                 return "Group"
 
-    def ServerMembers(self, members):
-        """Returns a dict with the members and their details
+    def ServerChannel(self, channel: discord.Channel):
+        """Returns a dict with the channel's details
 
         Parameters
         ----------
-        members: list of discord.Member"""
+        channel: discord.Channel"""
         data = {}
-        for member in members:
-            data[member.id] = {
-                "nick": member.nick,
-                "roles": [None],
-                "joined_at": str(member.joined_at),
-                "status": self.getStatus(member.status),
-                "top_role": member.top_role.id,
-                "perms": {},  # Usage explained in RTD FAQ!
-                "confs": {}  # Explained in RTD FAQ!
-            }
-            data[member.id]["roles"] = []
-            for role in member.roles:
-                data[member.id]["roles"].append(role.id)
-        return data
-
-    def ServerRoles(self, roles):
-        """Returns a dict with the roles and their details
-
-        Parameters
-        ----------
-        roles: list of discord.Role"""
-        data = {}
-        for role in roles:
-            data[role.id] = {
-                "name": role.name,
-                "colour": role.colour.to_tuple(),
-                "hoist": role.hoist,
-                "position": role.position,
-                "managed": role.managed,
-                "default": role.is_everyone,
-                "timestamp": str(role.created_at),
-                "perms": {},  # Usage explained in RTD FAQ!,  # Usage explained in RTD FAQ!
-                "confs": {}  # Explained in RTD FAQ!
-            }
-        return data
-
-    def ServerEmojis(self, emojis):
-        """Returns a dict with the channels and their details
-
-        Parameters
-        ----------
-        emojis: list of discord.Emoji"""
-        data = {}
-        for emoji in emojis:
-            data[emoji.id] = {
-                "name": emoji.name,
-                "require_colons": emoji.require_colons,
-                "managed": emoji.managed,
-                "timestamp": str(emoji.created_at),
-                "url": str(emoji.url)
-            }
+        data[channel.id] = {
+            "name": channel.name,
+            "topic": channel.topic if channel.topic is not None else "",
+            "position": channel.position,
+            "type": self.getChannelType(channel.type),
+            "bitrate": channel.bitrate,
+            "connected": len(channel.voice_members),
+            "user_limit": channel.user_limit,
+            "default": channel.is_default,
+            "timestamp": str(channel.created_at),
+            "perms": {},  # Usage explained in RTD FAQ!
+            "confs": {}  # Explained in RTD FAQ!
+        }
         return data
 
     def ServerChannels(self, channels):
@@ -495,24 +490,73 @@ class ServerParser(Parser):
         channels: list of discord.Channel"""
         data = {}
         for channel in channels:
-            data[channel.id] = {
-                "name": channel.name,
-                "topic": channel.topic if channel.topic is not None else "",
-                "position": channel.position,
-                "type": self.getChannelType(channel.type),
-                "bitrate": channel.bitrate,
-                "connected": len(channel.voice_members),
-                "user_limit": channel.user_limit,
-                "default": channel.is_default,
-                "timestamp": str(channel.created_at),
-                "perms": {},  # Usage explained in RTD FAQ!
-                "confs": {}  # Explained in RTD FAQ!
-            }
+            data[channel.id] = self.ServerChannel(channel)[channel.id]
+        return data
+
+class RoleParser(Parser):
+    """discord.Role Parser!"""
+    def ServerRole(self, role: discord.Role):
+        """Returns a dict with the role's details
+
+        Parameters
+        ----------
+        role: discord.Role"""
+        data = {}
+        data[role.id] = {
+            "name": role.name,
+            "colour": role.colour.to_tuple(),
+            "hoist": role.hoist,
+            "position": role.position,
+            "managed": role.managed,
+            "default": role.is_everyone,
+            "timestamp": str(role.created_at),
+            "perms": {},  # Usage explained in RTD FAQ!,  # Usage explained in RTD FAQ!
+            "confs": {}  # Explained in RTD FAQ!
+        }
+        return data
+
+    def ServerRoles(self, roles):
+        """Returns a dict with the roles and their details
+
+        Parameters
+        ----------
+        roles: list of discord.Role"""
+        data = {}
+        for role in roles:
+            data[role.id] = self.ServerRole(role)[role.id]
+        return data
+
+class EmojiParser(Parser):
+    """discord.Emoji Parser!"""
+    def ServerEmoji(self, emoji: discord.Emoji):
+        """Returns a dict with the emoji's details
+
+        Parameters
+        ----------
+        emoji: discord.Emoji"""
+        data = {}
+        data[emoji.id] = {
+            "name": emoji.name,
+            "require_colons": emoji.require_colons,
+            "managed": emoji.managed,
+            "timestamp": str(emoji.created_at),
+            "url": str(emoji.url)
+        }
+        return data
+
+    def ServerEmojis(self, emojis):
+        """Returns a dict with the channels and their details
+
+        Parameters
+        ----------
+        emojis: list of discord.Emoji"""
+        data = {}
+        for emoji in emojis:
+            data[emoji.id] = self.ServerEmoji(emoji)[emoji.id]
         return data
 
 class ConfigParser(Parser):
     """Config Parser: Parser
 
     This a parser mostly for config related things"""
-
     pass

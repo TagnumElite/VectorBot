@@ -153,6 +153,8 @@ class Database:
 
         .. note::
             TODO"""
+        if checks.is_an_ignored(user.id, self.bot.Configs["Ignored IDs"]):
+            return
         self.MessageDB.addReaction(reaction, user)
 
     async def on_reaction_remove_todo(self, reaction, user):
@@ -160,6 +162,8 @@ class Database:
 
         .. note::
             TODO"""
+        if checks.is_an_ignored(user.id, self.bot.Configs["Ignored IDs"]):
+            return
         self.MessageDB.deleteReaction(reaction, user)
 
     async def on_reaction_clear(self, message, reactions):
@@ -200,7 +204,7 @@ class Database:
             Before Update
         after:  discord.Server
             After Update"""
-        if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Configs["Ignored IDs"]):
+        if checks.is_an_ignored(server.id, self.bot.Configs["Ignored IDs"]):
             return
         self.ServerDB.update(before, after)
 
@@ -225,7 +229,7 @@ class Database:
         self.ServerDB.updateStatus(server, 0)
 
     async def on_server_emojis_update_todo(self, before, after):
-        """
+        """Called when an emojis is updated/create/deleted
 
         Parameters
         ----------
@@ -233,28 +237,46 @@ class Database:
             A list of the emojis before the update
         after: list[discord.Emojis]
             A list of emojis after the update"""
-        pass
+        if checks.is_an_ignored([before.id, before.server.id], self.bot.Configs["Ignored IDs"]):
+            return
+        beforeS = sorted(before, key=lambda x: x.id)
+        afterS = sorted(after, key=lambda x: x.id)
+        if len(before) < len(after):
+            for idx, emoji in enumerate(beforeS):
+                #if
+                NOTE = "I have to check between the two lists what's new"
+            self.ServerDB.createEmoji(None)
+        elif len(before) > len(after):
+            self.ServerDB.deleteEmoji(None)
+        elif len(before) is len(after):
+            self.ServerDB.updateEmoji(before, after)
+        else:
+            return "That doesn't make sense."
 
-    async def on_server_role_create_todo(self, role: discord.Role):
-        """
+    async def on_server_role_create(self, role: discord.Role):
+        """Called when a role is created
 
         Parameters
         ----------
         role: discord.Role
             The New Role"""
-        pass
+        if checks.is_an_ignored(role.id, self.bot.Configs["Ignored IDs"]):
+            return
+        self.ServersDB.createRole(role)
 
-    async def on_server_role_delete_todo(self, role: discord.Role):
-        """
+    async def on_server_role_delete(self, role: discord.Role):
+        """Called when a role is deleted
 
         Parameters
         ----------
         before: discord.Role
             The Delted Role"""
-        pass
+        if checks.is_an_ignored(role.id, self.bot.Configs["Ignored IDs"]):
+            return
+        self.ServersDB.deleteRole(role)
 
-    async def on_server_role_update_todo(self, before: discord.Role, after: discord.Role):
-        """
+    async def on_server_role_update(self, before: discord.Role, after: discord.Role):
+        """Called when a role is updated
 
         Parameters
         ----------
@@ -262,37 +284,58 @@ class Database:
             Old Role
         after: discord.Role
             New Role"""
-        pass
+        if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
+            return
+        self.ServersDB.updateRole(after)
 
-    async def on_channel_delete_todo(self, channel: discord.Channel):
-        """
+    async def on_channel_delete(self, channel: discord.Channel):
+        """Called when a channel is deleted
 
         Parameters
         ----------
         channel: discord.Channel
             The Delted Channel"""
-        pass
+        if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Configs["Ignored IDs"]):
+            return
+        self.ServersDB.deleteChannel(channel)
 
-    async def on_channel_create_todo(self, channel: discord.Channel):
-        """
+    async def on_channel_create(self, channel: discord.Channel):
+        """Called when a channel is created!
 
         Parameters
         ----------
         channel: discord.Channel
             The new Channel"""
-        pass
+        if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Configs["Ignored IDs"]):
+            return
+        self.ServersDB.createChannel(self, channel)
 
-    async def on_member_ban_todo(self, member: discord.Member):
-        """
+    async def on_channel_update(Self, before: discord.Channel, after: discord.Channel):
+        """Called when a channel is updated
+
+        Parameters
+        ----------
+        before: discord.Channel
+            The Old Channel
+        after: discord.Channel
+            The New Channel"""
+        if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Configs["Ignored IDs"]):
+            return
+        self.ServerDB.updateChannel(after)
+
+    async def on_member_ban(self, member: discord.Member):
+        """Called when a member is banned
 
         Parameters
         ----------
         member: discord.Member
             The banned Member"""
-        pass
+        if checks.is_an_ignored([member.id, member.server.id], self.bot.Configs["Ignored IDs"]):
+            return
+        self.MembersDB.ban(member)
 
-    async def on_member_unban_todo(self, server: discord.Server, user: discord.User):
-        """
+    async def on_member_unban(self, server: discord.Server, user: discord.User):
+        """Called when a user is unbanned
 
         Parameters
         ----------
@@ -300,7 +343,9 @@ class Database:
             The server from which the user was unbanned from
         user: discord.User
             The User"""
-        pass
+        if checks.is_an_ignored([server.id, user.id], self.bot.Configs["Ignored IDs"]):
+            return
+        self.MembersDB.unban(server, user)
 
     async def on_member_join(self, member: discord.Member):
         """Called when a member joins a server the bot is in.
@@ -309,9 +354,9 @@ class Database:
         ----------
         memer: discord.Member
             The Server Member that was added"""
-        if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
+        if checks.is_an_ignored([member.id, member.server.id], self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.addMember(member)
+        self.ServersDB.createMember(member)
         self.MembersDB.create(member)
 
     async def on_member_remove(self, member: discord.Member):
@@ -322,9 +367,9 @@ class Database:
         ----------
         memer: discord.Member
             The Server Member that was removed"""
-        if checks.is_an_ignored(member.id, self.bot.Configs["Ignored IDs"]):
+        if checks.is_an_ignored([member.id, member.server.id], self.bot.Configs["Ignored IDs"]):
             return
-        self.ServersDB.removeMember(member)
+        self.ServersDB.deleteMember(member)
         self.MembersDB.delete(member)
 
     async def on_member_update(self, before: discord.Member, after: discord.Member):
@@ -336,7 +381,7 @@ class Database:
             The Old Member
         after: discord.Member
             The New Member"""
-        if checks.is_an_ignored(before.id, self.bot.Configs["Ignored IDs"]):
+        if checks.is_an_ignored([before.id, before.server.id], self.bot.Configs["Ignored IDs"]):
             return
         self.MembersDB.update(before, after)
 

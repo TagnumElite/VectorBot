@@ -9,6 +9,6 @@ from .emailmanager import Email
 #from .formats import *
 #from .maps import *
 #from .paginator import *
-from .parser import Parser, MemberParser, MessageParser, ServerParser, ConfigParser
+from .parser import Parser, MemberParser, MessageParser, ServerParser, ConfigParser, ChannelParser, RoleParser, EmojiParser
 #from .salt import *
 from .steammanager import Player, SteamRep, SteamY

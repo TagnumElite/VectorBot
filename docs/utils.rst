@@ -54,6 +54,15 @@ Parser
 .. autoclass:: ServerParser
     :members:
 
+.. autoclass:: ChannelParser
+    :members:
+
+.. autoclass:: RoleParser
+    :members:
+
+.. autoclass:: EmojiParser
+    :members:
+
 .. autoclass:: ConfigParser
     :members:
 
