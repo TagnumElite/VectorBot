@@ -10,7 +10,7 @@ I don't have any rules yet but I will in the future!
 ## Features:
 - [ ] Database Extension
     - [x] MessageDB
-    - [ ] ServerDB
+    - [x] ServerDB
     - [ ] MembersDB
     - [ ] ConfigsDB
 - [ ] Multi Server Support (Requires Database Extension to be done)
@@ -25,8 +25,6 @@ I don't have any rules yet but I will in the future!
 - [ ] Record Player (Prep. Not Possible right now) `Currently Impossible`
 
 ## TODO:
-- [ ] Clean Out Code
-- [ ] Flesh Out Documentation
 - [ ] Change database logging to be similar to wordpress meta system `This allows me to change the database without having to drop tables or modify them`
 
 ## Discord

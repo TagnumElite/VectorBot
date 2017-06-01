@@ -53,7 +53,7 @@ class MemberParser(Parser):
                 return "Error"
 
 
-    def ServerMember(self, member: discord.Member):
+    def Server(self, member: discord.Member):
         """Returns a dict with the member's details
 
         Parameters
@@ -74,7 +74,7 @@ class MemberParser(Parser):
             data[member.id]["roles"].append(role.id)
         return data
 
-    def ServerMembers(self, members):
+    def Servers(self, members):
         """Returns a dict with the members and their details
 
         Parameters
@@ -82,7 +82,7 @@ class MemberParser(Parser):
         members: list[discord.Member]"""
         data = {}
         for member in members:
-            data[member.id] = self.ServerMember(member)[member.id]
+            data[member.id] = self.Server(member)[member.id]
         return data
 
 class MessageParser(Parser):
@@ -448,8 +448,8 @@ class ChannelParser(Parser):
             elif channelType is discord.ChannelType.group:
                 return "Group"
 
-    def ServerChannel(self, channel: discord.Channel):
-        """Returns a dict with the channel's details
+    def Server(self, channel: discord.Channel):
+        """Returns a dict that is acceptableish by MySQL and the Server Parser
 
         Parameters
         ----------
@@ -475,7 +475,7 @@ class ChannelParser(Parser):
         }
         return data
 
-    def ServerChannels(self, channels):
+    def Servers(self, channels):
         """Returns a dict with the channels and their details
 
         Parameters
@@ -483,7 +483,7 @@ class ChannelParser(Parser):
         channels: list[discord.Channel]"""
         data = {}
         for channel in channels:
-            data[channel.id] = self.ServerChannel(channel)[channel.id]
+            data[channel.id] = self.Server(channel)[channel.id]
         return data
 
 class RoleParser(Parser):
@@ -491,7 +491,7 @@ class RoleParser(Parser):
 
     This a parser mostly for discord.Role related things"""
 
-    def ServerRole(self, role: discord.Role):
+    def Server(self, role: discord.Role):
         """Returns a dict with the role's details
 
         Parameters
@@ -511,7 +511,7 @@ class RoleParser(Parser):
         }
         return data
 
-    def ServerRoles(self, roles):
+    def Servers(self, roles):
         """Returns a dict with the roles and their details
 
         Parameters
@@ -519,7 +519,7 @@ class RoleParser(Parser):
         roles: list[discord.Role]"""
         data = {}
         for role in roles:
-            data[role.id] = self.ServerRole(role)[role.id]
+            data[role.id] = self.Server(role)[role.id]
         return data
 
 class EmojiParser(Parser):
@@ -527,7 +527,7 @@ class EmojiParser(Parser):
 
     This a parser mostly for discord.Emoji related things"""
 
-    def ServerEmoji(self, emoji: discord.Emoji):
+    def Server(self, emoji: discord.Emoji):
         """Returns a dict with the emoji's details
 
         Parameters
@@ -543,7 +543,7 @@ class EmojiParser(Parser):
         }
         return data
 
-    def ServerEmojis(self, emojis):
+    def Servers(self, emojis):
         """Returns a dict with the channels and their details
 
         Parameters
@@ -551,7 +551,7 @@ class EmojiParser(Parser):
         emojis: list[discord.Emoji]"""
         data = {}
         for emoji in emojis:
-            data[emoji.id] = self.ServerEmoji(emoji)[emoji.id]
+            data[emoji.id] = self.Server(emoji)[emoji.id]
         return data
 
 class ConfigParser(Parser):
