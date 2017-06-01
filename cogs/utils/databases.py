@@ -1042,7 +1042,7 @@ class MembersDB():
     def ban(self, member: discord.Member):
         """Ban a user from a server
 
-        ..note::
+        .. note::
             Bans will overwrite the full ``servers`` to replace the
             current servers data with {"banned": true}
 
@@ -1055,7 +1055,7 @@ class MembersDB():
     def unban(self, server: discord.Server, user: discord.User):
         """Unban a user from a server
 
-        ..note::
+        .. note::
             Bans will overwrite the full ``servers`` to remove the
             current servers data!
 
