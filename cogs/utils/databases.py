@@ -237,8 +237,9 @@ cDiscriminator = "`discriminator` VARCHAR(45) NOT NULL"
 cAvatarUrl = "`avatar_url` VARCHAR(45) NULL"
 cDUrl = "`default_url` VARCHAR(45) NOT NULL"
 cServers = "`servers` JSON NULL"
-cStatus = "`status` ENUM('online', 'idle', 'dnd', 'offline') NOT NULL DEFAULT 'offline'"
+cStatus = "`status` VARCHAR(45) NULL DEFAULT 'offline'"
 cGame = "`game` LONGTEXT NULL"
+cConfigs = "`confs` JSON NULL"
 
 class MessageDB():
     """Message Database!
@@ -946,9 +947,9 @@ class MembersDB():
     DB: str
         This is the table prefix to denote whether we are running in dev mode or not!"""
 
-    createMemberDBIfNot = cTableIfNot+" {PRE}_users ("+cID+", "+cUserID+", "+cUsername+", "+cDiscriminator+", "+cAvatarUrl+", "+cDUrl+", "+cServers+", "+cStatus+", "+cGame+", "+PKID+");"
+    createMemberDB = cTableIfNot+" {PRE}_members ("+cID+", "+cUsername+", "+cDiscriminator+", "+cAvatarUrl+", "+cDUrl+", "+cStatus+", "+cGame+", "+cServers+", "+cConfigs+", "+cCreatedAt+", "+PKID+");"
 
-    userUpdate = " {PRE}_server(`user_id`, `username`, `discriminator`, `avatar_url`, `default_url`, `servers`, `status`, `game`) VALUES('{UID}', '{USN}', '{DIS}', '{AURL}', '{DURL}', '{SERV}', '{STA}', '{GME}');"
+    createMember = "INSERT INTO {PRE}_members(`id`, `username`, `discriminator`, `avatar_url`, `default_url`, `servers`, `status`, `game`, `servers`, `confs`, `created_at`) VALUES({MID}, '{MUN}', {DIS}, '{ARL}', '{DRL}', '{STS}', '{GME}', '{SVR}', '{CON}', '{CAT}');"
 
     def __init__(self, DBC, DB):
         self.DBC = DBC
@@ -969,11 +970,12 @@ class MembersDB():
         ----------
         user : discord.Member
             The user to be looked up."""
+
         self.createTable()
         results = self.DBC.queryOne(
-            "SELECT * FROM %s_users WHERE user_id = '%s';" % (
-                self.DB,
-                member.id
+            "SELECT * FROM {PRE}_members WHERE `id` = {MID};".format(
+                PRE=self.DB,
+                MID=int(member.id)
             )
         )
         if not results:
@@ -991,7 +993,18 @@ class MembersDB():
         self.createTable()
         if self.exists(member):
             return True
-        pass
+        return self.DBC.query(self.createMember(
+            MID=int(member.id),
+            MUN=member.name,
+            DIS=int(member.discriminator),
+            ARL=member.avatar_url,
+            DRL=member.default_avatar_url,
+            STS=MemberParser.getStatus(member.status),
+            GME=MemberParser.getGame(member.game),
+            SVR='null',  #NOTE: Remember to find a good way to go through all the servers in the mysql database to find all the servers this guy is in and get the configs from that
+            CON='{}',
+            CAT=str(member.created_at)
+        ))
 
     def _update(self, before: discord.Member, after: discord.Member):
         pass
@@ -1018,39 +1031,20 @@ class MembersDB():
                     return False
 
     def delete(self, member: discord.Member):
-        return
-
-    def ban(self, member: discord.Member):
-        return
-
-    def unban(self, server: discord.Server, user: discord.User):
-        return
-
-    def hasServer(self, user, server: discord.Server):
-        """Checks if the user has the server in it!
-        Returns a bool
+        """This deletes a member from the database
 
         Parameters
         ----------
-        user : discord.User / discord.Member
-            Is the Member/User that is going to be checked!
-        server : discord.Server
-            The discord server that is being searched for"""
-        results = self.DBC.queryOne(
-            "SELECT servers FROM %s_users WHERE user_id = '%s';" % (
-                self.DB,
-                user.id
-            )
-        )
-        for key, value in json.loads(results[0]).items():
-            if key == "servers":
-                for idx, val in enumerate(value):
-                    if val == server.id:
-                        return True
-        return False
+        member: discord.Member
+            The member you want removed"""
+        pass
 
     def ban(self, member: discord.Member):
         """Ban a user from a server
+
+        ..note::
+            Bans will overwrite the full ``servers`` to replace the
+            current servers data with {"banned": true}
 
         Parameters
         ----------
@@ -1059,7 +1053,11 @@ class MembersDB():
         pass
 
     def unban(self, server: discord.Server, user: discord.User):
-        """Ban a user from a server
+        """Unban a user from a server
+
+        ..note::
+            Bans will overwrite the full ``servers`` to remove the
+            current servers data!
 
         Parameters
         ----------
@@ -1237,9 +1235,4 @@ def log_resumed(bot):
     pass
 
 def log_error(bot, error):
-    #if query(createErrorDBIfNot % (bot.currentDB)) == True:
-        #print("Creating Table %s_errors" % (bot.currentDB))
-    #query(insertErrorLog % (bot.curretDB, error, datetime.datetime.utcnow()))
     pass
-
-#SOMEONE SEND HELP, IM STUCK IN AN LOOP BETWEEN A MAINFRAME AND A POTATO

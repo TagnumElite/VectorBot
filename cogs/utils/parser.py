@@ -52,6 +52,21 @@ class MemberParser(Parser):
             else:
                 return "Error"
 
+    def getGame(self, game):
+        """Gets the name of the game else if None
+
+        Parameters
+        ----------
+        game: discord.Game
+            If game is a str, then returns that string,
+            if game is None returns \"\""""
+
+        if isinstance(game, None):
+            return ""
+        elif isinstance(game, str):
+            return game
+        else:
+            return game.name
 
     def Server(self, member: discord.Member):
         """Returns a dict with the member's details
@@ -84,6 +99,16 @@ class MemberParser(Parser):
         for member in members:
             data[member.id] = self.Server(member)[member.id]
         return data
+
+    def dict(self, member: discord.Member):
+        """Turns a discord.Member into a dict which is
+        understandable by the MySQL Server
+
+        Parameters
+        ----------
+        member: discord.Member
+            The Member"""
+        pass
 
 class MessageParser(Parser):
     """Message Parser: Parser
@@ -310,8 +335,8 @@ class ServerParser(Parser):
     def getUpdates(self, before: discord.Server, after: discord.Server):
         """Returns a list of string with what has changed
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         before: discord.Server
             Before the updat
         after: discord.Server
