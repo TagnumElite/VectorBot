@@ -18,10 +18,18 @@ I don't have any rules yet but I will in the future!
 - [ ] Steam Extension ([SteamRep API](https://github.com/EliteKast/libzaek.py))
 - [ ] Wordpress API Support (More Importantly REST API Support)
 - [ ] Feeds Extension (RSS, ATOM, MOAR)
-- [ ] Twitch, Twitter, Facebook, etc. `I have no idea how to explain`
+- [ ] Notifier / Social Feed
+    - [ ] Twitch `WIP, Enabled only in Dev Mode`
+    - [ ] Twitter `PLANNED`
+    - [ ] Facebook `PLANNED`
+    - [ ] Tumblr `PLANNED`
+    - [ ] WordPress `PLANNED`
+    - [ ] Hitbox `PLANNED`
+    - [ ] Beam `PLANNED`
+    - Suggest Moar!
 - [ ] Image Extension (Image Manipulation) `Only Enabled In Dev Mode`
 - [ ] Email Support (Send emails when needed) `No Extension, will have no commands.`
-- [ ] Music Player (Will be done in the future)  `Only Enabled In Dev Mode`
+- [x] Music Player (Stolen from discord.py)  `Dev Mode Only, Will be improved immensly before it is enabled by default`
 - [ ] Record Player (Prep. Not Possible right now) `Currently Impossible`
 
 ## TODO:
@@ -37,7 +45,7 @@ This will be used for a few things like when adding a new team on a website (WOR
 ### Where is the main FAQ?
 In the [Wiki](https://github.com/TagnumElite/VectorBot/wiki)!
 ### This bot looks familiar?
-Thats because to understand discord.py I forked @Rapptz RoboDanny and built off on that.
+Thats because to understand discord.py I forked @Rapptz/RoboDanny and built off on that.
 ### I want to report a bug:heavy_exclamation_mark:
 Make an issue, same goes for suggestions!
 ### How did you learn to code? :coffee:
