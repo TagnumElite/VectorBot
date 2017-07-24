@@ -19,12 +19,6 @@ IF x%ValueValue:0x0=%==x%ValueValue% (
 )
 ENDLOCAL
 
-
-IF EXIST %SYSTEMROOT%\py.exe (
-    CMD /k py.exe bot.py
-    EXIT
-)
-
 python --version > NUL 2>&1
 IF %ERRORLEVEL% NEQ 0 GOTO nopython
 

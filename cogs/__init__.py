@@ -11,3 +11,5 @@ from .profile import Profile
 from .steams import Steams
 from .support import Support
 from .utilities import Utilities
+from .twitch import Twitch
+from .music import Music

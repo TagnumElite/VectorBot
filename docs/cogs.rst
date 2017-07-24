@@ -66,3 +66,14 @@ Utilities
 .. autoclass:: Utilities
     :members:
 
+Music
+-----
+
+.. autoclass:: Music
+    :members:
+
+Twitch
+------
+
+.. autoclass:: Twitch
+    :members:
