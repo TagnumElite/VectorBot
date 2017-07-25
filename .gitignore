@@ -88,23 +88,10 @@ ENV/
 # Rope project settings
 .ropeproject
 
-# Discord Bots That I have in the same directory. Let's not upload them!
-/MusicBot/
-/NotSoBot/
-/Red-DiscordBot/
-/disco/
-/discord_feedbot/
-/mee6/
-
 # Lets not store any compressed files
 *.zip
 *.rar
 *.7z
-
-# Lets ignore files you won't be needing
-*.log
-/configs.json
-*.pdf
 
 # I don't want your stuff
 buffer_*.txt
@@ -113,6 +100,9 @@ files/*
 !files/default_banner.png
 !files/default_font_name.ttf
 !files/default_font_game.ttf
+/configs.json
+logs/*
+!logs/_log files are text
 
 # I Have the wiki in here too
 wiki/
