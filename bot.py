@@ -1,4 +1,4 @@
-#!/usr/bin/python3.6
+#!/usr/bin/python3
 # Copyright (c) 2017 Tagan Hoyle
 # This software is released under an GPL-3.0 license.
 # See LICENSE.md for full details.
@@ -27,7 +27,10 @@ import re
 import discord.errors
 import discord
 from discord.ext import commands
-from cogs.utils import checks, databases
+from cogs.utils import checks#, databases
+from cogs.utils import parser
+
+Parser = parser.Parser()
 
 Configs = {}
 try:
@@ -41,40 +44,37 @@ except FileNotFoundError:
         exit("Missing ExampleConfig.json! Please download the ExampleConfig.json to setup bot!")
     else:
         with open('configs.json', 'w') as newconfig:
+            #exampleconfigs = re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig)
+            #for key, value in json.loads(exampleconfigs).items():
+            #    exampleconfigs[key] = input("Enter {key} ({Type}):".format(
+            #        key=key,
+            #        Type=type(value).__name__
+            #    ))
             newconfig.write(re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig))
         exit("Setup configs.json!!!")
 
 
 defaultDir = os.getcwd()
 
-DBC = databases.DBC(
-    database=Configs["Database Name"],
-    user=Configs["Database User"],
-    password=Configs["Database Pass"],
-    host=Configs["Database Host"],
-    port=Configs["Database Port"]
-)
+currentToken = Configs["Modes"][Configs["Mode"]]["Token"]
+currentLog = Configs["Modes"][Configs["Mode"]]["Log"]
+currentWelcome = Configs["Modes"][Configs["Mode"]]["Welcome"]
+currentDB = Configs["Modes"][Configs["Mode"]]["DB Prefix"]
+currentServer = Configs["Modes"][Configs["Mode"]]["Server"]
+currentAnnounce = Configs["Modes"][Configs["Mode"]]["Announce"]
+currentPrefix = Configs["Modes"][Configs["Mode"]]["Prefix"]
+currentDescription = Configs["Modes"][Configs["Mode"]]["Description"]
+currentStatus = Configs["Modes"][Configs["Mode"]]["Status"]
+DMHelp = Configs["Modes"][Configs["Mode"]]["Description"]
+
+#DBC = databases.DBC(
+#    database=Configs["Database Name"],
+#    user=Configs["Database User"],
+#    password=Configs["Database Pass"],
+#    host=Configs["Database Host"],
+#    port=Configs["Database Port"]
+#)
 startup_time = datetime.datetime.utcnow()
-
-if Configs["Dev Mode"]:
-    currentToken = Configs["Dev Token"]
-    currentLog = Configs["Dev Log"]
-    currentWelcome = Configs["Dev Welcome"]
-    currentDB = Configs["Dev Database Prefix"]
-    #currentNotification = devNotification
-else:
-    currentToken = Configs["Bot Token"]
-    currentLog = Configs["Bot Log"]
-    currentWelcome = Configs["Bot Welcome"]
-    currentDB = Configs["Bot Database Prefix"]
-    #currentNotification = botNotification
-
-#try:
-#    import uvloop
-#except ImportError:
-#    pass
-#else:
-#    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 discord_logger = logging.getLogger('discord')
 discord_logger.setLevel(logging.CRITICAL)
@@ -97,15 +97,15 @@ log.addHandler(handler)
 help_attrs = dict(hidden=True)
 
 bot = commands.Bot(
-    command_prefix=Configs["Prefix"],
-    description=Configs["Description"],
-    pm_help=Configs["PM Help"],
+    command_prefix=currentPrefix,
+    description=currentDescription,
+    pm_help=DMHelp,
     help_attrs=help_attrs
 )
 
 def isHelpCommand(query):
     """Checks if the text starts with any of the prefixes"""
-    for pre in Configs["Prefix"]:
+    for pre in currentPrefix:
         if query.lower().startswith(pre+"help"):
             return True
     return False
@@ -141,7 +141,7 @@ async def on_ready():
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
     await log_message("Started:")
-    await bot.change_presence(game=discord.Game(name=Configs["Status"]))
+    await bot.change_presence(game=discord.Game(name=currentStatus))
     bot.currentLog = currentLog
     bot.currentWelcome = currentWelcome
     #bot.currentNotification = currentNotification
@@ -160,7 +160,6 @@ async def on_message(message):
     channel = message.channel
     if message.author.bot or message.author.id == bot.user.id:
         bot.messages.remove(message)
-        print("BOT")
         return
     if message.author.id in Configs["Ignored IDs"] or message.server.id in Configs["Ignored IDs"] or message.channel.id in Configs["Ignored IDs"]:
         bot.messages.remove(message)
@@ -201,40 +200,36 @@ async def on_member_join(member):
         datetime.datetime.utcnow()
     )
     channel = discord.Object(id=currentWelcome)
-    em = discord.Embed(
-        title='Welcome to %s!' % (member.server.name),
-        description="""Use these commands %s!
-- V!help to get a PM about my commands!
-- V!rules to see the rules!""" % (member.mention),
-        color=0x2ecc71
+    embed = Configs["Welcome Embed"]
+    embed["Colour"] = 0x2ecc71
+    em = Parser.createEmbed(
+        data=embed,
+        extra=Parser.make_dicts(member, member.server, Configs)
     )
-    em.set_author(
-        name=member.name,
-        icon_url=member.avatar_url
-    )
-    em.set_thumbnail(url=member.avatar_url)
     await bot.send_message(channel, embed=em)
 
 @atexit.register
 def onExit():
     """Called when the programs crashes or shutsdown normally.
     Won't work if the window/screen/tmux is shut down forcefully."""
-    os.chdir(defaultDir)
-    if len(DBC.Buffer) > 0:
-        with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
-            for query in DBC.Buffer:
-                buffer.write(query)
-            buffer.close()
-    DBC.close()
+    #os.chdir(defaultDir+"/buffers")
+    #if len(DBC.Buffer) > 0:
+    #    with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
+    #        for query in DBC.Buffer:
+    #            buffer.write(query)
+    #        buffer.close()
+    #DBC.close()
 
 def main():
     """This runs the magic and everything else!"""
+
     #Set Global Vars Before Setting Up Cogs
     bot.currentLog = currentLog
     bot.currentDB = currentDB
     bot.currentDIR = defaultDir
+    bot.currentAnnounce = currentAnnounce
     bot.Configs = Configs
-    bot.DBC = DBC
+    #bot.DBC = DBC
     bot.startup_time = startup_time
 
     #Setup Main Cogs
@@ -247,7 +242,7 @@ def main():
             print("Loaded Extension: ", extension)
 
     #Setup Dev Cogs
-    if Configs["Dev Mode"]:
+    if Configs["Mode"].lower() in ["dev", "development"]:
         for dextension in Configs["Dev Cogs"]:
             try:
                 bot.load_extension(dextension)

@@ -6,7 +6,6 @@ Because JSON
 import json
 import discord
 
-
 class Parser():
     """A Normal Parser
 
@@ -21,6 +20,160 @@ class Parser():
         to: dict
             Turns the dict into a string"""
         return json.dumps(to)
+
+    def jsonLoads(self, data):
+        """This is esentially json.loads(data)
+
+        Parameters
+        ----------
+        data: str
+            Turns the str into a dict"""
+        return json.loads(data)
+
+    def getStreamIDs(self, data):
+        """This converts twitch stream data into IDs
+
+        Parameters
+        ----------
+        data: str
+            The stream data"""
+
+        pass
+
+    def createEmbed(self, data: dict, extra: dict={}):
+        """Turns a distionary into a discord.Embed
+
+        Parameters
+        ----------
+        data: dict
+            This is the main data to be converted
+        extra: dict
+            This is for changing any special strings"""
+
+        print("Create")
+        em = discord.Embed(
+            title=data["Title"].format(**extra),
+            description=data["Description"].format(**extra),
+            color=data["Colour"],
+            url=data["Url"].format(**extra)
+        )
+        print("Set Image")
+        em.set_image(url=data["Image"].format(**extra))
+        print("Set Thumbnail")
+        em.set_thumbnail(url=data["Thumbnail"].format(**extra))
+        print("Set Footer")
+        if data["Footer"]["Enabled"]:
+            em.set_footer(
+                text=data["Footer"]["Text"].format(**extra),
+                icon_url=data["Footer"]["Icon Url"].format(**extra)
+            )
+        print("Set Author")
+        if data["Author"]["Enabled"]:
+            em.set_author(
+                name=data["Author"]["Name"].format(**extra),
+                icon_url=data["Author"]["Avatar Url"].format(**extra)
+            )
+        print("Set Inline")
+        for inline in data["Inline"]:
+            em.add_field(
+                name=inline["Name"].format(**extra),
+                value=inline["Value"].format(**extra),
+                inline=inline["Inline"] if "Inline" in inline else False
+            )
+        print("Return")
+
+        return em
+
+    def merge_dicts(self, *dict_args):
+        """Given any number of dicts, shallow copy and merge into a new dict,
+        precedence goes to key value pairs in latter dicts.
+
+        Parameters
+        ----------
+        dicts: dict
+            A list of dictionarys to combine
+
+        Returns
+        -------
+        dict
+            The dictionaries combined"""
+
+        result = {}
+        for dictionary in dict_args:
+            result.update(dictionary)
+        return result
+
+    def make_dict(self, item):
+        """Creates a dictionary from an supported item"""
+        results = {}
+        if isinstance(item, dict):
+            results = item
+        elif isinstance(item, discord.Server):
+            results["server"] = item.name
+            results["server_id"] = item.id
+            #results["emojis"] = self.make_dict(item.emojis)
+            #results["roles"] = self.make_dict(item.roles)
+            #results["region"] = str(item.region)
+            results["afk_timeout"] = item.afk_timeout
+            results["afk_channel"] = item.afk_channel.id
+            #results["members"] = self.make_dict(item.members)
+            #results["channels"] = self.make_dict(item.channels)
+            #results["icon_hash"] = item.icon
+            results["owner"] = item.owner.id
+            results["available"] = not item.unavailable
+            #results["large"] = item.large
+            #results["mfa_level"] = item.mfa_level
+            #results["verification_level"] = item.verficiation_level
+            results["icon_url"] = item.icon_url
+            results["size"] = item.member_count
+        elif isinstance(item, discord.Member):
+            results["member"] = item.name
+            results["member_id"] = item.id
+            results["discriminator"] = item.discriminator
+            results["avatar_hash"] = item.avatar
+            results["member_bot"] = item.bot
+            results["avatar_url"] = item.avatar_url
+            results["member_joined"] = item.joined_at
+            #results["playing"] = item.game.name if not item.game else None
+            results["nick"] = item.nick
+        elif isinstance(item, discord.User):
+            results["user"] = item.name
+            results["user_id"] = item.id
+        #elif isinstance(item, discord.Emoji):
+        #elif isinstance(item, discord.Role):
+        #elif isinstance(item, discord.Channel):
+        #elif isinstance(item, discord.Message):
+        #elif isinstance(item, discord.Reaction):
+        #elif isinstance(item, discord.Embed):
+        #elif isinstance(item, discord.VoiceState):
+        #elif isinstance(item, discord.Colour):
+        #elif isinstance(item, discord.Game):
+        #elif isinstance(item, discord.Permissions):
+        #elif isinstance(item, discord.PermissionsOverwrite):
+        #elif isinstance(item, discord.PrivateChannel):
+        #elif isinstance(item, discord.Invite):
+        #elif isinstance(item, discord.CallMessage):
+        #elif isinstance(item, discord.GroupCall):
+        #elif isinstance(item, list):
+        else:
+            try:
+                results = dict(item)
+            except Exception as E:
+                try:
+                    results = item.dict
+                except Exception as A:
+                    raise Exception("Sorry, I don't know how to turn that into a dict!")
+
+        return results
+
+    def make_dicts(self, *items):
+        """Make dictionarys out the items given"""
+
+        results = {}
+        for item in items:
+            results = self.merge_dicts(results, self.make_dict(item))
+
+        return results
 
 class MemberParser(Parser):
     """Member Parser: Parser
@@ -61,7 +214,7 @@ class MemberParser(Parser):
             If game is a str, then returns that string,
             if game is None returns \"\""""
 
-        if isinstance(game, None):
+        if not game:
             return ""
         elif isinstance(game, str):
             return game
@@ -135,44 +288,33 @@ class MessageParser(Parser):
             data = {"emoji":reactions.emoji.id, "custom":int(reactions.custom_emoji), "count":str(reactions.count)}
             json_data['reaction'].append(data)
 
-    def ReactionDB(self, reaction: discord.Reaction, results: dict, user=None, add: bool=True):
-        """If no user is added it automatically assumes the reactions were cleared even if add bool is parsed.
-        If add is false will remove reaction and reaction doesn't exists returns orginal results
+    def AddReaction(self, reaction: discord.Reaction, user, data):
+        """Add the reaction to already existing reactions
 
         Parameters
         ----------
         reaction: discord.Reaction
             Reaction
-        results: dict
+        user: discord.User
+            The user that added the reaction
+        data: dict
+            The already exsiting reactions"""
 
-        user: discord.User/Member
-            Default: None
-        add: bool
-            Default: True."""
-        exists = False
-        if user is not None:
-            for key, value in results.items():
-                if key == reaction.emoji.name:
-                    exists = True
-                    for x in value:
-                        if x == user.id:
-                            return False
-                        else:
-                            if add:
-                                results[key].append(user.id)
-                                return results
-                            else:
-                                index = results[key].index(user.id)
-                                del results[key][index]
-                                return results
-                else:
-                    if add:
-                        results[reaction.emoji.name] = [user.id]
-                        return results
-                    else:
-                        return results
-        else:
-            return "{}"
+        return "{}"
+
+    def RemoveReaction(self, reaction: discord.Reaction, user, data):
+        """Removes the reaction to already existsing reactions
+
+        Parameters
+        ----------
+        reaction: discord.Reaction
+            Reaction
+        user: discord.User
+            The user that removed the reaction
+        data: dict
+            The already existing reactions"""
+
+        return "{}"
 
     def MessageMentions(self, message: discord.Message):
         """Converts mentions into a dict

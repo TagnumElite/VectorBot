@@ -1,27 +1,72 @@
-{   //Please remove all Comments from the Real configs.json! //Lines break the code!
-    //I will try my hardest to comment EVERYTHING but this takes time!
-    "Bot Token": "PUT THE BOTS TOKEN HERE", // This is the bots token
-    "Bot Server": "123456789101112131", // This is the main server that the bot will function from
-    "Bot Log": "123456789101112131", // This is the channel where the bot will log messages
-    "Bot Welcome": "123456789101112131", // This is the channel where the bot is going to welcome platers
-    "Dev Announcements": "123456789101112131", //Discord ID of the channel #Annoucements
-    "Bot Database Prefix": "vb",  //Seperate prefix to make sure the databases don't mix
+{   //Comments are automatically removed on bot startup!
+    "Mode": "Default", //This replaces the dev mode object and allows for custom modes
+    "Modes": {//These are the default modes
+        "Default": { //Default Mode
+            "Token": "PUT THE BOTS TOKEN HERE", // This is the bots token
+            "Server": "223848547081125888", // This is the main server that the bot will function from
+            "Log": "286148169396649994", // This is the channel where the bot will log messages
+            "Welcome": "286802443239686144", // This is the channel where the bot is going to welcome platers
+            "Announce": "290747091020414978", //Discord ID of the channel #Annoucements
+            "Prefix": ["v!", "V!", "\\N{HEAVY EXCLAMATION MARK SYMBOL}"], //Prefixes, Remember to add both uppercase and lowercase!
+            "DB Prefix": "vb",  //Seperate prefix to make sure the databases don't mix
+            "Owner": "179891973795086336",  //The Discord ID of the user hosting/manageing the bot
+            "Description": "Hello!, I am the VectorBot!",  //This is the description displayed on the help screen
+            "DM Help": true,  //This is if you want the help message sent over a direct message
+            "Status": "V!help",  //The is the *Playing* status
+            "Splash Site": "http://example.com", //The site may not end with an /
+            "Splash Path": "C:/PUBLIC_HTML", //This is where the splashes are stored!
+            "Cogs": [
 
-    // Just a quick message. Bot Log and Bot Welcome will be removed as the bot gets support for to be able to be used in multiple servers
+            ]
+        },
+        "Dev": { //Dev Mode
+            "Token": "PUT THE BOTS TOKEN HERE", //Development Bot Token
+            "Server": "285864807775600641",  //Discord ID of the server
+            "Log": "286003475970523136", //Discord ID of the channel #log
+            "Welcome": "287118703299133440", //Discord ID of the channel #Welcome
+            "Announce": "291810238179573760", //Discord ID of the channel #Annoucements
+            "Prefix": "!!", //Command Prefix
+            "DB Prefix": "vd",  //Seperate prefix to make sure the databases don't mix
+            "Owner": "179891973795086336",  //The Discord ID of the user hosting/manageing the bot
+            "Description": "Hello!, I am the experimental VectorBot!",  //This is the description displayed on the help screen
+            "DM Help": false,  //This is if you want the help message sent over a direct message
+            "Status": "!!help",  //The is the *Playing* status
+            "Splash Site": "http://example.com", //The site may not end with an /
+            "Splash Path": "C:/PUBLIC_HTML", //This is where the splashes are stored!
+            "Cogs": [
 
-    "Dev Mode": false,  //This enables bot mode which enables the Dev Cogs as well some undertested functionallity
-    "Dev Token": "awaaewg.awdwawaawGawDA121245", //Development Bot Token
-    "Bot Server": "123456789101112131",  //Discord ID of the server
-    "Dev Log": "123456789101112131", //Discord ID of the channel #log
-    "Dev Welcome": "123456789101112131", //Discord ID of the channel #Welcome
-    "Dev Announcements": "123456789101112131", //Discord ID of the channel #Annoucements
-    "Dev Database Prefix": "vd",  //Seperate prefix to make sure the databases don't mix
+            ]
+        }
+    },
+
+    "Welcome Embed": { //This is the embeded message that will be sent.
+        "Title": "Welcome to {server}!", //Title of the embed
+        "Description": "Check out the rules first <@{member_id}>!", //This is the description of the embed
+        "Colour": "", //Sets the colour of the embed, currently not working.
+        "Footer": { //This is the footer of the embed
+            "Enabled": false, //Set weather you want a footer or not
+            "Text": "{server}", //What is displayed by the embed if enabled
+            "Icon Url": "{icon_url}" //A small icon displayed by the footer if enabled. Can be empty
+        },
+        "Url": "", //The icon of the embed, can be empty
+        "Thumbnail": "{avatar_url}", //The thumbnail of the embed, can be empty
+        "Image": "", //The image of the embed, can be empty
+        "Author": { //This is the author of the embed
+            "Enabled": true, //Set weather you want an author
+            "Name": "{member}", //Name of the author
+            "Avatar Url": "{avatar_url}" //Avatar of the author, can be empty
+        },
+        "Inline": [ //This is what is displayed inside the embed, can be left empty
+            {"Name": "{Prefix[1]}Rules", "Value": "Check out our rules", "Inline": true},
+            {"Name": "{Prefix[1]}Help", "Value": "Check out my commands", "Inline": true}
+        ]
+    },
 
     "Database Type": "MySQL",     //Only a placeholder for functionality that may come in the future
     "Database Host": "localhost", //Default: localhost
-    "Database Port": "3306",      //Default: 3306
-    "Database Name": "vectorbot",    //Name of the Database
-    "Database User": "Vector", //Username of the SQL account
+    "Database Port": 3306,        //Default: 3306
+    "Database Name": "vectorbot", //Name of the Database
+    "Database User": "Vector",    //Username of the SQL account
     "Database Pass": "",          //Can Be Empty if no password
 
     "Cogs": [ //Normally Enabled Cogs
@@ -33,14 +78,6 @@
         "cogs.support"     //Bug Reporting and Suggestions. All this does is send bugs and suggestions to my discord account
     ],
 
-    "Owner": "123456789101112131",  //The Discord ID of the user hosting/manageing the bot
-    "Prefix": ["v!", "V!", "\\N{HEAVY EXCLAMATION MARK SYMBOL}"], //Prefixes, Remember to add both uppercase and lowercase!
-    "Description": "Hello!, I am the VectorBot!",  //This is the description displayed on the help screen
-    "PM Help": true,  //This is if you want the help message sent over a direct message
-    "Status": "V!help",  //The is the *Playing* status
-    "Splash Site": "http://example.com", //The site may not end with an /
-    "Splash Path": "C:/PUBLIC_HTML", //This is where the splashes are stored!
-
     //Email Settings - Only a placeholder
     "Email User": "user@example.com",  //Username
     "Email Pass": "example.password",  //Password
@@ -50,22 +87,63 @@
     "POP3 Port": 110, //Default: 110
     "SMTP Port": 25,  //Default: 25
 
-    "Dev Cogs": [ // Extensions that will be enabled if Dev Mode is set to true
+    "Dev Cogs": [ //Extensions that will be enabled if Dev Mode is set to true
         "cogs.api",
-        "cogs.feeds",      //Feed Parser.
-        "cogs.image"
+        "cogs.feeds",
+        "cogs.image",
+        "cogs.twitch",
+        "cogs.music",
+        "cogs.social"
     ],
 
     "Ignored IDs": [//These ids are ignored and don't get logged nor can they use commands, can be a server, user, channel id
-        ""
+        "286148169396649994"
     ],
+
+    "Twitch Client ID": "uo6dggojyb8d6soh92zknwmi5ej1q2", //This is for the twitch notifier
+    "Twitch Refresh": 300, //This is how often the twitch notifier looks for new streams, time in seconds.
+    "Twitch Users": [ //This is the channels that the twitch notifier will look for, for now
+        "tagnumelite",
+        "elitekast"
+    ],
+    "Twitch Embed": { //This is the embeded message that will be sent.
+        "Title": "{name} is live!", //Title of the embed
+        "Description": "", //This is the description of the embed
+        "Colour": "", //Sets the colour of the embed, currently not working.
+        "Footer": { //This is the footer of the embed
+            "Enabled": false, //Set weather you want a footer or not
+            "Text": "", //What is displayed by the embed if enabled
+            "Icon Url": "" //A small icon displayed by the footer if enabled. Can be empty
+        },
+        "Url": "", //The icon of the embed, can be empty
+        "Thumbnail": "", //The thumbnail of the embed, can be empty
+        "Image": "{preview[large]}", //The image of the embed, can be empty
+        "Author": { //This is the author of the embed
+            "Enabled": false, //Set weather you want an author
+            "Name": "", //Name of the author
+            "Avatar Url": "" //Avatar of the author, can be empty
+        },
+        "Inline": [ //This is what is displayed inside the embed, can be left empty
+            {"Name": "Viewers", "Value": "{viewers}", "Inline": true},
+            {"Name": "Created At", "Value": "{created_at}", "Inline": true}
+        ]
+    },
+
+    "Music": {
+        "Default Volume": 100, //Default Volume
+        "Autojoin Channel": "294769288131117056", //The voice channel the bot automatically joins
+        "Auto Playlist": [ //Music that is automatically played
+
+        ]
+    },
 
     //Rules Command Management
     "Rules": {
         "Title": "{server}'s Rules",//Title and Description has special value {server}, {channel}, {author}
-        "Description": "",
+        "Description": "{server}'s Description",
         "Colour": "ff0000", //Color Must be a HEX Value #ff0000 For Red but isn't used for now
         "Footer": { //Footer: Text: Required; Icon Url: Optional, Must Be A http(s) url!
+            "Enabled": true,
             "Text": "e-Sports is a profession and here we are professionals. We will not be held liable if you are recorded, your IP is tracked, and you are held accountable for your actions. By being on this discord you indemnify {server} for any responsibility",
             "Icon Url": "http://www.psdgraphics.com/file/red-warning-sign.jpg"
         },
@@ -73,6 +151,7 @@
         "Thumbnail": "", //Can Be Empty. Must Be A http(s) url!
         "Image": "",     //Can Be Empty. Must Be A http(s) url!
         "Author": {      //Author: Name: Required; Avatar Url: Optional, Must Be A http(s) url!
+            "Enabled": true,
             "Name": "{server}", //Can Be {server}
             "Avatar Url": "{server_icon}" //Can Be {server_icon}
         },
@@ -91,4 +170,4 @@
         ]
     }
 }
-//I am really tired, send help or chocolate
+ //I am really tired, send help or chocolate

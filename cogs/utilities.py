@@ -1,6 +1,7 @@
 from discord.ext import commands
 from .utils import checks, config
 import discord
+import asyncio
 import inspect
 import urllib
 
