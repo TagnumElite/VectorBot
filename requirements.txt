@@ -3,7 +3,6 @@ discord.py[voice]
 cffi==1.6.0; sys_platform == 'win32' #Don't Know
 mysqlclient #For Accessing the Database
 requests #Yes
-steam #I am making my own libary for this that can hook into steamrep for added functionallity!
 psutil #Might be optional
 lxml #This too, will decide in the future
 sphinx>=1.5.6

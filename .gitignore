@@ -100,7 +100,7 @@ files/*
 !files/default_banner.png
 !files/default_font_name.ttf
 !files/default_font_game.ttf
-/configs.json
+/config.json
 logs/*
 !logs/_log files are text
 

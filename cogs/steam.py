@@ -8,7 +8,7 @@ import urllib
 import datetime
 from collections import Counter
 
-class Steams:
+class Steam:
     """Steam Commands"""
 
     def __init__(self, bot):
@@ -71,4 +71,4 @@ class Steams:
         await self.bot.say(embed=em)
 
 def setup(bot):
-    bot.add_cog(Steams(bot))
+    bot.add_cog(Steam(bot))

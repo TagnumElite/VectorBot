@@ -9,9 +9,9 @@ ARRRRRRRRRRRGGGG
 """
 
 import discord, asyncio
-import random, steam
+import random#, steam
 import json, socket
-from steam import WebAPI, SteamID
+#from steam import WebAPI, SteamID
 from discord.ext import commands
 import urllib, requests
 

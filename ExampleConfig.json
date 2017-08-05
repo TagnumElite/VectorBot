@@ -39,6 +39,12 @@
         }
     },
 
+    "Wordpress Plugin": { //This is for a wordpress plugin I will be making
+        "Enabled": true,  //Wether you use the plugin or not!
+        "Twitch": true,   //This will require WP Social Login and my plugin
+        "Teams": false
+    },
+
     "Welcome Embed": { //This is the embeded message that will be sent.
         "Title": "Welcome to {server}!", //Title of the embed
         "Description": "Check out the rules first <@{member_id}>!", //This is the description of the embed
@@ -71,7 +77,6 @@
 
     "Cogs": [ //Normally Enabled Cogs
         "cogs.admin",      //Admin Stuff
-        "cogs.steams",     //Steam Functionality
         "cogs.database",   //Config And Logging
         "cogs.utilities",  //Useful Stuff
         "cogs.misc",       //The Little Things

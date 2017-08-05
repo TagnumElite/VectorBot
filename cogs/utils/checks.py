@@ -133,11 +133,6 @@ def find_user(username, members):
 class Checks():
     """TO BE SETUP"""
     pass
-async def log_message(message, bot, timeOfMessage=datetime.datetime.utcnow()):
-    print(message)
-    channel = discord.Object(id=bot.currentLog)
-    await bot.send_message(channel, message + " | " + str(timeOfMessage))
-
 async def get_different_perms(before, after):
     updates = {}
     if before.create_instant_invite != after.create_instant_invite:

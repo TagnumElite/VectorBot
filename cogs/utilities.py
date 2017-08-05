@@ -43,13 +43,14 @@ class Utilities:
 
     @commands.command(pass_context=True)
     @commands.cooldown(rate=2, per=3600.0)
-    @checks.admin_or_permissions(manage_server=True)
     async def setavatar(self, ctx, url=None):
         """Sets the bots avatar! BROKEN!"""
         message = ctx.message
         author = message.author
         server = message.server
         channel = message.channel
+        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+            return
         if url == None:
             await self.bot.say("Please give a url to change to!")
             return
@@ -60,12 +61,13 @@ class Utilities:
 
     @commands.command(pass_context=True, aliases=["setname"])
     @commands.cooldown(rate=2, per=3600.0)
-    @checks.admin_or_permissions(manage_server=True)
     async def setusername(self, ctx, username=None):
         message = ctx.message
         author = message.author
         server = message.server
         channel = message.channel
+        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+            return
         if username == None:
             await self.bot.say("Please specify a username to give!")
             return
@@ -90,13 +92,14 @@ class Utilities:
         await self.bot.say("PING!: %s"+"ms") % (str(ping.microseconds))
 
     @commands.command(pass_context=True, hidden=True)
-    @checks.admin_or_permissions(manage_server=True)
     async def status(self, ctx, *, status):
         """Changes the Bots status"""
         message = ctx.message
         author = message.author
         server = message.server
         channel = message.channel
+        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+            return
         await self.bot.change_presence(game=discord.Game(name=status))
 
     @commands.command(pass_context=True)
@@ -154,12 +157,23 @@ class Utilities:
         await self.bot.send_message(author, embed=em)
 
     @commands.command(pass_context=True, hidden=True)
-    @checks.admin_or_permissions(manage_server=True)
     async def logout(self, ctx):
         """Logs Bot out of Discord"""
+        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+            return
         await self.bot.say("Logging Out")
         await asyncio.sleep(2)
         await self.bot.logout()
+
+    @commands.command(pass_context=True)
+    async def invite(self, ctx):
+        """Creates an invite link for the bot"""
+
+        await self.bot.say(
+            "https://discordapp.com/oauth2/authorize?client_id={CLIENTID}&scope=bot&permissions=8".format(
+                CLIENTID=self.bot.user.id
+            )
+        )
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

@@ -6,39 +6,6 @@ import discord, json, os
 import uuid
 import asyncio
 
-def getServerConfig(serverID, bot, No=None):
-    os.chdir(bot.currentDir)
-    if No == True:
-        with open("servers/"+serverID+".json", 'w+') as server_config:
-            return json.load(server_config)
-    else:
-        return bot.serverConfigs[str(serverID)]
-
-def saveServerConfig(serverID, data, bot):
-    os.chdir(bot.currentDir)
-    with open("servers/"+serverID+".json", 'w+') as server_config_file:
-        json.dump(data, server_config_file)
-
-def exists(serverID, bot):
-    os.chdir(bot.currentDir)
-    if serverID in self.bot.serverConfigs:
-        #return self.bot.serverConfigs[str(server.id)]
-        return True
-    elif os.path.isfile("servers/"+serverID+".json"):
-        return None
-    else:
-        return False
-
-def createServerConfig(server, currentDir):
-    if server == None:
-        return
-    os.chdir(currentDir)
-    data = ""
-    with open("servers/"+server.id+".json", 'w+') as server_config_file:
-        json.dump(data, server_config_file)
-        return True
-    return False
-
 class Config:
     """The "database" object. Internally based on ``json``."""
 

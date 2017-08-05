@@ -27,15 +27,15 @@ import re
 import discord.errors
 import discord
 from discord.ext import commands
-from cogs.utils import checks#, databases
-from cogs.utils import parser
+from cogs.utils import checks, databases
+from cogs.utils import parser, config
 
 Parser = parser.Parser()
 
-Configs = {}
+Config = {}
 try:
-    with open('configs.json', 'r') as file:
-        Configs = json.load(file)
+    with open('config.json', 'r') as file:
+        Config = json.load(file)
 except FileNotFoundError:
     try:
         with open("ExampleConfig.json", 'r') as example:
@@ -43,7 +43,7 @@ except FileNotFoundError:
     except FileNotFoundError:
         exit("Missing ExampleConfig.json! Please download the ExampleConfig.json to setup bot!")
     else:
-        with open('configs.json', 'w') as newconfig:
+        with open('config.json', 'w') as newconfig:
             #exampleconfigs = re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig)
             #for key, value in json.loads(exampleconfigs).items():
             #    exampleconfigs[key] = input("Enter {key} ({Type}):".format(
@@ -51,29 +51,29 @@ except FileNotFoundError:
             #        Type=type(value).__name__
             #    ))
             newconfig.write(re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig))
-        exit("Setup configs.json!!!")
+        exit("Setup config.json!!!")
 
 
 defaultDir = os.getcwd()
 
-currentToken = Configs["Modes"][Configs["Mode"]]["Token"]
-currentLog = Configs["Modes"][Configs["Mode"]]["Log"]
-currentWelcome = Configs["Modes"][Configs["Mode"]]["Welcome"]
-currentDB = Configs["Modes"][Configs["Mode"]]["DB Prefix"]
-currentServer = Configs["Modes"][Configs["Mode"]]["Server"]
-currentAnnounce = Configs["Modes"][Configs["Mode"]]["Announce"]
-currentPrefix = Configs["Modes"][Configs["Mode"]]["Prefix"]
-currentDescription = Configs["Modes"][Configs["Mode"]]["Description"]
-currentStatus = Configs["Modes"][Configs["Mode"]]["Status"]
-DMHelp = Configs["Modes"][Configs["Mode"]]["Description"]
+currentToken = Config["Modes"][Config["Mode"]]["Token"]
+currentLog = Config["Modes"][Config["Mode"]]["Log"]
+currentWelcome = Config["Modes"][Config["Mode"]]["Welcome"]
+currentDB = Config["Modes"][Config["Mode"]]["DB Prefix"]
+currentServer = Config["Modes"][Config["Mode"]]["Server"]
+currentAnnounce = Config["Modes"][Config["Mode"]]["Announce"]
+currentPrefix = Config["Modes"][Config["Mode"]]["Prefix"]
+currentDescription = Config["Modes"][Config["Mode"]]["Description"]
+currentStatus = Config["Modes"][Config["Mode"]]["Status"]
+DMHelp = Config["Modes"][Config["Mode"]]["Description"]
 
-#DBC = databases.DBC(
-#    database=Configs["Database Name"],
-#    user=Configs["Database User"],
-#    password=Configs["Database Pass"],
-#    host=Configs["Database Host"],
-#    port=Configs["Database Port"]
-#)
+DBC = databases.DBC(
+    database=Config["Database Name"],
+    user=Config["Database User"],
+    password=Config["Database Pass"],
+    host=Config["Database Host"],
+    port=Config["Database Port"]
+)
 startup_time = datetime.datetime.utcnow()
 
 discord_logger = logging.getLogger('discord')
@@ -81,7 +81,7 @@ discord_logger.setLevel(logging.CRITICAL)
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 handler = logging.FileHandler(
-    filename='logs/vectordev_{:%Y-%m-%d_%H;%M}.log'.format(
+    filename='logs/vectorlog_{:%Y-%m-%d_%H;%M}.log'.format(
         datetime.datetime.utcnow()
     ),
     encoding='utf-8',
@@ -110,13 +110,6 @@ def isHelpCommand(query):
             return True
     return False
 
-async def log_message(message, timeOfMessage=datetime.datetime.utcnow()):
-    """This is called when a message must be logged to the logs channel.
-    I want to remove this at one stage because I want to move everything to MySQL"""
-    print(message)
-    channel = discord.Object(id=currentLog)
-    await bot.send_message(channel, message + " | " + str(timeOfMessage))
-
 @bot.event
 async def on_command_error(error, ctx):
     """This is called when an error has occured when running a command"""
@@ -135,21 +128,26 @@ async def on_command_error(error, ctx):
 async def on_ready():
     """This is called when the bot has logged in and can run all of its functions"""
     print('Logged in as:')
-    print('Username: ' + bot.user.name)
-    print('ID: ' + bot.user.id)
+    print('User:', bot.user.name+"#"+bot.user.discriminator)
+    print('ID: ', bot.user.id)
     print('------')
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
-    await log_message("Started:")
+    print("Started:")
     await bot.change_presence(game=discord.Game(name=currentStatus))
-    bot.currentLog = currentLog
-    bot.currentWelcome = currentWelcome
-    #bot.currentNotification = currentNotification
+    for server in bot.servers:
+        for member in server.members:
+            if member.id == Config["Modes"][Config["Mode"]]["Owner"]:
+                print("Found Owner %s/%s#%s" % (member.id, member.name, member.discriminator))
+                bot.owner = member
+                break
+    if bot.owner is None:
+        print("Failed to find owner")
 
 @bot.event
 async def on_resumed():
     """I don't know yet."""
-    await log_message("Resumed...")
+    print("Resumed...")
 
 @bot.event
 async def on_message(message):
@@ -161,7 +159,7 @@ async def on_message(message):
     if message.author.bot or message.author.id == bot.user.id:
         bot.messages.remove(message)
         return
-    if message.author.id in Configs["Ignored IDs"] or message.server.id in Configs["Ignored IDs"] or message.channel.id in Configs["Ignored IDs"]:
+    if message.author.id in Config["Ignored IDs"] or message.server.id in Config["Ignored IDs"] or message.channel.id in Config["Ignored IDs"]:
         bot.messages.remove(message)
         print("Ignored")
         return
@@ -179,7 +177,7 @@ async def on_message(message):
         except discord.errors.Forbidden():
             await databases.log_message(message)
         except:
-            await log_message(
+            print(
                 """Error deleteing command `help` run by %s(%s) on server %s(%s) in channel %s(%s)
 Error: {0}""".format(Forbidden) % (
                     author, author.id,
@@ -187,12 +185,21 @@ Error: {0}""".format(Forbidden) % (
                     channel, channel.id
                 )
             )
-    print("MESSAGE: %s"%(message.content))
 
 @bot.event
 async def on_member_join(member):
     """Called when a member has joined the server. This function handles the Welcome messages"""
-    await log_message(
+    continuee = False
+    server_id = member.server.id
+    await asyncio.sleep(10)
+    server = bot.get_server(server_id)
+    for members in server.members:
+        if member is members:
+            continuee = True
+            break
+    if not continuee:
+        return
+    print(
         "Member: %s(%s) has gone joined the server %s(%s)" % (
             member.name, member.id,
             member.server.name, member.server.id
@@ -200,11 +207,11 @@ async def on_member_join(member):
         datetime.datetime.utcnow()
     )
     channel = discord.Object(id=currentWelcome)
-    embed = Configs["Welcome Embed"]
+    embed = Config["Welcome Embed"]
     embed["Colour"] = 0x2ecc71
     em = Parser.createEmbed(
         data=embed,
-        extra=Parser.make_dicts(member, member.server, Configs)
+        extra=Parser.make_dicts(member, member.server, Config)
     )
     await bot.send_message(channel, embed=em)
 
@@ -212,28 +219,37 @@ async def on_member_join(member):
 def onExit():
     """Called when the programs crashes or shutsdown normally.
     Won't work if the window/screen/tmux is shut down forcefully."""
-    #os.chdir(defaultDir+"/buffers")
-    #if len(DBC.Buffer) > 0:
-    #    with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
-    #        for query in DBC.Buffer:
-    #            buffer.write(query)
-    #        buffer.close()
-    #DBC.close()
+    os.chdir(defaultDir+"/buffers")
+    if len(DBC.Buffer) > 0:
+        with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
+            for query in DBC.Buffer:
+                buffer.write(query)
+            buffer.close()
+    DBC.close()
 
 def main():
     """This runs the magic and everything else!"""
 
     #Set Global Vars Before Setting Up Cogs
+    bot.owner = None
     bot.currentLog = currentLog
     bot.currentDB = currentDB
     bot.currentDIR = defaultDir
     bot.currentAnnounce = currentAnnounce
-    bot.Configs = Configs
-    #bot.DBC = DBC
+    bot.currentWelcome = currentWelcome
+    bot.Config = Config
+    os.chdir(defaultDir+"\configs")
+    bot.Configs = []
+    for file in os.listdir():
+        if file.endswith(".json"):
+            print("Loading config", file)
+            bot.Configs.append(config.Config(file.replace(".json", "")))
+    os.chdir(defaultDir)
+    bot.DBC = DBC
     bot.startup_time = startup_time
 
     #Setup Main Cogs
-    for extension in Configs["Cogs"]:
+    for extension in Config["Cogs"]:
         try:
             bot.load_extension(extension)
         except Exception as e:
@@ -242,8 +258,8 @@ def main():
             print("Loaded Extension: ", extension)
 
     #Setup Dev Cogs
-    if Configs["Mode"].lower() in ["dev", "development"]:
-        for dextension in Configs["Dev Cogs"]:
+    if Config["Mode"].lower() in ["dev", "development"]:
+        for dextension in Config["Dev Cogs"]:
             try:
                 bot.load_extension(dextension)
             except Exception as e:
@@ -260,4 +276,4 @@ def main():
         log.removeHandler(hdlr)
 
 if __name__ == '__main__':
-    main() # Needed this to stop the autodoc!
+    main()
