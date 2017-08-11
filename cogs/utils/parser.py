@@ -268,7 +268,7 @@ class MessageParser(Parser):
 
     This a parser mostly for discord.Message related things"""
 
-    def MessageDBReplace(self, content):
+    def MessageReplace(self, content):
         """Replaces the contents ``\`` ``"`` ``'`` to something more
         understandable by MySQL"""
         content.replace("\\", "\\\\\\\\")  # This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
@@ -347,7 +347,7 @@ class MessageParser(Parser):
             for role in roles:
                 data["roles"].append(role.id)
         return json.dumps(data).replace("True", "true").replace("False", "false")
-    def MessageDelete(self, data: dict, time):
+    def MessageDelete(self, data, time):
         """Appends ``{"content":None, "timestamp":"%s" % (time)}``
 
         Parameters
@@ -356,7 +356,11 @@ class MessageParser(Parser):
             The current existing data
         time: datetime or str
             The time of when the message was deleted"""
-        return data['content'].append({"content":None, "timestamp":"%s" % (str(time))})
+
+        print("Pre Data:", data, ". Time:", time)
+        new_data=str(data["content"].append({"content":None, "timestamp":"%s" % time})).replace("'", '"').replace("None", "null")
+        print("New Data:", new_data)
+        return self.MessageReplace(new_data)
 
     def MessageUpdate(self, message: discord.Message, results, updates):
         """This updates the message using the originally stored on the Database and
@@ -376,7 +380,7 @@ class MessageParser(Parser):
                 print(message.content, str(message.edited_timestamp))
                 results['content'].append(
                     {
-                        "content":"%s"% (self.MessageDBReplace(message.content)),
+                        "content":"%s"% (self.MessageReplace(message.content)),
                         "timestamp":"%s" % (str(message.edited_timestamp))
                     }
                 )
@@ -393,7 +397,7 @@ class MessageParser(Parser):
             if 'content' in updates:
                 idx = updates.index('content')
                 before = json.loads(results[idx])
-                before['content'].append({"content":"%s"% (self.MessageDBReplace(message.content)), "timestamp":"%s" % (str(message.edited_timestamp))})
+                before['content'].append({"content":"%s"% (self.MessageReplace(message.content)), "timestamp":"%s" % (str(message.edited_timestamp))})
                 content = before
             if "content" in updates:
                 query = "`content`='%s'" % (str(content).replace("'", "\""))

@@ -1,4 +1,5 @@
 """
+Databases
 @author: TagnumElite
 """
 
@@ -10,20 +11,40 @@ import discord
 import MySQLdb
 from MySQLdb import MySQLError
 import json
-
-# to expose to the eval command
+import asyncio # I plan to make all the functions async for expanded functionallity later
 import datetime
-from collections import Counter
 
-# Setup Parsers
-Parser = Parser()
-MessageParser = MessageParser()
-MemberParser = MemberParser()
-ServerParser = ServerParser()
-ConfigParser = ConfigParser()
-ChannelParser = ChannelParser()
-RoleParser = RoleParser()
-EmojiParser = EmojiParser()
+getTable = "SELECT * FROM"
+PKID = "primary key(id)"
+iInto = "INSERT INTO"
+cTableIfNot = "CREATE TABLE IF NOT EXISTS"
+cID = "`id` INT NOT NULL AUTO_INCREMENT"
+cServerID = "`server_id` VARCHAR(100) NOT NULL"
+cMessageID = "`message_id` VARCHAR(100) NOT NULL"
+cAuthorID = "`author_id` VARCHAR(100) NOT NULL"
+cUserID = "`user_id` VARCHAR(100) NOT NULL"
+cChannelID = "`channel_id` VARCHAR(100) NOT NULL"
+cOwnerID = "`owner_id` VARCHAR(100) NOT NULL"
+cCreatedAt = "`created_at` DATETIME NOT NULL"
+cError = "`error` VARCHAR(3000) NOT NULL"
+cDiscriminator = "`discriminator` INT NOT NULL"
+cKey = "`key` VARCHAR(100) NOT NULL"
+cValue = '`value` VARCHAR(10000) NOT NULL'
+
+class DBError(Exception):
+    """Base Error Class"""
+
+    class DoesNotExists():
+        """Object doesn't exists"""
+        pass
+
+    class Exists():
+        """Object Exists"""
+        pass
+
+    class CouldNotCreate():
+        """Object could not be created error"""
+        pass
 
 class DBC():
     """This is the database connection to a MySQL databse
@@ -53,13 +74,16 @@ class DBC():
         self.port = port
         self.retries = retries
         self.Connecting = False
+        self.buffer = []
         self._connect()
 
     def _connect(self):
         if self.Connecting:
+            print("_connect connecting: ", self.Connecting)
             return
         else:
-            self.Connecting = False
+            self.Connecting = True
+            print("_connect connect: ", self.Connecting)
             for trie in range(self.retries):
                 if trie is not self.retries-1:
                     try:
@@ -75,8 +99,13 @@ class DBC():
                         if errno is 2003:
                             return
                         else:
-                            self.Conntection = False
+                            print("_connect failed: ", self.Connecting)
+                            self.Connecting = False
                             raise(E)
+                    else:
+                        self.Connecting = False
+                        print("_connect success: ", self.Connecting)
+                        break
                 else: #Last Try
                     try:
                         self.Connection = MySQLdb.connect(
@@ -91,10 +120,12 @@ class DBC():
                         if errno is 2003:
                             exit("Couldn't Connect to the MySQL Server")
                         else:
+                            print("_connect failed: ", self.Connecting)
                             self.Conntection = False
                             raise(E)
+
         self.Cursor = self.Connection.cursor()
-        self.query("SET SQL_SAFE_UPDATES = 0;")
+        self.queryOne("SET SQL_SAFE_UPDATES = 0;")
 
     def reconnect(self):
         """Reconnects to the database"""
@@ -108,140 +139,201 @@ class DBC():
         self.query("SET SQL_SAFE_UPDATES = 1;")
         self.Connection.close()
 
-    def query(self, query):
-        """Make an query but doesn't return anything
+    def _query(self, query, results=None):
+        print("_query start: ", self.Connecting)
+        while self.Connecting:
+            pass
 
-        Parameters
-        ----------
-        query: str
-            The MySQL query you want to make"""
+        self.Connecting = True
+        print("_query connect: ", self.Connecting)
+
+        if len(query) == 1:
+            query = query[0]
+        else:
+            query = " ".join(query)
+
         try:
             print("Query: ", query)
             self.Cursor.execute(query)
+            if results is 1:
+                result = self.Cursor.fetchone()
+            elif results is True:
+                result = self.Cursor.fetchall()
             self.Connection.commit()
         except MySQLError as me:
             print("Exception Args", me.args)
             if me.args[0] in [2006, 2013]:
+                print("_query could not connect: ", self.Connecting)
+                self.Connecting = False
                 try:
                     self.reconnect()
                 except Exception as E:
                     raise(E)
                 else:
-                    return self.query(query)
+                    if results is 1:
+                        return self.queryOne(query)
+                    elif results is True:
+                        return self.queryAll(query)
+                    else:
+                        return self.query(query)
             else:
                 print("Query Exception: {}".format(me))
                 self.Buffer.append(query)
                 self.Connection.rollback()
+                self.Connecting = False
+                print("Connecting:", self.Connecting)
                 raise me
+        except Exception as E:
+            print("Query Exception: {}".format(E))
+            self.Buffer.append(query)
+            self.Connection.rollback()
+            self.Connecting = False
+            raise E
+        else:
+            self.Connecting = False
+            print("_query finish: ", not self.Connecting)
+            if results is not None:
+                return result
+            else:
+                return True
+
+    def query(self, *query):
+        """Make an query but doesn't return anything
+
+        Parameters
+        ----------
+        query: str
+            The MySQL query you want to make, a list for multiple queries"""
+
+        return self._query(query, results=1)
+
+    def queryOne(self, *query):
+        """Make an query and returns the first result
+
+        Parameters
+        ----------
+        query: str
+            The MySQL query you want to make, a list for multiple queries"""
+
+        return self._query(query, results=1)
+
+    def queryAll(self, *query):
+        """Make an query and returns all results
+
+        Parameters
+        ----------
+        query: str/list
+            The MySQL query you want to make, a list for multiple queries"""
+
+        return self._query(query, results=True)
+
+
+class DB():
+    """Base DB Class
+
+    Parameters
+    ----------
+    DBC: DBC
+        The Database Connection
+    DB: str
+        The table prefix"""
+
+    #: Override, tables main name
+    table = "main"
+    #: Override, The main table to be created!
+    createDataTable = cTableIfNot
+    #: Override, The meta table to be created!
+    createMetaTable = cTableIfNot
+    #: Override
+    insertData = iInto
+    #: Override
+    insertMeta = iInto
+    #: Override
+    insertMetaV = iInto
+    #: Override
+    insertMetaW = iInto
+    #: Override
+    selectValue = "SELECT value FROM {PRE}_{TABLE}s_meta WHERE `{TAB}_id`='{MID}' AND `key`='{KEY}';"
+
+
+    def __init__(self, DBC, DB):
+        self.DBC = DBC
+        self.DB = DB
+        self.createTables()
+        # Setup Parsers
+        self.Parser = Parser()
+        self.MessageParser = MessageParser()
+        self.MemberParser = MemberParser()
+        self.ServerParser = ServerParser()
+        self.ConfigParser = ConfigParser()
+        self.ChannelParser = ChannelParser()
+        self.RoleParser = RoleParser()
+        self.EmojiParser = EmojiParser()
+
+    def createTables(self):
+        """Creates the tables"""
+
+        self.DBC.query(
+            self.createDataTable.format(PRE=self.DB)
+        )
+        self.DBC.query(
+            self.createMetaTable.format(PRE=self.DB)
+        )
+
+    def exists(self, item):
+        """Checks if the item exists
+
+        Parameters
+        ----------
+        message: discord.Object
+            The object to be checked if it exists"""
+
+        result = self.DBC.queryOne(
+            "SELECT * FROM {PRE}_{TAB}s WHERE `{TAB}_id`={MID};".format(
+                PRE=self.DB,
+                TAB=self.table,
+                MID=item.id
+            )
+        )
+        if not result:
+            return False
         else:
             return True
 
-    def queryOne(self, query):
-        """Make an query but returns the first result
+
+    def _update(self, before, after):
+        """OVERWRITE
 
         Parameters
         ----------
-        query: str
-            The MySQL query you want to make"""
-        try:
-            print("QueryOne: ", query)
-            self.Cursor.execute(query)
-            result = self.Cursor.fetchone()
-            self.Connection.commit()
-        except MySQLError as me:
-            print("Exception Args", me.args)
-            if me.args[0] in [2006, 2013]:
-                self.reconnect()
-                return self.query(query) # I know infinite loop.
-            else:
-                print("Query Exception: {}".format(me))
-                self.Buffer.append(query)
-                self.Connection.rollback()
-                raise me
-        else:
-            if isinstance(result, list):
-                for value in result:
-                    print("Result: ", result)
-            return result
+        before
+            The object before the update
+        after
+            The updated object"""
+        pass
 
-    def queryAll(self, query):
-        """Make an query but returns all results
+    def update(self, before, after):
+        """Update an object
 
         Parameters
         ----------
-        query: str
-            The MySQL query you want to make"""
-        try:
-            print("QueryAll: ", query)
-            self.Cursor.execute(query)
-            result = self.Cursor.fetchall()
-            self.Connection.commit()
-        except MySQLError as me:
-            print("Exception Args", me.args)
-            if me.args[0] in [2006, 2013]:
-                self.reconnect()
-                return self.query(query) # I know infinite loop.
-            else:
-                print("Query Exception: {}".format(me))
-                self.Buffer.append(query)
-                self.Connection.rollback()
-                raise me
+        before
+            The object before the change
+        after
+            The object after the change"""
+
+        if self.exists(after):
+            return self._update(before, after)
         else:
-            if isinstance(result, list):
-                for row in result:
-                    for value in row:
-                        print("Result: ", result)
-            return result
+            if not self.create(before):
+                raise DBError.CouldNotCreate("Object could not be created!")
+            else:
+                if self.exists(after):
+                    return self._update(before, after) #Why do I double check? because I must
+                else:
+                    raise DBError.DoesNotExist("Object Doesn't Exists!")
 
-getTable = "SELECT * FROM"
-PKID = "primary key(id)"
-iInto = "INSERT INTO"
-cTableIfNot = "CREATE TABLE IF NOT EXISTS"
-cID = "`id` BIGINT(18) NOT NULL"
-cName = "`name` VARCHAR(100) NOT NULL"
-cServerID = "`server_id` VARCHAR(20) NOT NULL"
-cMessageID = "`message_id` VARCHAR(20) NOT NULL"
-cAuthorID = "`author_id` VARCHAR(20) NOT NULL"
-cUserID = "`user_id` VARCHAR(20) NOT NULL"
-cChannelID = "`channel_id` VARCHAR(20) NOT NULL"
-cContent = "`content` JSON NOT NULL"
-cCreatedAt = "`created_at` DATETIME NOT NULL"
-cRemovedAt = "`removed_at` DATETIME NULL"
-cConfig = "`config` JSON NULL"
-cEditedAt = "`edited_at` DATE NOT NULL"
-cError = "`error` VARCHAR(1000) NOT NULL"
-cMembers = "`members` JSON NOT NULL"
-cRoles = "`roles` JSON NOT NULL"
-cEmojis = "`emojis` JSON NULL"
-cAfkTimeout = "`afk_timeout` INT NULL"
-cRegion = "`region` VARCHAR(30) NOT NULL"
-cAfkChannel = "`afk_channel` VARCHAR(20)"
-cChannels = "`channels` JSON NOT NULL"
-cIconUrl = "`icon_url` TEXT(30) NULL"
-cOwner = "`owner` VARCHAR(20) NOT NULL"
-cStatus = "`status` TINYINT NOT NULL DEFAULT 1"
-cLarge = "`large` TINYINT NOT NULL DEFAULT 0"
-cMFA = "`mfa` TINYINT NOT NULL DEFAULT 0"
-cVerficationLevel = "`verification_level` VARCHAR(30) NOT NULL DEFAULT 'None'"
-cDRole = "`default_role` VARCHAR(20) NOT NULL"
-cDChannel = "`default_channel` VARCHAR(20) NOT NULL"
-cSlpash = "`splash` VARCHAR(45) NULL"
-cSize = "`size` REAL NOT NULL"
-cConfig = "config JSON"
-cMentions = "`mentions` JSON NULL"
-cAttachments = "`attachments` LONGTEXT NULL"
-cPinned = "`pinned` TINYINT NULL DEFAULT 0"
-cReactions = "`reactions` JSON NULL"
-cUsername = "`username` VARCHAR(45) NOT NULL"
-cDiscriminator = "`discriminator` VARCHAR(45) NOT NULL"
-cAvatarUrl = "`avatar_url` VARCHAR(45) NULL"
-cDUrl = "`default_url` VARCHAR(45) NOT NULL"
-cServers = "`servers` JSON NULL"
-cStatus = "`status` VARCHAR(45) NULL DEFAULT 'offline'"
-cGame = "`game` LONGTEXT NULL"
-cConfigs = "`confs` JSON NULL"
-
-class MessageDB():
+class MessageDB(DB):
     """Message Database!
 
     Parameters
@@ -250,35 +342,23 @@ class MessageDB():
         The SQL Connection
     DB: str
         The Table Prefix"""
-    createMessageDBIfNot = cTableIfNot+" {PRE}_messages ("+cID+", "+cServerID+", "+cChannelID+", "+cAuthorID+", "+cContent+", "+cMentions+", "+cAttachments+", "+cPinned+", "+cReactions+", "+PKID+");"
 
-    insertMessageLog = iInto+" {PRE}_messages(`id`, `server_id`, `channel_id`, `author_id`, `content`, `mentions`, `attachments`, `pinned`, `reactions`) VALUES({MID}, '{SID}', '{CID}', '{AID}', '{CON}', '{MENS}', '{ATTCHS}', {PIN}, '{REACTS}');"
+    table = "message"
 
-    def __init__(self, DBC, DB):
-        self.DBC = DBC
-        self.DB = DB
-        self.createTable() # Create Table on startup. Only creates a table if one doesn't exist
-    def createTable(self):
-        """Used to create the table"""
-        self.DBC.query(self.createMessageDBIfNot.format(PRE=self.DB))
+    createDataTable = cTableIfNot+" {PRE}_messages ("+cID+", "+cMessageID+" UNIQUE, "+cServerID+", "+cChannelID+", "+cAuthorID+", "+cCreatedAt+", "+PKID+");"
 
-    def exists(self, message: discord.Message):
-        """Checks if the message exists
+    createMetaTable = cTableIfNot+" {PRE}_messages_meta ("+cID+", "+cMessageID+", "+cKey+", "+cValue+", "+PKID+");"
 
-        Parameters
-        ----------
-        message: discord.Message
-            The message that was sent"""
-        result = self.DBC.queryOne(
-            "SELECT * FROM {PRE}_messages WHERE `id`={MID};".format(
-                PRE=self.DB,
-                MID=int(message.id)
-            )
-        )
-        if not result:
-            return False
-        else:
-            return True
+    insertMessageData = iInto+" {PRE}_messages (`message_id`, `server_id`, `channel_id`, `author_id`, `created_at`) VALUES ('{MID}', '{SID}', '{CID}', '{AID}', '{CAT}');"
+
+    insertMessageMeta = iInto+" {PRE}_messages_meta (`message_id`, `key`, `value`) VALUES ('{MID}', '{KEY}', '{VAL}');"
+
+    insertMessageMetaV = iInto+" {PRE}_messages_meta (`message_id`, `key`, `value`) VALUES {VALUES};"
+
+    insertMessageMetaW = iInto+" {PRE}_messages_meta (`message_id`, `key`, `value`) VALUES ('{MID}', '{KEY}', '{VAL}') WHERE {WHERE};"
+
+    selectMessageValue = "SELECT value FROM {PRE}_messages_meta WHERE `message_id`='{MID}' AND `key`='{KEY}';"
+    print("Data Table:", createDataTable)
 
     def create(self, message: discord.Message):
         """Create a entry to the SQL of an message
@@ -287,35 +367,57 @@ class MessageDB():
         ----------
         message: discord.Message
             The message that was sent"""
-        self.createTable()        # Make sure the Table Exists
-        if self.exists(message):  # If the message already exists in the database
-            #self.update(message) # Then update the message! TODO
+
+        print("Creating Message")
+        if self.exists(message):  # Raise an error if the message already exists
+            print("Message Exists")
+            #raise DBError.Exists("Message Already Exists")
             return False
         msg = "{}"
         if message.type == discord.MessageType.default: #Check if the message is a normal message
-            msg = MessageParser.MessageDBReplace(message.content)
+            print("Message Type: Message")
+            msg = self.MessageParser.MessageReplace(message.content)
             msg = '{"content":[{"content":"'+msg+'", "timestamp":"'+str(message.timestamp.utcnow())+'"}]}'
         elif message.type == discord.MessageType.pins_add:
+            print("Message Type: Pin")
             msg = '{"content":[{"content":"{author} pinned a message to this channel.", "timestamp":"{timestamp}"}]}'.format(
                 author=message.author.name,
                 timestamp=str(message.timestamp.utcnow())
             )
         else:
+            print("Message Type: Unknown")
+            #raise DBError.UnknownType("Unknown message type: {}".format(message.type.__name__))
             return False
-        return self.DBC.query(
-            self.insertMessageLog.format(
-                PRE=self.DB,
-                MID=int(message.id),
-                SID=message.server.id,
-                CID=message.channel.id,
-                AID=message.author.id,
-                CON=msg,
-                MENS=str(MessageParser.MessageMentions(message)).replace("'", "\""),
-                ATTCHS=json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}",
-                PIN=int(message.pinned),
-                REACTS=str(MessageParser.getReactionJSON(message.reactions)).replace("'", "\"") if len(message.reactions) >= 1 else "{}"
+        try:
+            self.DBC.query(
+                self.insertMessageData.format(
+                    PRE=self.DB,
+                    MID=message.id,
+                    SID=message.server.id,
+                    CID=message.channel.id,
+                    AID=message.author.id,
+                    CAT=message.timestamp
+                )
             )
-        )
+        except Exception as e:
+            raise e
+
+        try:
+            self.DBC.query(
+                self.insertMessageMetaV.format(
+                    PRE=self.DB,
+                    VALUES="""('{MID}', 'content', '{CON}'),
+                    ('{MID}', 'mentions', '{MENS}'),
+                    ('{MID}', 'attachments', '{ATTCHS}')""".format(
+                        MID=message.id,
+                        CON=msg,
+                        MENS=str(self.MessageParser.MessageMentions(message)).replace("'", "\""),
+                        ATTCHS=json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}"
+                    )
+                )
+            )
+        except Exception as E:
+            raise E
 
     def _update(self, before: discord.Message, after: discord.Message):
         updates = []
@@ -335,10 +437,10 @@ class MessageDB():
         if length == 1:
             json_data = {}
             results = self.DBC.queryOne(
-                "SELECT {UP} FROM {PRE}_messages WHERE `id`={MID}".format(
-                    UP=updates[0],
+                "SELECT value FROM {PRE}_messages_meta WHERE `message_id`={MID} AND `key`={UP};".format(
                     PRE=self.DB,
-                    MID=int(after.id)
+                    MID=after.id,
+                    UP=updates[0]
                 )
             )
             search = updates[0]
@@ -346,19 +448,19 @@ class MessageDB():
                 json_data = json.loads(results[0])
             elif search is 'pinned':
                 return self.DBC.query(
-                    "UPDATE `{PRE}_messages` SET `pinned`='{PIN}' WHERE `id`={MID};".format(
+                    "INSERT INTO {PRE}_messages_meta (message_id, key, value) VALUES('{MID}', '{KEY}', '{VAL}') ON DUPLICATE KEY UPDATE value='{VAL}';".format(
                         PRE=self.DB,
-                        PIN=int(after.pinned),
-                        MID=int(after.id)
+                        PIN=str(after.pinned),
+                        MID=after.id
                     )
                 )
-            json_update = MessageParser.MessageUpdate(after, json_data, updates)
+            json_update = self.MessageParser.MessageUpdate(after, json_data, updates)
             return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `id`={MID};".format(
+                "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `message_id`={MID};".format(
                     PRE=self.DB,
                     KEY=search,
-                    VAL=MessageParser.MessageDBReplace(str(json_update).replace("'", '"')),
-                    MID=int(after.id)
+                    VAL=self.MessageParser.MessageReplace(str(json_update).replace("'", '"')),
+                    MID=after.id
                 )
             )
         else:
@@ -368,39 +470,20 @@ class MessageDB():
                 else:
                     search += value+", "
             results = self.DBC.queryOne(
-                "SELECT {KEY} FROM {PRE}_messages WHERE `id`={MID}".format(
+                "SELECT {KEY} FROM {PRE}_messages WHERE `message_id`={MID}".format(
                     KEY=search,
                     PRE=self.DB,
-                    MID=int(after.id)
+                    MID=after.id
                 )
             )
-            string_data = MessageParser.MessageUpdate(after, results, updates)
+            string_data = self.MessageParser.MessageUpdate(after, results, updates)
             return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET {DATA} WHERE `id`={MID};".format(
+                "UPDATE `{PRE}_messages` SET {DATA} WHERE `message_id`={MID};".format(
                     PRE=self.DB,
                     DATA=string_data,
-                    MID=int(after.id)
+                    MID=after.id
                 )
             )
-
-    def update(self, before: discord.Message, after: discord.Message):
-        """Update a message
-
-        Parameters
-        ----------
-        before: discord.Message
-        after: discord.Message"""
-        self.createTable()
-        if self.exists(after):
-            return self._update(before, after)
-        else:
-            if not self.create(before):
-                return False  # I will raise an error here later but for now it is fine
-            else:
-                if self.exists(after):
-                    return self._update(before, after) #Why do I double check? because I must
-                else:
-                    return False  # I will raise an error here later but for now it is fine
 
     def delete(self, message: discord.Message, time):
         """Called when a message is deleted.
@@ -411,25 +494,32 @@ class MessageDB():
             The discord message that was deleted
         time: datetime.datetime.utcnow()
             UTC Time when message was deleted"""
-        self.createTable()
+
         if self.exists(message):
             results = self.DBC.queryOne(
-                "SELECT content FROM {PRE}_messages WHERE `id`={MID}".format(
+                "SELECT value FROM {PRE}_messages_meta WHERE `message_id`='{MID}' AND `key`='content'".format(
                     PRE=self.DB,
-                    MID=int(message.id)
+                    MID=message.id
                 )
             )
+            print("Results:", results)
             data = json.loads(results[0])
-            json_react = MessageParser.MessageDelete(data, time)
-            return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET `content`='{VAL}' WHERE `id`={MID};".format(
-                    PRE=self.DB,
-                    VAL=str(json_react).replace("'", '"').replace("None", "null"),
-                    MID=int(message.id)
+            print("Data:", data)
+            json_data = self.MessageParser.MessageDelete(data, time)
+            print("JSON Data:", json_data)
+            try:
+                self.DBC.query(
+                    "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`='{MID}' AND `key`='content';".format(
+                        PRE=self.DB,
+                        VAL=str(json_data).replace("'", '"').replace("None", "null"),
+                        MID=message.id
+                    )
                 )
-            )
+            except Exception as E:
+                raise E
         else:
-            return False # I will raise an error here later but for now it is fine
+            #raise DBError.DoesNotExists("Message doesn't exists")
+            return False
 
     def addReaction(self, reaction: discord.Reaction, user):
         """Called when a reaction is added
@@ -440,33 +530,47 @@ class MessageDB():
             The reaction
         user: discord.User
             The User"""
+
         if self.exists(reaction.message):
-            results = self.DBC.queryAll(
-                "SELECT reactions FROM {PRE}_messages WHERE `id`='{MID}'".format(
+            if self.DBC.queryOne(
+                self.selectMessageValue.format(
                     PRE=self.DB,
-                    MID=int(reaction.message.id)
+                    MID=reaction.message.id,
+                    KEY='reactions'
                 )
-            )
-            print(results[0][0])
-            data = json.loads(results[0][0])
-            print(data)
-            json_react = MessageParser.ReactionDB(reaction, data, user)
-            print(Parser.jsonToDB(json_react))
-            return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET `reactions`='{VAL}' WHERE `id`={MID};".format(
-                    PRE=self.DB,
-                    VAL=str(json_react),
-                    MID=int(reaction.message.id)
+            ):
+                results = self.DBC.queryOne(
+                    self.selectMessageValue.format(
+                        PRE=self.DB,
+                        MID=reaction.message.id,
+                        KEY='reactions'
+                    )
                 )
-            )
+                print(results[0])
+                data = json.loads(results[0])
+                print(data)
+                return self.DBC.query(
+                    "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`={MID} AND `key`='reactions';".format(
+                        PRE=self.DB,
+                        VAL=self.MessageParser.AddReaction(reaction, user, data).replace('"', "'"),
+                        MID=reaction.message.id
+                    )
+                )
+            else:
+                self.DBC.query(
+                    self.insertMessageMeta.format(
+                        PRE=self.DB,
+                        MID=reaction.message.id,
+                        KEY='reactions',
+                        VAl=self.MessageParser.AddReaction(reaction, data, user).replace('"', "'")
+                    )
+                )
         else:
+            #raise DBError.DoesNotExists("Message doesn't exists")
             return False
 
     def deleteReaction(self, reaction: discord.Reaction, user):
         """Called when a reaction is deleted
-
-        .. note::
-            TODO
 
         Parameters
         ----------
@@ -474,23 +578,67 @@ class MessageDB():
             The reaction
         user: discord.User
             The User"""
-        return
 
-    def clearReaction(self, message: discord.Message, reactions):
-        """Called when all reaction on a message is deleted
+        if self.exists(reaction.message):
+            if self.DBC.queryOne(
+                self.selectMessageValue.format(
+                    PRE=self.DB,
+                    MID=reaction.message.id,
+                    KEY='reactions'
+                )
+            ):
+                results = self.DBC.queryOne(
+                    self.selectMessageValue.format(
+                        PRE=self.DB,
+                        MID=reaction.message.id,
+                        KEY='reactions'
+                    )
+                )
+                print(results[0])
+                data = json.loads(results[0])
+                print(data)
+                return self.DBC.query(
+                    "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`={MID} AND `key`='reactions';".format(
+                        PRE=self.DB,
+                        VAL=self.MessageParser.RemoveReaction(reaction, user, data).replace('"', "'"),
+                        MID=reaction.message.id
+                    )
+                )
+            else:
+                #raise DBError.DoesNotExists("That reaction doesn't exists")
+                return False
+        else:
+            #raise DBError.DoesNotExists("Message doesn't exists")
+            return False
 
-        .. note::
-            TODO
+    def clearReactions(self, message: discord.Message):
+        """Called when all reactions on a message is deleted
 
         Parameters
         ----------
         message: discord.Message
-            The reaction
-        reactions: list[discord.Reaction]
-            The User"""
-        return
+            The message that had all the reactions cleared"""
 
-class ServerDB():
+        if self.exists(message):
+            if not self.DBC.queryOne(
+                "SELECT value FROM {PRE}_messages_meta WHERE `message_id`={MID} AND `key`='reactions';".format(
+                    PRE=self.DB,
+                    MID=message.id
+                )
+            ):
+                return True
+            else:
+                return self.DBC.query(
+                    "UPDATE `{PRE}_messages_meta` SET `value`='{}' WHERE `message_id`={MID} AND `key`='reactions';".format(
+                        PRE=self.DB,
+                        MID=message.id
+                    )
+                )
+        else:
+            #raise DBError.DoesNotExists("Message doesn't exists")
+            return False
+
+class ServerDB(DB):
     """Server Databases, contains details for all the channels and config
 
     Parameters
@@ -500,24 +648,13 @@ class ServerDB():
     DB: str
         This is the table prefix to denote whether we are running in dev mode or not!"""
 
-    #  Remember to turn repetitive lines of codes into one function
-    #  when done with testing!
+    table = "server"
 
-    createServerDBIfNot = cTableIfNot+" {PRE}_servers ("+cID+", "+cName+", "+cMembers+", "+cConfig+", "+cRoles+", "+cEmojis+", "+cAfkTimeout+", "+cRegion+", "+cAfkChannel+", "+cChannels+", "+cIconUrl+", "+cOwner+", "+cStatus+", "+cLarge+", "+cMFA+", "+cVerficationLevel+", "+cDRole+", "+cSlpash+", "+cSize+", "+cDChannel+", "+cCreatedAt+", "+PKID+");"
+    createDataTable = cTableIfNot+" {PRE}_servers ("+cID+", "+cServerID+" UNIQUE, "+cOwnerID+", "+cCreatedAt+", "+PKID+");"
 
-    createServer = "INSERT INTO {PRE}_servers(`id`, `name`, `members`, `config`, `roles`, `emojis`, `afk_timeout`, `region`, `afk_channel`, `channels`, `icon_url`, `owner`, `status`, `large`, `mfa`, `verification_level`, `default_role`, `splash`, `size`, `default_channel`, `created_at`) VALUES({SID}, '{NAM}', '{MEM}', '{CON}', '{ROL}', '{EMO}', '{AFT}', '{REG}', '{AFC}', '{CHA}', '{ICO}', '{OWN}', '{STS}', '{LAR}', '{MFA}', '{VLV}', '{DRL}', '{SPL}', '{SIZ}', '{DCH}', '{CAT}');"
+    createMetaTable = cTableIfNot+" {PRE}_servers_meta ("+cID+", "+cServerID+", "+cKey+", "+cValue+", "+PKID+");"
 
-    def __init__(self, DBC, DB):
-        self.DBC = DBC
-        self.DB = DB
-
-    def createTable(self):
-        """Creates the ``prefix_servers`` table"""
-        return self.DBC.query(
-            self.createServerDBIfNot.format(
-                PRE=self.DB
-            )
-        )
+    insertServerData = iInto+" {PRE}_servers (`server_id`, `owner_id`, `created_at`) VALUES('{SID}', '{OID}', '{CAT}')"
 
     def __update(self, data):
         """Updates data inside the server
@@ -530,27 +667,27 @@ class ServerDB():
             The new data"""
 
         key = ""
-        CurrentParser = Parser
+        CurrentParser = self.Parser
 
         if isinstance(data, discord.Role):
             key = "roles"
-            CurrentParser = RoleParser
+            CurrentParser = self.RoleParser
         elif isinstance(data, discord.Channel):
             key = "channels"
-            CurrentParser = ChannelParser
+            CurrentParser = self.ChannelParser
         elif isinstance(data, discord.Emoji):
             key = "emojis"
-            CurrentParser = EmojiParser
+            CurrentParser = self.EmojiParser
         elif isinstance(data, discord.Member):
             key = "members"
-            CurrentParser = MemberParser
+            CurrentParser = self.MemberParser
         else:
             raise Exception("You failed to provide the appropiate data")
 
         results = self.DBC.queryOne("SELECT {KEY} FROM {PRE}_servers WHERE `id`={SID};".format(
             KEY=key,
             PRE=self.DB,
-            SID=int(data.server.id)
+            SID=data.server.id
         ))
         data_dict = json.loads(results[0])
         if data.id in data_dict:
@@ -566,7 +703,7 @@ class ServerDB():
                     ).replace(
                         "'", '"'
                     ),
-                    SID=int(data.server.id)
+                    SID=data.server.id
                 )
             )
         else:
@@ -582,7 +719,7 @@ class ServerDB():
                     ).replace(
                         "'", '"'
                     ),
-                    SID=int(data.server.id)
+                    SID=data.server.id
                 )
             )
 
@@ -610,7 +747,7 @@ class ServerDB():
         results = self.DBC.queryOne("SELECT {KEY} FROM {PRE}_servers WHERE `id`={SID};".format(
             KEY=key,
             PRE=self.DB,
-            SID=int(data.server.id)
+            SID=data.server.id
         ))
         data_dict = json.loads(results[0])
         return data.id in roles_dict
@@ -622,6 +759,7 @@ class ServerDB():
         ----------
         server: discord.Server
             The Server"""
+
         results = self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
             PRE=self.DB,
             SID=int(server.id)
@@ -673,7 +811,7 @@ class ServerDB():
         ----------
         server: discord.Server
             The Server to be created"""
-        self.createTable()
+
         if self.exists(server):
             return False
         members = json.dumps(MemberParser.Servers(server.members)).replace("'", '"')
@@ -683,32 +821,17 @@ class ServerDB():
         config = {
 
         }
-        return self.DBC.query(
-            self.createServer.format(
-                PRE = self.DB,
-                SID = int(server.id),
-                NAM = server.name,
-                MEM = members,
-                CON = config,
-                ROL = roles,
-                EMO = emojis,
-                AFT = server.afk_timeout,
-                REG = ServerParser.getRegion(server.region),
-                AFC = server.afk_channel.id if server.afk_channel is not None else "",
-                CHA = channels,
-                ICO = server.icon_url if server.icon_url is not None else "",
-                OWN = server.owner.id,
-                STS = int(not server.unavailable),
-                LAR = int(server.large),
-                MFA = server.mfa_level,
-                VLV = ServerParser.getVLV(server.verification_level),
-                DRL = server.default_role.id,
-                SPL = server.splash,
-                SIZ = server.member_count,
-                DCH = server.default_channel.id,
-                CAT = server.created_at
-            ).replace("None", "null").replace("True", "true").replace("False", "false")
-        )
+        try:
+            self.DBC.query(
+                self.insertServerData.format(
+                    PRE = self.DB,
+                    SID = server.id,
+                    OWN = server.owner.id,
+                    CAT = server.created_at
+                )
+            )
+        except:
+            return False
 
     def createRole(self, role: discord.Role):
         """Add a role
@@ -778,7 +901,7 @@ class ServerDB():
             The Old Server
         after: discord.Server
             The New Server"""
-        self.createTable()
+
         if self.exists(after):
             if self._update(before, after):
                 return True
@@ -875,7 +998,7 @@ class ServerDB():
         ----------
         server: discord.Server
             The Server That was removed"""
-        self.createTable(server)
+
         return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
 
     def deleteRole(self, role: discord.Role):
@@ -926,7 +1049,7 @@ class ServerDB():
                 status = 1
             else:
                 status = 0
-        self.createTable()
+
         if not self.exists(server):
             return self.create(server)
         return self.DBC.query(
@@ -937,7 +1060,7 @@ class ServerDB():
             )
         )
 
-class MembersDB():
+class MembersDB(DB):
     """Members Database Class
 
     Parameters
@@ -947,37 +1070,52 @@ class MembersDB():
     DB: str
         This is the table prefix to denote whether we are running in dev mode or not!"""
 
-    createMemberDB = cTableIfNot+" {PRE}_members ("+cID+", "+cUsername+", "+cDiscriminator+", "+cAvatarUrl+", "+cDUrl+", "+cStatus+", "+cGame+", "+cServers+", "+cConfigs+", "+cCreatedAt+", "+PKID+");"
+    table = "member"
+
+    createDataTable = cTableIfNot+" {PRE}_members ("+cID+", "+cUserID+" UNIQUE, "+cServerID+", "+cCreatedAt+", "+PKID+");"
+
+    createMetaTable = cTableIfNot+" {PRE}_servers_meta ("+cID+", "+cUserID+", "+cKey+", "+cValue+", "+PKID+");"
 
     createMember = "INSERT INTO {PRE}_members(`id`, `username`, `discriminator`, `avatar_url`, `default_url`, `servers`, `status`, `game`, `servers`, `confs`, `created_at`) VALUES({MID}, '{MUN}', {DIS}, '{ARL}', '{DRL}', '{STS}', '{GME}', '{SVR}', '{CON}', '{CAT}');"
 
-    def __init__(self, DBC, DB):
-        self.DBC = DBC
-        self.DB = DB
-
-    def createTable(self):
-        """Creates the table"""
-        return self.DBC.query(
-            self.createMemberDBIfNot.format(
-                PRE=self.DB
-            )
-        )
-
-    def exists(self, member: discord.Member):
-        """Checks if user exists in the table
+    def exists(self, user):
+        """Checks if user/member exists in the table
 
         Parameters
         ----------
-        user : discord.Member
-            The user to be looked up."""
+        user : [int, discord.User, discord.Member]
+            If int or discord.User then searches for that user in general
+            but if discord.Member then checks if that member exists in the database"""
 
-        self.createTable()
-        results = self.DBC.queryOne(
-            "SELECT * FROM {PRE}_members WHERE `id` = {MID};".format(
-                PRE=self.DB,
-                MID=int(member.id)
+        results = False
+
+        if isinstance(user, int):
+            results = self.DBC.queryOne(
+                "SELECT * FROM {PRE}_members WHERE `id` = {MID};".format(
+                    PRE=self.DB,
+                    MID=user
+                )
             )
-        )
+        elif isinstance(user, discord.User):
+            results = self.DBC.queryOne(
+                "SELECT * FROM {PRE}_members WHERE `id` = {MID};".format(
+                    PRE=self.DB,
+                    MID=int(user.id)
+                )
+            )
+        elif isinstance(user, discord.Member):
+            results = self.DBC.queryOne(
+                "SELECT `servers` FROM {PRE}_members WHERE `id` = {MID};".format(
+                    PRE=self.DB,
+                    MID=int(user.id)
+                )
+            )
+            data = json.loads(results[0])
+            results = member.server.id in data
+
+        else:
+            raise Exception("Incorrect Data Type")
+
         if not results:
             return False
         else:
@@ -986,11 +1124,10 @@ class MembersDB():
     def create(self, member: discord.Member):
         """Adds a member to the database
 
-        Parameters
+        Parameters1
         ----------
         member: discord.Member
-            The Member"""
-        self.createTable()
+            The Member to be added"""
         if self.exists(member):
             return True
         return self.DBC.query(self.createMember(
@@ -1001,7 +1138,7 @@ class MembersDB():
             DRL=member.default_avatar_url,
             STS=MemberParser.getStatus(member.status),
             GME=MemberParser.getGame(member.game),
-            SVR='null',  #NOTE: Remember to find a good way to go through all the servers in the mysql database to find all the servers this guy is in and get the configs from that
+            SVR='null',  #NOTE: Remember to find a good way to go through all the servers in the mysql database to find all the servers this person is in and get the configs from that
             CON='{}',
             CAT=str(member.created_at)
         ))
@@ -1018,7 +1155,7 @@ class MembersDB():
             The Discord Member before the update.
         after : discord.Member
             The Discord Member after the update."""
-        self.createTable()
+
         if self.exists(after):
             return self._update(before, after)
         else:
@@ -1067,7 +1204,71 @@ class MembersDB():
             The user that was unbanned"""
         pass
 
-class ConfigsDB():
+class TeamDB(DB):
+    """Team Database!
+
+    Parameters
+    ----------
+    DBC: DBC
+        The SQL Connection
+    DB: str
+        The Table Prefix"""
+
+    createDataTable = cTableIfNot+" {PRE}_teams ("+cID+", "+PKID+");"
+
+    createMetaTable = cTableIfNot+" {PRE}_teams ("+cID+", "+PKID+");"
+
+    createTeamMetaTable = cTableIfNot+" {PRE}_messages ("+cID+""",
+    """+cKey+", "+cValue+", "+PKID+");"
+    def createTable(self):
+        """Used to create the table"""
+        self.DBC.query(
+            self.createTeamTable.format(PRE=self.DB),
+            self.createTeamMetaTable.format(PRE=self.DB)
+        )
+
+    def exists(self, team):
+        """Checks if the message exists
+
+        Parameters
+        ----------
+        message: discord.Message
+            The message that was sent"""
+        pass
+
+    def create(self, team):
+        """Create a entry to the SQL of an message
+
+        Parameters
+        ----------
+        message: discord.Message
+            The message that was sent"""
+        pass
+
+    def _update(self, before, after):
+        pass
+
+    def update(self, before, after):
+        """Update a message
+
+        Parameters
+        ----------
+        before: discord.Message
+        after: discord.Message"""
+        pass
+
+    def delete(self, team, time):
+        """Called when a message is deleted.
+
+        Parameters
+        ----------
+        message: discord.Message
+            The discord message that was deleted
+        time: datetime.datetime.utcnow()
+            UTC Time when message was deleted"""
+        pass
+
+class ConfigDB(ServerDB):
     """Configs Database Class
 
     Parameters
