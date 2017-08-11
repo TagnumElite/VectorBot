@@ -12,7 +12,7 @@ __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.15pre'
+__version__ = '0.6.15'
 
 import asyncio
 import datetime

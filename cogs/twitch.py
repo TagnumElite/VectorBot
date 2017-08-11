@@ -73,14 +73,18 @@ class Twitch:
     async def twitch(self, ctx):
         """Twitch commands"""
 
+        pass
+
     @twitch.command(pass_context=True)
     async def add(self, ctx, user):
         """Add a user to the announcement list"""
+
         pass
 
     @twitch.command(pass_context=True)
     async def remove(self, ctx, user):
         """Remove a user to the announcement list"""
+
         pass
 
     @twitch.command(pass_context=True)
