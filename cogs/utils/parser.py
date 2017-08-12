@@ -271,6 +271,8 @@ class MessageParser(Parser):
     def MessageReplace(self, content):
         """Replaces the contents ``\`` ``"`` ``'`` to something more
         understandable by MySQL"""
+        if not isinstance(content, str):
+            content = str(content)
         content.replace("\\", "\\\\\\\\")  # This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
         content.replace('\'', '\\\'')
         content.replace("\"", "\\\"")
@@ -357,10 +359,8 @@ class MessageParser(Parser):
         time: datetime or str
             The time of when the message was deleted"""
 
-        print("Pre Data:", data, ". Time:", time)
-        new_data=str(data["content"].append({"content":None, "timestamp":"%s" % time})).replace("'", '"').replace("None", "null")
-        print("New Data:", new_data)
-        return self.MessageReplace(new_data)
+        data["content"].append({"content":None, "timestamp":"%s" % time})
+        return self.MessageReplace(data).replace("'", '"').replace("None", "null")
 
     def MessageUpdate(self, message: discord.Message, results, updates):
         """This updates the message using the originally stored on the Database and
