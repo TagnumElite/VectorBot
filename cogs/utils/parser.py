@@ -268,15 +268,30 @@ class MessageParser(Parser):
 
     This a parser mostly for discord.Message related things"""
 
-    def MessageReplace(self, content):
-        """Replaces the contents ``\`` ``"`` ``'`` to something more
-        understandable by MySQL"""
-        if not isinstance(content, str):
-            content = str(content)
-        content.replace("\\", "\\\\\\\\")  # This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
-        content.replace('\'', '\\\'')
-        content.replace("\"", "\\\"")
-        return content
+    def Parse(self, content):
+        """Changes object to something more understandable by MySQL
+
+        Parameters
+        ----------
+        content
+            Can be anything. If the objects class is not regcognised it returns it"""
+
+        if isinstance(content, str):
+            content.replace("\\", "\\\\\\\\")  # This should work but because of reasons I don't know why it doesn't so if you know how to fix this please!
+            content.replace('\'', '\\\'')
+            content.replace("\"", "\\\"")
+            return content
+        elif isinstance(content, dict):
+            for key, value in content.items():
+                if isinstance(value, bool):
+                    content[key] = ("false", "true")[int(value)]
+                elif isinstance(value, (str, dict, list, tuple)):
+                    content[key] = self.Parse(value)
+        elif isinstance(content, (list, tuple)):
+            for idx, value in enumerate(content):
+                content[idx] = self.Parse(content)
+        else:
+            return content
 
     def MessageReactions(self, reactions):
         """Turns reactions on a message to MySQL readable json
@@ -288,10 +303,11 @@ class MessageParser(Parser):
         json_data = {'reactions':[]}
         for idx, value in enumerate(reactions):
             data = {"emoji":reactions.emoji.id, "custom":int(reactions.custom_emoji), "count":str(reactions.count)}
-            json_data['reaction'].append(data)
+            json_data['reactions'].append(data)
 
-    def AddReaction(self, reaction: discord.Reaction, user, data):
-        """Add the reaction to already existing reactions
+    def AddReaction(self, reaction: discord.Reaction, user, data=None):
+        """Add the reaction to already existing reactions, if no data is provided
+        then the reaction is created
 
         Parameters
         ----------
@@ -299,7 +315,7 @@ class MessageParser(Parser):
             Reaction
         user: discord.User
             The user that added the reaction
-        data: dict
+        data: dict[Optional]
             The already exsiting reactions"""
 
         return "{}"
@@ -360,7 +376,7 @@ class MessageParser(Parser):
             The time of when the message was deleted"""
 
         data["content"].append({"content":None, "timestamp":"%s" % time})
-        return self.MessageReplace(data).replace("'", '"').replace("None", "null")
+        return self.Parse(data).replace("'", '"').replace("None", "null")
 
     def MessageUpdate(self, message: discord.Message, results, updates):
         """This updates the message using the originally stored on the Database and
@@ -380,7 +396,7 @@ class MessageParser(Parser):
                 print(message.content, str(message.edited_timestamp))
                 results['content'].append(
                     {
-                        "content":"%s"% (self.MessageReplace(message.content)),
+                        "content":"%s"% (self.Parse(message.content)),
                         "timestamp":"%s" % (str(message.edited_timestamp))
                     }
                 )
@@ -397,7 +413,7 @@ class MessageParser(Parser):
             if 'content' in updates:
                 idx = updates.index('content')
                 before = json.loads(results[idx])
-                before['content'].append({"content":"%s"% (self.MessageReplace(message.content)), "timestamp":"%s" % (str(message.edited_timestamp))})
+                before['content'].append({"content":"%s"% (self.Parse(message.content)), "timestamp":"%s" % (str(message.edited_timestamp))})
                 content = before
             if "content" in updates:
                 query = "`content`='%s'" % (str(content).replace("'", "\""))

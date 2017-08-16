@@ -261,14 +261,14 @@ class DB():
         self.DB = DB
         self.createTables()
         # Setup Parsers
-        self.Parser = Parser()
-        self.MessageParser = MessageParser()
-        self.MemberParser = MemberParser()
-        self.ServerParser = ServerParser()
-        self.ConfigParser = ConfigParser()
-        self.ChannelParser = ChannelParser()
-        self.RoleParser = RoleParser()
-        self.EmojiParser = EmojiParser()
+        self.P = Parser()
+        self.MP = MessageParser()
+        self.MBP = MemberParser()
+        self.SP = ServerParser()
+        self.CFP = ConfigParser()
+        self.CP = ChannelParser()
+        self.RP = RoleParser()
+        self.EP = EmojiParser()
 
     def createTables(self):
         """Creates the tables"""
@@ -376,7 +376,7 @@ class MessageDB(DB):
         msg = "{}"
         if message.type == discord.MessageType.default: #Check if the message is a normal message
             print("Message Type: Message")
-            msg = self.MessageParser.MessageReplace(message.content)
+            msg = self.MP.Parse(message.content)
             msg = '{"content":[{"content":"'+msg+'", "timestamp":"'+str(message.timestamp.utcnow())+'"}]}'
         elif message.type == discord.MessageType.pins_add:
             print("Message Type: Pin")
@@ -411,7 +411,7 @@ class MessageDB(DB):
                     ('{MID}', 'attachments', '{ATTCHS}')""".format(
                         MID=message.id,
                         CON=msg,
-                        MENS=str(self.MessageParser.MessageMentions(message)).replace("'", "\""),
+                        MENS=str(self.MP.MessageMentions(message)).replace("'", "\""),
                         ATTCHS=json.dumps(message.attachments[0]).replace("'", "\\\"") if len(message.attachments) >= 1 else "{}"
                     )
                 )
@@ -437,7 +437,7 @@ class MessageDB(DB):
         if length == 1:
             json_data = {}
             results = self.DBC.queryOne(
-                "SELECT value FROM {PRE}_messages_meta WHERE `message_id`={MID} AND `key`={UP};".format(
+                "SELECT value FROM {PRE}_messages_meta WHERE `message_id`={MID} AND `key`='{UP}';".format(
                     PRE=self.DB,
                     MID=after.id,
                     UP=updates[0]
@@ -454,12 +454,12 @@ class MessageDB(DB):
                         MID=after.id
                     )
                 )
-            json_update = self.MessageParser.MessageUpdate(after, json_data, updates)
+            json_update = self.MP.MessageUpdate(after, json_data, updates)
             return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `message_id`={MID};".format(
+                "UPDATE `{PRE}_messages` SET `{KEY}`='{VAL}' WHERE `message_id`='{MID}';".format(
                     PRE=self.DB,
                     KEY=search,
-                    VAL=self.MessageParser.MessageReplace(str(json_update).replace("'", '"')),
+                    VAL=self.MP.Parse(str(json_update).replace("'", '"')),
                     MID=after.id
                 )
             )
@@ -470,15 +470,15 @@ class MessageDB(DB):
                 else:
                     search += value+", "
             results = self.DBC.queryOne(
-                "SELECT {KEY} FROM {PRE}_messages WHERE `message_id`={MID}".format(
+                "SELECT {KEY} FROM {PRE}_messages WHERE `message_id`='{MID}'".format(
                     KEY=search,
                     PRE=self.DB,
                     MID=after.id
                 )
             )
-            string_data = self.MessageParser.MessageUpdate(after, results, updates)
+            string_data = self.MP.MessageUpdate(after, results, updates)
             return self.DBC.query(
-                "UPDATE `{PRE}_messages` SET {DATA} WHERE `message_id`={MID};".format(
+                "UPDATE `{PRE}_messages` SET {DATA} WHERE `message_id`='{MID}';".format(
                     PRE=self.DB,
                     DATA=string_data,
                     MID=after.id
@@ -502,11 +502,8 @@ class MessageDB(DB):
                     MID=message.id
                 )
             )
-            print("Results:", results)
             data = json.loads(results[0])
-            print("Data:", data)
-            json_data = self.MessageParser.MessageDelete(data, time)
-            print("JSON Data:", json_data)
+            json_data = self.MP.MessageDelete(data, time)
             try:
                 self.DBC.query(
                     "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`='{MID}' AND `key`='content';".format(
@@ -532,27 +529,21 @@ class MessageDB(DB):
             The User"""
 
         if self.exists(reaction.message):
-            if self.DBC.queryOne(
+            results = self.DBC.queryOne(
                 self.selectMessageValue.format(
                     PRE=self.DB,
                     MID=reaction.message.id,
                     KEY='reactions'
                 )
-            ):
-                results = self.DBC.queryOne(
-                    self.selectMessageValue.format(
-                        PRE=self.DB,
-                        MID=reaction.message.id,
-                        KEY='reactions'
-                    )
-                )
+            )
+            if results:
                 print(results[0])
                 data = json.loads(results[0])
                 print(data)
                 return self.DBC.query(
-                    "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`={MID} AND `key`='reactions';".format(
+                    "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`='{MID}' AND `key`='reactions';".format(
                         PRE=self.DB,
-                        VAL=self.MessageParser.AddReaction(reaction, user, data).replace('"', "'"),
+                        VAL=self.MP.AddReaction(reaction, user, data).replace("'", '"'),
                         MID=reaction.message.id
                     )
                 )
@@ -562,7 +553,7 @@ class MessageDB(DB):
                         PRE=self.DB,
                         MID=reaction.message.id,
                         KEY='reactions',
-                        VAl=self.MessageParser.AddReaction(reaction, data, user).replace('"', "'")
+                        VAL=self.MP.AddReaction(reaction, user).replace("'", '"')
                     )
                 )
         else:
@@ -580,32 +571,26 @@ class MessageDB(DB):
             The User"""
 
         if self.exists(reaction.message):
-            if self.DBC.queryOne(
+            results = self.DBC.queryOne(
                 self.selectMessageValue.format(
                     PRE=self.DB,
                     MID=reaction.message.id,
                     KEY='reactions'
                 )
-            ):
-                results = self.DBC.queryOne(
-                    self.selectMessageValue.format(
-                        PRE=self.DB,
-                        MID=reaction.message.id,
-                        KEY='reactions'
-                    )
-                )
+            )
+            if results:
                 print(results[0])
                 data = json.loads(results[0])
                 print(data)
                 return self.DBC.query(
-                    "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`={MID} AND `key`='reactions';".format(
+                    "UPDATE `{PRE}_messages_meta` SET `value`='{VAL}' WHERE `message_id`='{MID}' AND `key`='reactions';".format(
                         PRE=self.DB,
-                        VAL=self.MessageParser.RemoveReaction(reaction, user, data).replace('"', "'"),
+                        VAL=self.MP.RemoveReaction(reaction, user, data).replace("'", '"'),
                         MID=reaction.message.id
                     )
                 )
             else:
-                #raise DBError.DoesNotExists("That reaction doesn't exists")
+                #raise DBError.DoesNotExist("Reactions dont exists for this message")
                 return False
         else:
             #raise DBError.DoesNotExists("Message doesn't exists")
@@ -667,20 +652,20 @@ class ServerDB(DB):
             The new data"""
 
         key = ""
-        CurrentParser = self.Parser
+        CurrentParser = self.P
 
         if isinstance(data, discord.Role):
             key = "roles"
-            CurrentParser = self.RoleParser
+            CurrentParser = self.RP
         elif isinstance(data, discord.Channel):
             key = "channels"
-            CurrentParser = self.ChannelParser
+            CurrentParser = self.CP
         elif isinstance(data, discord.Emoji):
             key = "emojis"
-            CurrentParser = self.EmojiParser
+            CurrentParser = self.EP
         elif isinstance(data, discord.Member):
             key = "members"
-            CurrentParser = self.MemberParser
+            CurrentParser = self.MBP
         else:
             raise Exception("You failed to provide the appropiate data")
 
@@ -814,10 +799,10 @@ class ServerDB(DB):
 
         if self.exists(server):
             return False
-        members = json.dumps(MemberParser.Servers(server.members)).replace("'", '"')
-        roles = json.dumps(RoleParser.Servers(server.roles)).replace("'", '"')
-        emojis = json.dumps(EmojiParser.Servers(server.emojis)).replace("'", '"')
-        channels = json.dumps(ChannelParser.Servers(server.channels)).replace("'", '"')
+        members = json.dumps(self.MBP.Servers(server.members)).replace("'", '"')
+        roles = json.dumps(self.RP.Servers(server.roles)).replace("'", '"')
+        emojis = json.dumps(self.EP.Servers(server.emojis)).replace("'", '"')
+        channels = json.dumps(self.CP.Servers(server.channels)).replace("'", '"')
         config = {
 
         }
@@ -882,8 +867,8 @@ class ServerDB(DB):
         if not self.exists(before):
             return self.create(after)
         else:
-            updates = ServerParser.getUpdates(before, after)
-            query = ServerParser.ServerUpdate(after, updates)
+            updates = self.SP.getUpdates(before, after)
+            query = self.SP.ServerUpdate(after, updates)
             return self.DBC.query(
                 "UPDATE `{PRE}_servers` SET {DATA} WHERE `id`={SID};".format(
                     PRE=self.DB,
@@ -891,31 +876,6 @@ class ServerDB(DB):
                     SID=int(after.id)
                 )
             )
-
-    def update(self, before: discord.Server, after: discord.Server):
-        """Update a server
-
-        Parameters
-        ----------
-        before: discord.Server
-            The Old Server
-        after: discord.Server
-            The New Server"""
-
-        if self.exists(after):
-            if self._update(before, after):
-                return True
-            else:
-                return False
-        else:
-            if not self.create(before):
-                return False
-            else:
-                if self.exists(after):
-                    if self._update(before, after):
-                        return True
-                    else:
-                        return False
 
     def updateRole(self, role: discord.Role):
         """Update a role
@@ -1136,8 +1096,8 @@ class MembersDB(DB):
             DIS=int(member.discriminator),
             ARL=member.avatar_url,
             DRL=member.default_avatar_url,
-            STS=MemberParser.getStatus(member.status),
-            GME=MemberParser.getGame(member.game),
+            STS=self.MBP.getStatus(member.status),
+            GME=self.MBP.getGame(member.game),
             SVR='null',  #NOTE: Remember to find a good way to go through all the servers in the mysql database to find all the servers this person is in and get the configs from that
             CON='{}',
             CAT=str(member.created_at)

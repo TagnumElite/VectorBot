@@ -12,7 +12,7 @@ __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017 TagnumElite'
-__version__ = '0.6.15'
+__version__ = '0.6.16pre'
 
 import asyncio
 import datetime
@@ -65,7 +65,8 @@ currentAnnounce = Config["Modes"][Config["Mode"]]["Announce"]
 currentPrefix = Config["Modes"][Config["Mode"]]["Prefix"]
 currentDescription = Config["Modes"][Config["Mode"]]["Description"]
 currentStatus = Config["Modes"][Config["Mode"]]["Status"]
-DMHelp = Config["Modes"][Config["Mode"]]["Description"]
+mainServer = Config["Modes"][Config["Mode"]]["Server"]
+DMHelp = Config["Modes"][Config["Mode"]]["DM Help"]
 
 DBC = databases.DBC(
     database=Config["Database Name"],
@@ -237,6 +238,7 @@ def main():
     bot.currentDIR = defaultDir
     bot.currentAnnounce = currentAnnounce
     bot.currentWelcome = currentWelcome
+    bot.mainSever = mainServer
     bot.Config = Config
     os.chdir(defaultDir+"\configs")
     bot.Configs = []

@@ -1,9 +1,11 @@
 from discord.ext import commands
+from .utils.checks import check_ignore
 from .utils.parser import Parser
 import discord
 import asyncio
 import requests
 import json
+import re
 
 class Twitch:
     """Handles the bot's twitch system."""
@@ -69,6 +71,11 @@ class Twitch:
             await self.check_streams()
             await asyncio.sleep(self.bot.Configs["Twitch Refresh"])
 
+    async def check_stream(self, url):
+        """Check if url is twitch stream and has been checked"""
+
+        if url.startswith("")
+
     @commands.group(pass_context=True)
     async def twitch(self, ctx):
         """Twitch commands"""
@@ -101,6 +108,19 @@ class Twitch:
         is online"""
 
         await self.check_streams()
+
+    async def on_member_update(self, before, after):
+        """Check for when members stream"""
+
+        if check_ignore([before.id, before.server.id], self.bot.Config["Ignored IDs"]):
+            return True
+        if member.server.id is self.bot.mainServer:
+            if before.game is not after.game:
+                if before.game.type is 1:
+                    return
+                if after.game.type is 1 and before.game.type is 0:
+                    await self.check_stream(after.game.url)
+        return
 
 def setup(bot):
     bot.add_cog(Twitch(bot))

@@ -7,6 +7,16 @@ from difflib import SequenceMatcher
 import datetime
 import discord.utils
 
+def check_ignore(ids, ignored: list):
+    if isinstance(ids, (list, tuple)):
+        for id in ids:
+            if id in ignored:
+                return True
+    else:
+        if ids in ignored:
+            return True
+    return False
+
 def similarSeq(a, b):
     return SequenceMatcher(None, a, b).ratio()
 

@@ -27,7 +27,7 @@ class Database:
 
     Parameters
     ----------
-    bot: discord.ext.commands.Bot
+    bot: discord.Client
         The bot
 
     Attributes
@@ -103,14 +103,14 @@ class Database:
             TODO"""
         pass
 
-    async def on_message(self, message):
+    async def on_message(self, message: discord.Message):
         """Called when a message is create. This adds the message
         if it is not an ignored ID to the database."""
         if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Config["Ignored IDs"]):
             return
         self.MessageDB.create(message)
 
-    async def on_message_delete(self, message):
+    async def on_message_delete(self, message: discord.Message):
         """Called when a message is deleted. This makes it so that the
         message JSON in the database leads to null as it's last update
         if it is not an ignored ID to the database."""
@@ -118,7 +118,7 @@ class Database:
             return
         self.MessageDB.delete(message, datetime.datetime.utcnow())
 
-    async def on_message_edit(self, before, after):
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Called when a message is updates. This adds the message new
         content while still keeping the old content if it is not an
         ignored ID to the database."""
@@ -126,25 +126,33 @@ class Database:
             return
         self.MessageDB.update(before, after)
 
-    async def on_reaction_add_todo(self, reaction, user):
+    async def on_reaction_add(self, reaction: discord.Reaction, user):
         """Called when a message gets an reaction.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        reaction: discord.Reaction
+            The reaction to be added
+        user: discord.User
+            The user that added the reaction"""
         if checks.is_an_ignored(user.id, self.bot.Config["Ignored IDs"]):
             return
         self.MessageDB.addReaction(reaction, user)
 
-    async def on_reaction_remove_todo(self, reaction, user):
+    async def on_reaction_remove(self, reaction: discord.Reaction, user):
         """Called when a reaction gets removed from a message.
 
-        .. note::
-            TODO"""
+        Parameters
+        ----------
+        reaction: discord.Reaction
+            The reaction to be added
+        user: discord.User
+            The user that added the reaction"""
         if checks.is_an_ignored(user.id, self.bot.Config["Ignored IDs"]):
             return
         self.MessageDB.deleteReaction(reaction, user)
 
-    async def on_reaction_clear(self, message, reactions):
+    async def on_reaction_clear(self, message: discord.Message, reactions):
         """Called when the reactions on a message get cleared.
 
         Parameters
