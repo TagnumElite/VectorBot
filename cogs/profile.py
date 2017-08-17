@@ -70,7 +70,7 @@ class Profile:
         author = message.author
         server = message.server
         await self.bot.delete_message(message)
-        if server.id is self.bot.Configs["Bot Server"]:
+        if server.id is self.bot.Config["Bot Server"]:
             await self.bot.send_message(
                 author,
                 "Here is your custom splash! {}/members/{}".format(
@@ -78,7 +78,7 @@ class Profile:
                     self.Splash.Check(member) # I won't do Update because in large servers that can cause the bot to crash
                 )
             )
-        elif server.id is self.bot.Configs["Dev Server"]:
+        elif server.id is self.bot.Config["Dev Server"]:
             print("Check Splash: banner")
         else:
             msg = await self.bot.say("That is not permitted here!")

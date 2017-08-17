@@ -72,7 +72,7 @@ class Splash():
     Parameters
     ----------
     WebsitePath: str
-        Configs["Splash Site"]
+        Config["Splash Site"]
     BotPath: str
         self.bot.currentDIR
     StatusColors: Optional[dict]

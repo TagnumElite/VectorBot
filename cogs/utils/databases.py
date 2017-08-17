@@ -1090,17 +1090,18 @@ class MembersDB(DB):
             The Member to be added"""
         if self.exists(member):
             return True
-        return self.DBC.query(self.createMember(
-            MID=int(member.id),
+        return self.DBC.query(self.createMember.format(
+            PRE=self.DB,
+            MID=member.id,
             MUN=member.name,
-            DIS=int(member.discriminator),
+            DIS=member.discriminator,
             ARL=member.avatar_url,
             DRL=member.default_avatar_url,
             STS=self.MBP.getStatus(member.status),
             GME=self.MBP.getGame(member.game),
             SVR='null',  #NOTE: Remember to find a good way to go through all the servers in the mysql database to find all the servers this person is in and get the configs from that
             CON='{}',
-            CAT=str(member.created_at)
+            CAT=member.created_at
         ))
 
     def _update(self, before: discord.Member, after: discord.Member):

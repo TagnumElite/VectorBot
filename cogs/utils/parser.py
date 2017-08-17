@@ -269,7 +269,8 @@ class MessageParser(Parser):
     This a parser mostly for discord.Message related things"""
 
     def Parse(self, content):
-        """Changes object to something more understandable by MySQL
+        """Changes object to something more understandable by MySQL.
+        What we mean by that is that it makes the scripts identifieable by json
 
         Parameters
         ----------
@@ -285,6 +286,8 @@ class MessageParser(Parser):
             for key, value in content.items():
                 if isinstance(value, bool):
                     content[key] = ("false", "true")[int(value)]
+                elif isinstance(value, None):
+                    content[key] = "null"
                 elif isinstance(value, (str, dict, list, tuple)):
                     content[key] = self.Parse(value)
         elif isinstance(content, (list, tuple)):

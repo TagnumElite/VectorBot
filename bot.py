@@ -238,7 +238,7 @@ def main():
     bot.currentDIR = defaultDir
     bot.currentAnnounce = currentAnnounce
     bot.currentWelcome = currentWelcome
-    bot.mainSever = mainServer
+    bot.mainServer = mainServer
     bot.Config = Config
     os.chdir(defaultDir+"\configs")
     bot.Configs = []

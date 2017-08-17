@@ -17,7 +17,7 @@ class Utilities:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Configs = bot.Configs
+        self.Config = bot.Config
 
     @commands.command(pass_context=True)
     @checks.admin_or_permissions(manage_messages=True)
@@ -111,32 +111,32 @@ class Utilities:
         channel = msg.channel
         #TODO: Remember to make an if statement to check if the server has overridden rules!
         em = discord.Embed(
-            title=self.Configs["Rules"]["Title"].format(
+            title=self.Config["Rules"]["Title"].format(
                 server=server.name,
                 channel=channel.name,
                 author=author.name
             ),
-            description=self.Configs["Rules"]["Description"].format(
+            description=self.Config["Rules"]["Description"].format(
                 server=server.name,
                 channel=channel.name,
                 author=author.name
             ),
             color=0xff0000
         )
-        em.set_image(url=self.Configs["Rules"]["Image"])
-        em.set_thumbnail(url=self.Configs["Rules"]["Thumbnail"])
-        if self.Configs["Rules"]["Footer"]["Enabled"]:
+        em.set_image(url=self.Config["Rules"]["Image"])
+        em.set_thumbnail(url=self.Config["Rules"]["Thumbnail"])
+        if self.Config["Rules"]["Footer"]["Enabled"]:
             em.set_footer(
-                text=self.Configs["Rules"]["Footer"]["Text"].format(server=server.name),
-                icon_url=self.Configs["Rules"]["Footer"]["Icon Url"].format(server_icon=server.icon_url)
+                text=self.Config["Rules"]["Footer"]["Text"].format(server=server.name),
+                icon_url=self.Config["Rules"]["Footer"]["Icon Url"].format(server_icon=server.icon_url)
             )
-        if self.Configs["Rules"]["Author"]["Enabled"]:
+        if self.Config["Rules"]["Author"]["Enabled"]:
             em.set_author(
-                name=self.Configs["Rules"]["Author"]["Name"].format(server=server.name),
-                icon_url=self.Configs["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
+                name=self.Config["Rules"]["Author"]["Name"].format(server=server.name),
+                icon_url=self.Config["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
             )
 
-        for rule in self.Configs["Rules"]["Rules"]:
+        for rule in self.Config["Rules"]["Rules"]:
             em.add_field(
                 name=rule["Name"],
                 value=rule["Rule"],
