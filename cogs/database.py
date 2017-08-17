@@ -1,6 +1,5 @@
 from discord.ext import commands
 from .utils import config, checks
-from .utils.databases import DBC, MessageDB, ServerDB, MembersDB, ConfigDB
 import warnings, functools
 import discord
 import inspect
@@ -22,6 +21,9 @@ import asyncio
 # Emoji Create/Update/Remove
 # Messages Remove
 
+def check_database(func):
+    return func
+
 class Database:
     """Database Functionallity
 
@@ -32,16 +34,40 @@ class Database:
 
     Attributes
     ---------
-    MessageDB: MessageDB
-    ServerDB: ServerDB
-    MembersDB: MembersDB"""
+    MDB: MessageDB
+    SDB: ServerDB
+    MBDB: MembersDB"""
 
     def __init__(self, bot):
         self.bot = bot
-        self.MessageDB = MessageDB(bot.DBC, bot.currentDB)
-        self.ServerDB = ServerDB(bot.DBC, bot.currentDB)
-        self.MembersDB = MembersDB(bot.DBC, bot.currentDB)
-        self.ConfigDB = ConfigDB(bot.DBC, bot.currentDB)
+        try:
+            from .utils.databases import MessageDB
+        except:
+            print("Message Database Offline")
+            self.MDB = None
+        else:
+            self.MDB = MessageDB(bot.DBC, bot.currentDB)
+        try:
+            from .utils.databases import ServerDB
+        except:
+            print("Server Database Offline")
+            self.SDB = None
+        else:
+            self.SDB = ServerDB(bot.DBC, bot.currentDB)
+        try:
+            from .utils.databases import MembersDB
+        except:
+            print("Member Database Offline")
+            self.MBDB = None
+        else:
+            self.MBDB = MembersDB(bot.DBC, bot.currentDB)
+        try:
+            from .utils.databases import ConfigDB
+        except:
+            print("Config Database Offline")
+            self.CDB = None
+        else:
+            self.CDB = ConfigDB(bot.DBC, bot.currentDB)
 
     @commands.group(pass_context=True)
     async def database(self, ctx):
@@ -56,7 +82,7 @@ class Database:
         .. warning::
             NOT SETUP"""
         if date is None:
-            message = self.MembersDB.fetch(user)[1]
+            message = self.MBDB.fetch(user)[1]
             await self.bot.say(message)
 
     @database.command(pass_context=True)
@@ -103,12 +129,20 @@ class Database:
             TODO"""
         pass
 
+    @check_database
     async def on_message(self, message: discord.Message):
         """Called when a message is create. This adds the message
         if it is not an ignored ID to the database."""
         if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.MessageDB.create(message)
+        if self.MDB is not None:
+            try:
+                result = self.MDB.create(message)
+            except:
+                return
+            else:
+                return result
+        return
 
     async def on_message_delete(self, message: discord.Message):
         """Called when a message is deleted. This makes it so that the
@@ -116,7 +150,7 @@ class Database:
         if it is not an ignored ID to the database."""
         if checks.is_an_ignored([message.author.id, message.server.id, message.channel.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.MessageDB.delete(message, datetime.datetime.utcnow())
+        return self.MDB.delete(message, datetime.datetime.utcnow())
 
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         """Called when a message is updates. This adds the message new
@@ -124,7 +158,7 @@ class Database:
         ignored ID to the database."""
         if checks.is_an_ignored([before.author.id, before.server.id, before.channel.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.MessageDB.update(before, after)
+        return self.MDB.update(before, after)
 
     async def on_reaction_add(self, reaction: discord.Reaction, user):
         """Called when a message gets an reaction.
@@ -137,7 +171,7 @@ class Database:
             The user that added the reaction"""
         if checks.is_an_ignored(user.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.MessageDB.addReaction(reaction, user)
+        return self.MDB.addReaction(reaction, user)
 
     async def on_reaction_remove(self, reaction: discord.Reaction, user):
         """Called when a reaction gets removed from a message.
@@ -150,7 +184,7 @@ class Database:
             The user that added the reaction"""
         if checks.is_an_ignored(user.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.MessageDB.deleteReaction(reaction, user)
+        return self.MDB.deleteReaction(reaction, user)
 
     async def on_reaction_clear(self, message: discord.Message, reactions):
         """Called when the reactions on a message get cleared.
@@ -164,7 +198,7 @@ class Database:
 
         if checks.is_an_ignored_todo([message.author.id, message.server.id, message.channel.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.MessageDB.clearReactions(message)
+        return self.MDB.clearReactions(message)
 
     async def on_server_join(self, server: discord.Server):
         """Called when the bot joins a server.
@@ -174,7 +208,7 @@ class Database:
         server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.create(server)
+        return self.SDB.create(server)
 
     async def on_server_remove(self, server: discord.Server):
         """Called when the bot Leaves/Kicked From/Banned From a server.
@@ -184,7 +218,7 @@ class Database:
         server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.delete(server)
+        return self.SDB.delete(server)
 
     async def on_server_update(self, before: discord.Server, after: discord.Server):
         """Called when server updates that the bot is in.
@@ -197,7 +231,7 @@ class Database:
             After Update"""
         if checks.is_an_ignored(before.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.update(before, after)
+        return self.SDB.update(before, after)
 
     async def on_server_available(self, server: discord.Server):
         """Called when a server comes back online
@@ -207,7 +241,7 @@ class Database:
         server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.updateStatus(server, 1)
+        return self.SDB.updateStatus(server, 1)
 
     async def on_server_unavailable(self, server: discord.Server):
         """Called when a server goes offline
@@ -217,7 +251,7 @@ class Database:
         server: discord.Server"""
         if checks.is_an_ignored(server.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.updateStatus(server, 0)
+        return self.SDB.updateStatus(server, 0)
 
     async def on_server_emojis_update_todo(self, before, after):
         """Called when an emojis is updated/create/deleted
@@ -236,11 +270,11 @@ class Database:
             for idx, emoji in enumerate(beforeS):
                 #if
                 NOTE = "I have to check between the two lists what's new"
-            return self.ServerDB.createEmoji(None)
+            return self.SDB.createEmoji(None)
         elif len(before) > len(after):
-            return self.ServerDB.deleteEmoji(None)
+            return self.SDB.deleteEmoji(None)
         elif len(before) is len(after):
-            return self.ServerDB.updateEmoji(before, after)
+            return self.SDB.updateEmoji(before, after)
         else:
             return "That doesn't make sense."
         return
@@ -254,7 +288,7 @@ class Database:
             The New Role"""
         if checks.is_an_ignored(role.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.createRole(role)
+        return self.SDB.createRole(role)
 
     async def on_server_role_delete(self, role: discord.Role):
         """Called when a role is deleted
@@ -265,7 +299,7 @@ class Database:
             The Delted Role"""
         if checks.is_an_ignored(role.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.deleteRole(role)
+        return self.SDB.deleteRole(role)
 
     async def on_server_role_update(self, before: discord.Role, after: discord.Role):
         """Called when a role is updated
@@ -278,7 +312,7 @@ class Database:
             New Role"""
         if checks.is_an_ignored(before.id, self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.updateRole(after)
+        return self.SDB.updateRole(after)
 
     async def on_channel_delete(self, channel: discord.Channel):
         """Called when a channel is deleted
@@ -289,7 +323,7 @@ class Database:
             The Delted Channel"""
         if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.deleteChannel(channel)
+        return self.SDB.deleteChannel(channel)
 
     async def on_channel_create(self, channel: discord.Channel):
         """Called when a channel is created!
@@ -300,7 +334,7 @@ class Database:
             The new Channel"""
         if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.createChannel(self, channel)
+        return self.SDB.createChannel(self, channel)
 
     async def on_channel_update(Self, before: discord.Channel, after: discord.Channel):
         """Called when a channel is updated
@@ -313,7 +347,7 @@ class Database:
             The New Channel"""
         if checks.is_an_ignored([channel.id, channel.server.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.ServerDB.updateChannel(after)
+        return self.SDB.updateChannel(after)
 
     async def on_member_bant(self, member: discord.Member):
         """Called when a member is banned
@@ -324,7 +358,7 @@ class Database:
             The banned Member"""
         if checks.is_an_ignored([member.id, member.server.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.MembersDB.ban(member)
+        return self.MBDB.ban(member)
 
     async def on_member_unbant(self, server: discord.Server, user: discord.User):
         """Called when a user is unbanned
@@ -337,7 +371,7 @@ class Database:
             The User"""
         if checks.is_an_ignored([server.id, user.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.MembersDB.unban(server, user)
+        return self.MBDB.unban(server, user)
 
     async def on_member_joint(self, member: discord.Member):
         """Called when a member joins a server the bot is in.
@@ -348,8 +382,8 @@ class Database:
             The Server Member that was added"""
         if checks.is_an_ignored([member.id, member.server.id], self.bot.Config["Ignored IDs"]):
             return
-        self.ServerDB.createMember(member)
-        return self.MembersDB.create(member)
+        self.SDB.createMember(member)
+        return self.MBDB.create(member)
 
     async def on_member_removet(self, member: discord.Member):
         """Called when a member (leaves/kicked from/banned from) a server
@@ -361,8 +395,8 @@ class Database:
             The Server Member that was removed"""
         if checks.is_an_ignored([member.id, member.server.id], self.bot.Config["Ignored IDs"]):
             return
-        self.ServerDB.deleteMember(member)
-        return self.MembersDB.delete(member)
+        self.SDB.deleteMember(member)
+        return self.MBDB.delete(member)
 
     async def on_member_updatet(self, before: discord.Member, after: discord.Member):
         """Called when a member calls an update the server the bot is in.
@@ -375,7 +409,7 @@ class Database:
             The New Member"""
         if checks.is_an_ignored([before.id, before.server.id], self.bot.Config["Ignored IDs"]):
             return
-        return self.MembersDB.update(before, after)
+        return self.MBDB.update(before, after)
 
     #async def on_voice_state_update_todo(self, before, after):
 

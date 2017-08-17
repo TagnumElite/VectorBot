@@ -119,7 +119,7 @@ class Twitch:
                         print("Stream has been checked")
                     else:
                         print("Stream has not been checked")
-                        if stream["channel"]["name"] in users:
+                        if stream["channel"]["name"] == username:
                             print("Found stream")
                             embed_data = self.bot.Config["Twitch Embed"]
                             embed_data["Colour"] = 0x6441A4
