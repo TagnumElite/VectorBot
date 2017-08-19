@@ -28,8 +28,9 @@ class Profile:
 
     def __init__(self, bot):
         self.bot = bot
+        self.Config = bot.Config.get(self.__class__.__name__, {})
         self.Splash = draw.Splash(
-            WebsitePath=self.bot.Config["Modes"][self.bot.Config["Mode"]]["Splash Path"],
+            WebsitePath=self.bot.Config["Splash Path"],
             BotPath=bot.currentDIR
         )
 
@@ -70,23 +71,21 @@ class Profile:
         author = message.author
         server = message.server
         await self.bot.delete_message(message)
-        if server.id is self.bot.Config["Bot Server"]:
+        if server.id is self.bot.Config["Server"]:
             await self.bot.send_message(
                 author,
                 "Here is your custom splash! {}/members/{}".format(
-                    self.bot.Config["Modes"][self.bot.Config["Mode"]]["Splash Site"],
+                    self.bot.Config["Splash Site"],
                     self.Splash.Check(member) # I won't do Update because in large servers that can cause the bot to crash
                 )
             )
-        elif server.id is self.bot.Config["Dev Server"]:
-            print("Check Splash: banner")
         else:
             msg = await self.bot.say("That is not permitted here!")
             await asyncio.sleep(4)
             await self.bot.delete_message(msg)
 
     async def on_member_join(self, member):
-        if member.server.id is self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"] and not member.bot:
+        if member.server.id is self.bot.Config["Server"] and not member.bot:
             await self.bot.send_message(
                 author,
                 "Here is your custom splash! {}/members/{}".format(
@@ -94,11 +93,9 @@ class Profile:
                     self.Splash.Update(member)
                 )
             )
-        elif member.server.id is self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"] and not member.bot:
-            print("Create Splash: Member Joined")
 
     async def on_member_update(self, before, after):
-        if after.server.id == self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"] and not after.bot:
+        if after.server.id == self.bot.Config["Server"] and not after.bot:
             if before.name is not after.name:
                 self.Splash.Update(after)
             elif before.game is not after.game:
@@ -109,20 +106,14 @@ class Profile:
                 self.Splash.Update(after)
             elif before.status is not after.status:
                 self.Splash.Update(after)
-        elif after.server.id is self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"] and not after.bot:
-            print("Create Splash: Member Update")
 
     async def on_member_ban(self, member):
-        if member.server.id == self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"]:
+        if member.server.id == self.bot.Config["Server"]:
             self.Splash.Remove(member.id)
-        elif member.server.id is self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"]:
-            print("Remove Splash: Banned")
 
     async def on_member_remove(self, member):
-        if member.server.id == self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"]:
+        if member.server.id == self.bot.Config["Server"]:
             self.Splash.Remove(member.id)
-        elif member.server.id is self.bot.Config["Modes"][self.bot.Config["Mode"]]["Server"]:
-            print("Remove Splash: Kicked")
 
 def setup(bot):
     bot.add_cog(Profile(bot))

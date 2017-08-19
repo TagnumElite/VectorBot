@@ -17,7 +17,7 @@ class Utilities:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Config = bot.Config
+        self.Config = bot.Config.get(self.__class__.__name__, {})
 
     @commands.command(pass_context=True)
     @checks.admin_or_permissions(manage_messages=True)
@@ -49,7 +49,7 @@ class Utilities:
         author = message.author
         server = message.server
         channel = message.channel
-        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+        if ctx.message.author.id is not self.bot.Config["Owner"]:
             return
         if url == None:
             await self.bot.say("Please give a url to change to!")
@@ -66,7 +66,7 @@ class Utilities:
         author = message.author
         server = message.server
         channel = message.channel
-        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+        if ctx.message.author.id is not self.bot.Config["Owner"]:
             return
         if username == None:
             await self.bot.say("Please specify a username to give!")
@@ -98,7 +98,7 @@ class Utilities:
         author = message.author
         server = message.server
         channel = message.channel
-        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+        if ctx.message.author.id is not self.bot.Config["Owner"]:
             return
         await self.bot.change_presence(game=discord.Game(name=status))
 
@@ -145,7 +145,7 @@ class Utilities:
         try:
             await bot.delete_message(msg)
         except Exception as E:
-            await log_message(
+            print(
                 """Error deleteing command `rules` run by %s(%s) on server %s(%s) in channel %s(%s)
     Error: {0}""".format(E) % (
                     author, author.id,
@@ -159,7 +159,7 @@ class Utilities:
     @commands.command(pass_context=True, hidden=True)
     async def logout(self, ctx):
         """Logs Bot out of Discord"""
-        if ctx.message.author.id is not self.bot.Config["Modes"][self.bot.Config["Mode"]]["Owner"]:
+        if ctx.message.author.id is not self.bot.Config["Owner"]:
             return
         await self.bot.say("Logging Out")
         await asyncio.sleep(2)
@@ -174,6 +174,92 @@ class Utilities:
                 CLIENTID=self.bot.user.id
             )
         )
+
+    @commands.command(pass_context=True)
+    async def avatar(self, ctx, user=None):
+        """Get your avatar and if user is specified then gets the users avatar!"""
+        message = ctx.message
+        author = message.author
+        server = message.server
+        channel = message.channel
+        print("User %s(%s) ran command `avatar` in channel %s(%s) on server %s(%s)" % (author.name, author.id, channel.name, channel.id, server.name, server.id), self.bot)
+        if user == None:
+            if author.avatar_url == "":
+                await self.bot.say("You have no avatar!")
+                return
+            else:
+                await self.bot.say(author.avatar_url)
+                return
+        else:
+            members = server.members
+            if members == None:
+                await self.bot.say("Members not found!")
+                return
+            member = checks.find_user(user, members)
+            if member == None:
+                print(member)
+                await self.bot.say("User not found!")
+                return
+            elif member == False:
+                await self.bot.say("No user was found matching %s" % (user))
+                return
+            else:
+                if member.avatar_url == "":
+                    await self.bot.say("%s has no avatar!" % (member.name))
+                else:
+                    await self.bot.say("%s avatar url: %s" % (member.mention, member.avatar_url))
+
+    @commands.command(pass_context=True)
+    async def icon(self, ctx):
+        """Gets the servers icon"""
+        message = ctx.message
+        author = message.author
+        server = message.server
+        channel = message.channel
+        print("User %s(%s) ran command `icon` in channel %s(%s) on server %s(%s)" % (author.name, author.id, channel.name, channel.id, server.name, server.id), self.bot)
+        if server.icon_url == "":
+            await self.bot.say("%s has no icon!" % (server.name))
+        else:
+            await self.bot.say("%s icon is: %s" % (server.name, server.icon_url))
+
+    @commands.command(pass_context=True)
+    async def splash(self, ctx):
+        """Gets the servers slpash"""
+        message = ctx.message
+        author = message.author
+        server = message.server
+        channel = message.channel
+        print("User %s(%s) ran command `splash` in channel %s(%s) on server %s(%s)" % (author.name, author.id, channel.name, channel.id, server.name, server.id), self.bot)
+        if server.splash_url == "":
+            await self.bot.say("%s has no splash!" % (server.name))
+        else:
+            await self.bot.say("%s splash is %s" % (server.name, server.splash_url))
+
+    @commands.command(pass_context=True)
+    async def size(self, ctx):
+        """Gets the servers total member count"""
+        message = ctx.message
+        author = message.author
+        server = message.server
+        channel = message.channel
+        print("User %s(%s) ran command `size` in channel %s(%s) on server %s(%s)" % (author.name, author.id, channel.name, channel.id, server.name, server.id), self.bot)
+        if server.member_count == 0:
+            await self.bot.say("Server has no members! WAIT WHAT!")
+        else:
+            await self.bot.say("%s total member count: %s" % (server.name, server.member_count))
+
+    @commands.command(pass_context=True)
+    async def created(self, ctx):
+        """Gets the servers creation time"""
+        message = ctx.message
+        author = message.author
+        server = message.server
+        channel = message.channel
+        print("User %s(%s) ran command `created` in channel %s(%s) on server %s(%s)" % (author.name, author.id, channel.name, channel.id, server.name, server.id), self.bot)
+        if server.created_at == None:
+            await self.bot.say("Server has no creation date! WAIT WHAT!")
+        else:
+            await self.bot.say("%s was created on: %s" % (server.name, server.created_at))
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

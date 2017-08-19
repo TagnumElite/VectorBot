@@ -12,6 +12,7 @@ class Admin:
 
     def __init__(self, bot):
         self.bot = bot
+        self.Config = bot.Config.get(self.__class__.__name__, {})
 
     @commands.command(hidden=True)
     @checks.admin_or_permissions(administrator=True)

@@ -13,8 +13,7 @@ def check_ignore(ids, ignored: list):
             if id in ignored:
                 return True
     else:
-        if ids in ignored:
-            return True
+        return ids in ignored
     return False
 
 def similarSeq(a, b):
@@ -85,15 +84,6 @@ def is_in_servers(*server_ids):
 
 def is_lounge_cpp():
     return is_in_servers('145079846832308224')
-
-def is_an_ignored(ids, ignoredids):
-    if isinstance(ids, list):
-        for ID in ids:
-            if ID in ignoredids:
-                return True
-        return False
-    else:
-        return ids in ignoredids
 
 def find_user(username, members):
     usernames = []

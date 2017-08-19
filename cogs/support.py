@@ -9,11 +9,16 @@ class Support:
 
     def __init__(self, bot):
         self.bot = bot
+        self.Config = bot.Config.get(self.__class__.__name__, {})
 
     @commands.command(pass_context=True, aliases=["bug"])
     @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
     async def bugreport(self, ctx, *, bug):
+        """Send a bugreport to the owner of the bot!"""
         msgs = [ctx.message]
+
+        if bug == None or bug == "":
+            await self.bot.send_message(ctx.message.author, "HOW TO MAKE A BUG REPORT")
 
         if self.bot.owner is None:
             msgs.append(await self.bot.send_message(ctx.message.author, "Sorry, bug could not be sent"))
@@ -30,7 +35,11 @@ class Support:
     @commands.command(pass_context=True)
     @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
     async def suggestion(self, ctx, *, suggestion):
+        """Send a suggestion or feature request to the bot owner!"""
         msgs = [ctx.message]
+
+        if suggestion == None or suggestion == "":
+            await self.bot.send_message(ctx.message.author, "HOW TO MAKE A SUGGESTION")
 
         if self.bot.owner is None:
             msmgs.append(await self.bot.send_message(ctx.message.author, "Sorry, suggestion could not be sent"))

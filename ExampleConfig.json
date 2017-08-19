@@ -8,171 +8,138 @@
             "Welcome": "286802443239686144", // This is the channel where the bot is going to welcome platers
             "Announce": "290747091020414978", //Discord ID of the channel #Annoucements
             "Prefix": ["v!", "V!", "\\N{HEAVY EXCLAMATION MARK SYMBOL}"], //Prefixes, Remember to add both uppercase and lowercase!
-            "DB Prefix": "vb",  //Seperate prefix to make sure the databases don't mix
             "Owner": "179891973795086336",  //The Discord ID of the user hosting/manageing the bot
             "Description": "Hello!, I am the VectorBot!",  //This is the description displayed on the help screen
             "DM Help": true,  //This is if you want the help message sent over a direct message
             "Status": "V!help",  //The is the *Playing* status
-            "Splash Site": "http://example.com", //The site may not end with an /
-            "Splash Path": "C:/PUBLIC_HTML", //This is where the splashes are stored!
-            "Cogs": [
+            "Wordpress Plugin": { //This is for a wordpress plugin I will be making
+                "Enabled": true,  //Wether you use the plugin or not!
+                "Twitch": true,   //This will require WP Social Login and my plugin
+                "Teams": false
+            },
+            "Embeds": {
+                "Welcome": { //This is the embeded message that will be sent.
+                    "Title": "Welcome to {server}!", //Title of the embed
+                    "Description": "Check out the rules first <@{member_id}>!", //This is the description of the embed
+                    "Colour": "", //Sets the colour of the embed, currently not working.
+                    "Footer": { //This is the footer of the embed
+                        "Enabled": false, //Set weather you want a footer or not
+                        "Text": "{server}", //What is displayed by the embed if enabled
+                        "Icon Url": "{icon_url}" //A small icon displayed by the footer if enabled. Can be empty
+                    },
+                    "Url": "", //The icon of the embed, can be empty
+                    "Thumbnail": "{avatar_url}", //The thumbnail of the embed, can be empty
+                    "Image": "", //The image of the embed, can be empty
+                    "Author": { //This is the author of the embed
+                        "Enabled": true, //Set weather you want an author
+                        "Name": "{member}", //Name of the author
+                        "Avatar Url": "{avatar_url}" //Avatar of the author, can be empty
+                    },
+                    "Inline": [ //This is what is displayed inside the embed, can be left empty
+                        {"Name": "{Prefix[1]}Rules", "Value": "Check out our rules", "Inline": true},
+                        {"Name": "{Prefix[1]}Help", "Value": "Check out my commands", "Inline": true}
+                    ]
+                },
+            },
+            "Cogs": [ //Normally Enabled Cogs
+                "cogs.admin",      //Admin Stuff
+                "cogs.database",   //Config And Logging
+                "cogs.utilities",  //Useful Stuff
+                "cogs.support"     //Bug Reporting and Suggestions. All this does is send bugs and suggestions to my discord account
+            ],
+            "Profile": {
+                "Site": "http://example.com", //The site may not end with an /
+                "Path": "C:/PUBLIC_HTML",     //This is where the splashes are stored!
+            },
+            "Database": {
+                "Host": "localhost", //Default: localhost
+                "Port": 3306,        //Default: 3306
+                "Name": "vectorbot", //Name of the Database
+                "User": "Vector",    //Username of the SQL account
+                "Pass": "",          //Can Be Empty if no password
+                "Type": "MySQL",     //Only a placeholder for functionality that may come in the future
+                "Prefix": "vb"       //Seperate prefix to make sure the databases don't mix
+            },
+            "Email": {//Email Settings - Only a placeholder
+                "User": "user@example.com",  //Username
+                "Pass": "example.password",  //Password
+                "Incoming Server": "mail.example.com",  //Incoming Server
+                "Outgoing Server": "mail.example.com",  //Outgoing Server
+                "IMAP Port": 143, //Default: 143
+                "POP3 Port": 110, //Default: 110
+                "SMTP Port": 25  //Default: 25
+            },
+            "Ignored IDs": [//These ids are ignored and don't get logged nor can they use commands, can be a server, user, channel id
+                "286148169396649994"
+            ],
+            "Twitch": {
+                "Client ID": "uo6dggojyb8d6soh92zknwmi5ej1q2", //This is for the twitch notifier
+                "Refresh": 30, //This is how often the twitch notifier looks for new streams, time in seconds.
+                "Users": [ //This is the channels that the twitch notifier will look for, for now
+                    "tagnumelite"
+                ],
+                "Main": "", //This is used for setting the bots stream status
+                "Embed": { //This is the embeded message that will be sent.
+                    "Title": "{name} is live!", //Title of the embed
+                    "Description": "", //This is the description of the embed
+                    "Colour": "", //Sets the colour of the embed, currently not working.
+                    "Footer": { //This is the footer of the embed
+                        "Enabled": false, //Set weather you want a footer or not
+                        "Text": "", //What is displayed by the embed if enabled
+                        "Icon Url": "" //A small icon displayed by the footer if enabled. Can be empty
+                    },
+                    "Url": "", //The icon of the embed, can be empty
+                    "Thumbnail": "", //The thumbnail of the embed, can be empty
+                    "Image": "{preview[large]}", //The image of the embed, can be empty
+                    "Author": { //This is the author of the embed
+                        "Enabled": false, //Set weather you want an author
+                        "Name": "", //Name of the author
+                        "Avatar Url": "" //Avatar of the author, can be empty
+                    },
+                    "Inline": [ //This is what is displayed inside the embed, can be left empty
+                        {"Name": "Viewers", "Value": "{viewers}", "Inline": true},
+                        {"Name": "Created At", "Value": "{created_at}", "Inline": true}
+                    ]
+                }
+            },
+            "Music": {
+                "Default Volume": 100, //Default Volume
+                "Autojoin Channel": "294769288131117056", //The voice channel the bot automatically joins
+                "Auto Playlist": [ //Music that is automatically played
 
-            ]
-        },
-        "Dev": { //Dev Mode
-            "Token": "PUT THE BOTS TOKEN HERE", //Development Bot Token
-            "Server": "285864807775600641",  //Discord ID of the server
-            "Log": "286003475970523136", //Discord ID of the channel #log
-            "Welcome": "287118703299133440", //Discord ID of the channel #Welcome
-            "Announce": "291810238179573760", //Discord ID of the channel #Annoucements
-            "Prefix": "!!", //Command Prefix
-            "DB Prefix": "vd",  //Seperate prefix to make sure the databases don't mix
-            "Owner": "179891973795086336",  //The Discord ID of the user hosting/manageing the bot
-            "Description": "Hello!, I am the experimental VectorBot!",  //This is the description displayed on the help screen
-            "DM Help": false,  //This is if you want the help message sent over a direct message
-            "Status": "!!help",  //The is the *Playing* status
-            "Splash Site": "http://example.com", //The site may not end with an /
-            "Splash Path": "C:/PUBLIC_HTML", //This is where the splashes are stored!
-            "Cogs": [
-
-            ]
+                ]
+            },
+            "Rules": {//Rules Command Management
+                "Title": "{server}'s Rules",//Title and Description has special value {server}, {channel}, {author}
+                "Description": "{server}'s Description",
+                "Colour": "ff0000", //Color Must be a HEX Value #ff0000 For Red but isn't used for now
+                "Footer": { //Footer: Text: Required; Icon Url: Optional, Must Be A http(s) url!
+                    "Enabled": true,
+                    "Text": "e-Sports is a profession and here we are professionals. We will not be held liable if you are recorded, your IP is tracked, and you are held accountable for your actions. By being on this discord you indemnify {server} for any responsibility",
+                    "Icon Url": "http://www.psdgraphics.com/file/red-warning-sign.jpg"
+                },
+                "Url": "mailto:admin@example.com", // Maybe
+                "Thumbnail": "", //Can Be Empty. Must Be A http(s) url!
+                "Image": "",     //Can Be Empty. Must Be A http(s) url!
+                "Author": {      //Author: Name: Required; Avatar Url: Optional, Must Be A http(s) url!
+                    "Enabled": true,
+                    "Name": "{server}", //Can Be {server}
+                    "Avatar Url": "{server_icon}" //Can Be {server_icon}
+                },
+                "Inline": [ //Rules: These are global rules but they can be overridden to each server
+                    {"Name": "No Rudeness", "Rule": "Can Be Instabanned", "Inline": true},
+                    {"Name": "No Trolling", "Rule": "Can Be Instabanned", "Inline": true},
+                    {"Name": "No Spamming", "Rule": "Can Be Instabanned", "Inline": true},
+                    {"Name": "No Interfering in team practices", "Rule": "Can Be Instabanned"},
+                    {"Name": "Obey all Staff members", "Rule": "Can Be Instabanned"}, //Rule can be anything really. Could be something you just want to tell the user about that sepefic rule
+                    {"Name": "Joining Competitive Rooms Without Permission", "Rule": "You May not join a Competitive Room without permission from the team/clan owner's permission!"},
+                    {"Name": "No Interfering in team practices", "Rule": "Can Be Instabanned"},
+                    {"Name": "No Racism", "Rule": "First time offenders will be permanently branded."},
+                    {"Name": "Playing the wrong game in a competitive channel", "Rule": "You will be warned and forceably moved. If you do it again, you will be banned!"},
+                    {"Name": "Abusing Powers", "Rule": "Any security officers or senior members caught abusing their powers will be stripped of all privelages."},
+                    {"Name": "Seniors Have No Power", "Rule": "Senior members have no punishment or decisive authority in this community. If they  boss you around, report them by sending an email to admin@example.com - This goes for team captains aswell. Team captains should only have rights to the channel they are in"}
+                ]
+            }
         }
-    },
-
-    "Wordpress Plugin": { //This is for a wordpress plugin I will be making
-        "Enabled": true,  //Wether you use the plugin or not!
-        "Twitch": true,   //This will require WP Social Login and my plugin
-        "Teams": false
-    },
-
-    "Welcome Embed": { //This is the embeded message that will be sent.
-        "Title": "Welcome to {server}!", //Title of the embed
-        "Description": "Check out the rules first <@{member_id}>!", //This is the description of the embed
-        "Colour": "", //Sets the colour of the embed, currently not working.
-        "Footer": { //This is the footer of the embed
-            "Enabled": false, //Set weather you want a footer or not
-            "Text": "{server}", //What is displayed by the embed if enabled
-            "Icon Url": "{icon_url}" //A small icon displayed by the footer if enabled. Can be empty
-        },
-        "Url": "", //The icon of the embed, can be empty
-        "Thumbnail": "{avatar_url}", //The thumbnail of the embed, can be empty
-        "Image": "", //The image of the embed, can be empty
-        "Author": { //This is the author of the embed
-            "Enabled": true, //Set weather you want an author
-            "Name": "{member}", //Name of the author
-            "Avatar Url": "{avatar_url}" //Avatar of the author, can be empty
-        },
-        "Inline": [ //This is what is displayed inside the embed, can be left empty
-            {"Name": "{Prefix[1]}Rules", "Value": "Check out our rules", "Inline": true},
-            {"Name": "{Prefix[1]}Help", "Value": "Check out my commands", "Inline": true}
-        ]
-    },
-
-    "Database Type": "MySQL",     //Only a placeholder for functionality that may come in the future
-    "Database Host": "localhost", //Default: localhost
-    "Database Port": 3306,        //Default: 3306
-    "Database Name": "vectorbot", //Name of the Database
-    "Database User": "Vector",    //Username of the SQL account
-    "Database Pass": "",          //Can Be Empty if no password
-
-    "Cogs": [ //Normally Enabled Cogs
-        "cogs.admin",      //Admin Stuff
-        "cogs.database",   //Config And Logging
-        "cogs.utilities",  //Useful Stuff
-        "cogs.misc",       //The Little Things
-        "cogs.support"     //Bug Reporting and Suggestions. All this does is send bugs and suggestions to my discord account
-    ],
-
-    //Email Settings - Only a placeholder
-    "Email User": "user@example.com",  //Username
-    "Email Pass": "example.password",  //Password
-    "Email Incoming Server": "mail.example.com",  //Incoming Server
-    "Email Outgoing Server": "mail.example.com",  //Outgoing Server
-    "IMAP Port": 143, //Default: 143
-    "POP3 Port": 110, //Default: 110
-    "SMTP Port": 25,  //Default: 25
-
-    "Dev Cogs": [ //Extensions that will be enabled if Dev Mode is set to true
-        "cogs.api",
-        "cogs.feeds",
-        "cogs.image",
-        "cogs.twitch",
-        "cogs.music",
-        "cogs.social"
-    ],
-
-    "Ignored IDs": [//These ids are ignored and don't get logged nor can they use commands, can be a server, user, channel id
-        "286148169396649994"
-    ],
-
-    "Twitch Client ID": "uo6dggojyb8d6soh92zknwmi5ej1q2", //This is for the twitch notifier
-    "Twitch Refresh": 300, //This is how often the twitch notifier looks for new streams, time in seconds.
-    "Twitch Users": [ //This is the channels that the twitch notifier will look for, for now
-        "tagnumelite",
-        "elitekast"
-    ],
-    "Twitch Embed": { //This is the embeded message that will be sent.
-        "Title": "{name} is live!", //Title of the embed
-        "Description": "", //This is the description of the embed
-        "Colour": "", //Sets the colour of the embed, currently not working.
-        "Footer": { //This is the footer of the embed
-            "Enabled": false, //Set weather you want a footer or not
-            "Text": "", //What is displayed by the embed if enabled
-            "Icon Url": "" //A small icon displayed by the footer if enabled. Can be empty
-        },
-        "Url": "", //The icon of the embed, can be empty
-        "Thumbnail": "", //The thumbnail of the embed, can be empty
-        "Image": "{preview[large]}", //The image of the embed, can be empty
-        "Author": { //This is the author of the embed
-            "Enabled": false, //Set weather you want an author
-            "Name": "", //Name of the author
-            "Avatar Url": "" //Avatar of the author, can be empty
-        },
-        "Inline": [ //This is what is displayed inside the embed, can be left empty
-            {"Name": "Viewers", "Value": "{viewers}", "Inline": true},
-            {"Name": "Created At", "Value": "{created_at}", "Inline": true}
-        ]
-    },
-
-    "Music": {
-        "Default Volume": 100, //Default Volume
-        "Autojoin Channel": "294769288131117056", //The voice channel the bot automatically joins
-        "Auto Playlist": [ //Music that is automatically played
-
-        ]
-    },
-
-    //Rules Command Management
-    "Rules": {
-        "Title": "{server}'s Rules",//Title and Description has special value {server}, {channel}, {author}
-        "Description": "{server}'s Description",
-        "Colour": "ff0000", //Color Must be a HEX Value #ff0000 For Red but isn't used for now
-        "Footer": { //Footer: Text: Required; Icon Url: Optional, Must Be A http(s) url!
-            "Enabled": true,
-            "Text": "e-Sports is a profession and here we are professionals. We will not be held liable if you are recorded, your IP is tracked, and you are held accountable for your actions. By being on this discord you indemnify {server} for any responsibility",
-            "Icon Url": "http://www.psdgraphics.com/file/red-warning-sign.jpg"
-        },
-        "Url": "mailto:admin@example.com", // Maybe
-        "Thumbnail": "", //Can Be Empty. Must Be A http(s) url!
-        "Image": "",     //Can Be Empty. Must Be A http(s) url!
-        "Author": {      //Author: Name: Required; Avatar Url: Optional, Must Be A http(s) url!
-            "Enabled": true,
-            "Name": "{server}", //Can Be {server}
-            "Avatar Url": "{server_icon}" //Can Be {server_icon}
-        },
-        "Rules": [ //Rules: These are global rules but they can be overridden to each server
-            {"Name": "No Rudeness", "Rule": "Can Be Instabanned", "Inline": true},
-            {"Name": "No Trolling", "Rule": "Can Be Instabanned", "Inline": true},
-            {"Name": "No Spamming", "Rule": "Can Be Instabanned", "Inline": true},
-            {"Name": "No Interfering in team practices", "Rule": "Can Be Instabanned"},
-            {"Name": "Obey all Staff members", "Rule": "Can Be Instabanned"}, //Rule can be anything really. Could be something you just want to tell the user about that sepefic rule
-            {"Name": "Joining Competitive Rooms Without Permission", "Rule": "You May not join a Competitive Room without permission from the team/clan owner's permission!"},
-            {"Name": "No Interfering in team practices", "Rule": "Can Be Instabanned"},
-            {"Name": "No Racism", "Rule": "First time offenders will be permanently branded."},
-            {"Name": "Playing the wrong game in a competitive channel", "Rule": "You will be warned and forceably moved. If you do it again, you will be banned!"},
-            {"Name": "Abusing Powers", "Rule": "Any security officers or senior members caught abusing their powers will be stripped of all privelages."},
-            {"Name": "Seniors Have No Power", "Rule": "Senior members have no punishment or decisive authority in this community. If they  boss you around, report them by sending an email to admin@example.com - This goes for team captains aswell. Team captains should only have rights to the channel they are in"}
-        ]
     }
 }
- //I am really tired, send help or chocolate

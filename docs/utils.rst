@@ -24,7 +24,7 @@ Databases
 .. autoclass:: MembersDB
     :members:
 
-.. autoclass:: ConfigsDB
+.. autoclass:: ConfigDB
     :members:
 
 Draw

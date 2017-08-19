@@ -7,11 +7,41 @@ import requests
 import json
 import re
 
+default = {
+    "Client ID": "uo6dggojyb8d6soh92zknwmi5ej1q2",
+    "Refresh": 30,
+    "Users": [],
+    "Main": "",
+    "Embed": {
+        "Title": "{name} is live!",
+        "Description": "",
+        "Colour": "",
+        "Footer": {
+            "Enabled": False,
+            "Text": "",
+            "Icon Url": ""
+        },
+        "Url": "",
+        "Thumbnail": "",
+        "Image": "{preview[large]}",
+        "Author": {
+            "Enabled": False,
+            "Name": "",
+            "Avatar Url": ""
+        },
+        "Inline": [
+            {"Name": "Viewers", "Value": "{viewers}", "Inline": True},
+            {"Name": "Created At", "Value": "{created_at}", "Inline": True}
+        ]
+    }
+}
+
 class Twitch:
     """Handles the bot's twitch system."""
 
     def __init__(self, bot):
         self.bot = bot
+        self.Config = bot.Config.get(self.__class__.__name__, default)
         self.Parser = Parser()
         self.checked_streams = []
         self.bot.loop.create_task(self.check_for_streams())
@@ -44,8 +74,8 @@ class Twitch:
             config = self.bot.Config.get(server.id)
         print("Checking for streams")
         url = "https://api.twitch.tv/kraken/streams/?channel={}"
-        headers = {'Client-ID': self.bot.Config["Twitch Client ID"]}
-        users = self.bot.Config["Twitch Users"]
+        headers = {'Client-ID': self.Config["Client ID"]}
+        users = self.Config["Users"]
         channels = ", ".join(users)
 
         print("Getting streams")
@@ -63,7 +93,7 @@ class Twitch:
                     print("Stream has not been checked")
                     if stream["channel"]["name"] in users:
                         print("Found stream")
-                        embed_data = self.bot.Config["Twitch Embed"]
+                        embed_data = self.Config["Embed"]
                         embed_data["Colour"] = 0x6441A4
                         print("Getting Embed")
                         em = self.Parser.createEmbed(
@@ -92,7 +122,7 @@ class Twitch:
         await self.bot.wait_until_ready()
         while not self.bot.is_closed:
             await self.check_streams()
-            await asyncio.sleep(self.bot.Config["Twitch Refresh"])
+            await asyncio.sleep(self.Config["Refresh"])
 
     async def check_stream(self, url):
         """Check if url is twitch stream and has been checked"""
@@ -104,7 +134,7 @@ class Twitch:
 
             print("Checking the stream")
             url = "https://api.twitch.tv/kraken/streams/?channel={}"
-            headers = {'Client-ID': self.bot.Config["Twitch Client ID"]}
+            headers = {'Client-ID': self.Config["Client ID"]}
 
             print("Getting streams")
             response = requests.get(url.format(username), headers=headers)
@@ -121,7 +151,7 @@ class Twitch:
                         print("Stream has not been checked")
                         if stream["channel"]["name"] == username:
                             print("Found stream")
-                            embed_data = self.bot.Config["Twitch Embed"]
+                            embed_data = self.Config["Embed"]
                             embed_data["Colour"] = 0x6441A4
                             print("Getting Embed")
                             em = self.Parser.createEmbed(

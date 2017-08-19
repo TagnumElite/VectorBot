@@ -17,13 +17,11 @@ Database
 .. autoclass:: Database
     :members:
 
-
 Feeds
 -----
 
 .. autoclass:: Feeds
     :members:
-
 
 Image Manipulation
 ------------------
@@ -31,34 +29,23 @@ Image Manipulation
 .. autoclass:: Image
     :members:
 
-
-Miscellaneous
--------------
-
-.. autoclass:: Misc
-    :members:
-
-
 Profile
 -------
 
 .. autoclass:: Profile
     :members:
 
-
 Steams
 ------
 
-.. autoclass:: Steams
+.. autoclass:: Steam
     :members:
-
 
 Support
 -------
 
 .. autoclass:: Support
     :members:
-
 
 Utilities
 ---------

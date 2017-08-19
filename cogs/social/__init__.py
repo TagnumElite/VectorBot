@@ -10,6 +10,7 @@ class Social:
 
     def __init__(self, bot):
         self.bot = bot
+        self.Config = bot.Config.get(self.__class__.__name__, {})
         self.bot.loop.create_task(self.check_feeds())
         self.checked_feeds = {}
 

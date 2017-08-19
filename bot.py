@@ -53,27 +53,20 @@ except FileNotFoundError:
             newconfig.write(re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig))
         exit("Setup config.json!!!")
 
-
 defaultDir = os.getcwd()
-
-currentToken = Config["Modes"][Config["Mode"]]["Token"]
-currentLog = Config["Modes"][Config["Mode"]]["Log"]
-currentWelcome = Config["Modes"][Config["Mode"]]["Welcome"]
-currentDB = Config["Modes"][Config["Mode"]]["DB Prefix"]
-currentServer = Config["Modes"][Config["Mode"]]["Server"]
-currentAnnounce = Config["Modes"][Config["Mode"]]["Announce"]
-currentPrefix = Config["Modes"][Config["Mode"]]["Prefix"]
-currentDescription = Config["Modes"][Config["Mode"]]["Description"]
-currentStatus = Config["Modes"][Config["Mode"]]["Status"]
-mainServer = Config["Modes"][Config["Mode"]]["Server"]
-DMHelp = Config["Modes"][Config["Mode"]]["DM Help"]
+Mode = Config["Mode"]
+Config = Config["Modes"][Mode]
+mainServer = Config["Server"]
+DMHelp = Config["DM Help"]
+Database = Config["Database"]
+Embeds = Config["Embeds"]
 
 DBC = databases.DBC(
-    database=Config["Database Name"],
-    user=Config["Database User"],
-    password=Config["Database Pass"],
-    host=Config["Database Host"],
-    port=Config["Database Port"]
+    database=Database["Name"],
+    user=Database["User"],
+    password=Database["Pass"],
+    host=Database["Host"],
+    port=Database["Port"]
 )
 startup_time = datetime.datetime.utcnow()
 
@@ -98,15 +91,15 @@ log.addHandler(handler)
 help_attrs = dict(hidden=True)
 
 bot = commands.Bot(
-    command_prefix=currentPrefix,
-    description=currentDescription,
+    command_prefix=Config["Prefix"],
+    description=Config["Description"],
     pm_help=DMHelp,
     help_attrs=help_attrs
 )
 
 def isHelpCommand(query):
     """Checks if the text starts with any of the prefixes"""
-    for pre in currentPrefix:
+    for pre in Config["Prefix"]:
         if query.lower().startswith(pre+"help"):
             return True
     return False
@@ -135,10 +128,10 @@ async def on_ready():
     if not hasattr(bot, 'uptime'):
         bot.uptime = datetime.datetime.utcnow()
     print("Started:")
-    await bot.change_presence(game=discord.Game(name=currentStatus))
+    await bot.change_presence(game=discord.Game(name=Config["Status"]))
     for server in bot.servers:
         for member in server.members:
-            if member.id == Config["Modes"][Config["Mode"]]["Owner"]:
+            if member.id == Config["Owner"]:
                 print("Found Owner %s/%s#%s" % (member.id, member.name, member.discriminator))
                 bot.owner = member
                 break
@@ -208,7 +201,7 @@ async def on_member_join(member):
         datetime.datetime.utcnow()
     )
     channel = discord.Object(id=currentWelcome)
-    embed = Config["Welcome Embed"]
+    embed = Embeds["Welcome"]
     embed["Colour"] = 0x2ecc71
     em = Parser.createEmbed(
         data=embed,
@@ -233,11 +226,6 @@ def main():
 
     #Set Global Vars Before Setting Up Cogs
     bot.owner = None
-    bot.currentLog = currentLog
-    bot.currentDB = currentDB
-    bot.currentDIR = defaultDir
-    bot.currentAnnounce = currentAnnounce
-    bot.currentWelcome = currentWelcome
     bot.mainServer = mainServer
     bot.Config = Config
     os.chdir(defaultDir+"\configs")
@@ -259,18 +247,8 @@ def main():
         else:
             print("Loaded Extension: ", extension)
 
-    #Setup Dev Cogs
-    if Config["Mode"].lower() in ["dev", "development"]:
-        for dextension in Config["Dev Cogs"]:
-            try:
-                bot.load_extension(dextension)
-            except Exception as e:
-                print('Failed to load development extension {}\n{}: {}'.format(dextension, type(e).__name__, e))
-            else:
-                print("Loaded Development Extension: ", dextension)
-
     #Run Bot
-    bot.run(currentToken)
+    bot.run(Config["Token"])
 
     handlers = log.handlers[:]
     for hdlr in handlers:
