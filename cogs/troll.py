@@ -9,11 +9,5 @@ class Troll:
         self.bot = bot
         self.Config = bot.Config.get(self.__class__.__name__, {})
 
-    async def on_message(self, message):
-        if len(message.attachments) > 0:
-            print("Message Attach:", message.attachments)
-        else:
-            return
-
 def setup(bot):
     bot.add_cog(Troll(bot))
