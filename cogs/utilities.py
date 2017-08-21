@@ -44,20 +44,36 @@ class Utilities:
     @commands.command(pass_context=True)
     @commands.cooldown(rate=2, per=3600.0)
     async def setavatar(self, ctx, url=None):
-        """Sets the bots avatar! BROKEN!"""
-        message = ctx.message
-        author = message.author
-        server = message.server
-        channel = message.channel
-        if ctx.message.author.id is not self.bot.Config["Owner"]:
-            return
-        if url == None:
-            await self.bot.say("Please give a url to change to!")
-            return
-        if self.bot.user.bot:
-            image = urllib.urlretrieve(url, "avatar.png")
-            await self.bot.edit_profile(avatar=image)
-            await self.bot.say("This script may be broken, don't expect it to work!")
+        """Sets the bots avatar! Semi-Working!"""
+
+        msgs = [ctx.message]
+        author = msgs[0].author
+        server = msgs[0].server
+        channel = msgs[0].channel
+        if msgs[0].author.id is not self.bot.Config["Owner"]:
+            msgs.append(self.bot.say("You do not have the required permission"))
+        else:
+            if url == None:
+                if len(msgs[0].attachments) >= 1:
+                    url = msgs[0].attachments[0]["url"]
+                else:
+                    msgs.append(await self.bot.say("Please give a url to change to or upload an image to update to!"))
+            if url != None:
+                image = urllib.urlretrieve(url, "avatar.png")
+                try:
+                    await self.bot.edit_profile(avatar=image)
+                except discord.InvalidArgument:
+                    msgs.append(await self.bot.say("Please upload the appropriate image format"))
+                except Exception as E:
+                    msgs.append(await self.bot.say("Exception! :{}:".format(E)))
+                except discord.HTTPException as HE:
+                    msgs.append(await self.bot.say("Failed to edit avatar: {}".format(HE)))
+                except discord.ClientException:
+                    msgs.append(await self.bot.say("Non-Bot Account"))
+                else:
+                    msgs.append(await self.bot.say("This script may be broken, don't expect it to work!"))
+        await asyncio.sleep(5)
+        await self.bot.delete_messages(msgs)
 
     @commands.command(pass_context=True, aliases=["setname"])
     @commands.cooldown(rate=2, per=3600.0)
@@ -74,8 +90,8 @@ class Utilities:
         if self.bot.user.bot:
             try:
                 await self.bot.edit_profile(username=username)
-            except Exception as e:
-                await self.bot.say("Exception! :{}:".format(e))
+            except Exception as E:
+                await self.bot.say("Exception! :{}:".format(E))
             else:
                 await self.bot.say("Username was changed to {}".format(username))
 
@@ -111,32 +127,32 @@ class Utilities:
         channel = msg.channel
         #TODO: Remember to make an if statement to check if the server has overridden rules!
         em = discord.Embed(
-            title=self.Config["Rules"]["Title"].format(
+            title=self.bot.Config["Rules"]["Title"].format(
                 server=server.name,
                 channel=channel.name,
                 author=author.name
             ),
-            description=self.Config["Rules"]["Description"].format(
+            description=self.bot.Config["Rules"]["Description"].format(
                 server=server.name,
                 channel=channel.name,
                 author=author.name
             ),
             color=0xff0000
         )
-        em.set_image(url=self.Config["Rules"]["Image"])
-        em.set_thumbnail(url=self.Config["Rules"]["Thumbnail"])
-        if self.Config["Rules"]["Footer"]["Enabled"]:
+        em.set_image(url=self.bot.Config["Rules"]["Image"])
+        em.set_thumbnail(url=self.bot.Config["Rules"]["Thumbnail"])
+        if self.bot.Config["Rules"]["Footer"]["Enabled"]:
             em.set_footer(
-                text=self.Config["Rules"]["Footer"]["Text"].format(server=server.name),
-                icon_url=self.Config["Rules"]["Footer"]["Icon Url"].format(server_icon=server.icon_url)
+                text=self.bot.Config["Rules"]["Footer"]["Text"].format(server=server.name),
+                icon_url=self.bot.Config["Rules"]["Footer"]["Icon Url"].format(server_icon=server.icon_url)
             )
-        if self.Config["Rules"]["Author"]["Enabled"]:
+        if self.bot.Config["Rules"]["Author"]["Enabled"]:
             em.set_author(
-                name=self.Config["Rules"]["Author"]["Name"].format(server=server.name),
-                icon_url=self.Config["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
+                name=self.bot.Config["Rules"]["Author"]["Name"].format(server=server.name),
+                icon_url=self.bot.Config["Rules"]["Author"]["Avatar Url"].format(server_icon=server.icon_url)
             )
 
-        for rule in self.Config["Rules"]["Rules"]:
+        for rule in self.bot.Config["Rules"]["Inline"]:
             em.add_field(
                 name=rule["Name"],
                 value=rule["Rule"],
@@ -170,8 +186,9 @@ class Utilities:
         """Creates an invite link for the bot"""
 
         await self.bot.say(
-            "https://discordapp.com/oauth2/authorize?client_id={CLIENTID}&scope=bot&permissions=8".format(
-                CLIENTID=self.bot.user.id
+            discord.utils.ouath_url(
+                client_id=self.bot.user.id,
+                permissions=discord.Permission(8)
             )
         )
 

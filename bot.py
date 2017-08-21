@@ -30,8 +30,6 @@ from discord.ext import commands
 from cogs.utils import checks, databases
 from cogs.utils import parser, config
 
-Parser = parser.Parser()
-
 Config = {}
 try:
     with open('config.json', 'r') as file:
@@ -57,7 +55,6 @@ defaultDir = os.getcwd()
 Mode = Config["Mode"]
 Config = Config["Modes"][Mode]
 mainServer = Config["Server"]
-DMHelp = Config["DM Help"]
 Database = Config["Database"]
 Embeds = Config["Embeds"]
 
@@ -93,7 +90,7 @@ help_attrs = dict(hidden=True)
 bot = commands.Bot(
     command_prefix=Config["Prefix"],
     description=Config["Description"],
-    pm_help=DMHelp,
+    pm_help=Config["DM Help"],
     help_attrs=help_attrs
 )
 
@@ -227,6 +224,7 @@ def main():
     #Set Global Vars Before Setting Up Cogs
     bot.owner = None
     bot.mainServer = mainServer
+    bot.currentDIR = defaultDir
     bot.Config = Config
     os.chdir(defaultDir+"\configs")
     bot.Configs = []

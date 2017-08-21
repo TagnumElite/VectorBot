@@ -64,3 +64,15 @@ Twitch
 
 .. autoclass:: Twitch
     :members:
+
+Troll
+-----
+
+.. autoclass:: Troll
+    :members:
+
+Debug
+-----
+
+.. autoclass:: Debug
+    :members:

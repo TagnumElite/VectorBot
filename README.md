@@ -19,7 +19,7 @@ I don't have any rules yet but I will in the future!
 - [ ] Wordpress API Support (More Importantly REST API Support)
 - [ ] Feeds Extension (RSS, ATOM, MOAR)
 - [ ] Notifier / Social Feed
-    - [ ] Twitch `WIP, Enabled only in Dev Mode`
+    - [X] Twitch `WIP, Enabled only in Dev Mode`
     - [ ] Twitter `PLANNED`
     - [ ] Facebook `PLANNED`
     - [ ] Tumblr `PLANNED`

@@ -6,7 +6,7 @@ Because JSON
 import json
 import discord
 
-class Parser():
+class Parser:
     """A Normal Parser
 
     I have to put something here later but I forgot what!"""
@@ -142,7 +142,14 @@ class Parser():
         #elif isinstance(item, discord.Emoji):
         #elif isinstance(item, discord.Role):
         #elif isinstance(item, discord.Channel):
-        #elif isinstance(item, discord.Message):
+        elif isinstance(item, discord.Message):
+            results["edited_timestamp"] = item.edited_timestamp
+            results["timestamp"] = item.timestamp
+            results["tts"] = item.tts
+            #results["type"] = item.type
+            results["author"] = item.author.name+"#"+item.author.discriminator
+            results["content"] = item.content
+            results["nonce"]
         #elif isinstance(item, discord.Reaction):
         #elif isinstance(item, discord.Embed):
         #elif isinstance(item, discord.VoiceState):

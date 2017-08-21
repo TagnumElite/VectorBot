@@ -45,6 +45,7 @@ class Twitch:
         self.Parser = Parser()
         self.checked_streams = []
         self.bot.loop.create_task(self.check_for_streams())
+        self.Name = self.__class__.__name__
 
     async def on_member_update(self, before, after):
         """Check for when members stream"""
@@ -61,7 +62,7 @@ class Twitch:
                     return
                 if after.game.type is 1 and before.game.type is 0:
                     print("Started Streaming")
-                    return await self.check_stream(after.game.url)
+                    return await self.check_streams(after.game.url)
                 print("Stream Unknown")
             else:
                 print("Same Game")
@@ -69,114 +70,73 @@ class Twitch:
             print("Not Main Server")
         return
 
-    async def check_streams(self):
+    async def check_streams(self, url=None):
+        channel = ""
+        if url is None:
+            if len(self.Config["Users"]) == 0:
+                print(self.Name+":", "No streamers in config")
+                return
+            else:
+                channel = ", ".join(users)
+        else:
+            if url.startswith("https://www.twitch.tv"):
+                channel = url.replace("https://www.twitch.tv/", "")
+            else:
+                print(self.Name+":", "None Twitch Stream")
+                return
+
         for server in self.bot.servers:
             config = self.bot.Config.get(server.id)
-        print("Checking for streams")
+        print(self.Name+":", "Checking for streams")
         url = "https://api.twitch.tv/kraken/streams/?channel={}"
         headers = {'Client-ID': self.Config["Client ID"]}
         users = self.Config["Users"]
-        channels = ", ".join(users)
 
-        print("Getting streams")
-        response = requests.get(url.format(channels), headers=headers)
-        print("Response: ", response)
+        print(self.Name+":", "Getting streams")
+        response = requests.get(url.format(channel), headers=headers)
+        print(self.Name+":", "Response:", response)
         data = self.Parser.jsonLoads(response.content)
-        print("Data: ", data)
+        print(self.Name+":", "Data:", data)
         if data["_total"] is not 0:
-            print("Streams: ", data["_total"])
+            print(self.Name+":", "Streams:", data["_total"])
             for stream in data["streams"]:
-                print("Stream ID: ", stream["_id"])
+                print(self.Name+":", "Stream ID:", stream["_id"])
                 if stream["_id"] in self.checked_streams:
-                    print("Stream has been checked")
+                    print(self.Name+":", "Stream has been checked")
                 else:
-                    print("Stream has not been checked")
+                    print(self.Name+":", "Stream has not been checked")
                     if stream["channel"]["name"] in users:
-                        print("Found stream")
+                        print(self.Name+":", "Found stream")
                         embed_data = self.Config["Embed"]
                         embed_data["Colour"] = 0x6441A4
-                        print("Getting Embed")
+                        print(self.Name+":", "Getting Embed")
                         em = self.Parser.createEmbed(
                             data=embed_data,
                             extra=stream
                         )
-                        print("Embed: ", em.to_dict())
-                        print("Appedning Stream")
+                        print(self.Name+":", "Embed:", em.to_dict())
+                        print(self.Name+":", "Appedning Stream")
                         self.checked_streams.append(stream["_id"])
-                        print("Getting announcement")
+                        print(self.Name+":", "Getting announcement channel")
                         announcement = discord.Object(
                             id=self.bot.currentAnnounce
                         )
-                        print("Sending Embed")
+                        print(self.Name+":", "Sending Embed")
                         await self.bot.send_message(
                             announcement,
                             embed=em
                         )
-                        print("Sent Embed")
+                        print(self.Name+":", "Sent Embed")
                     else:
-                        print("User is not ours")
+                        print(self.Name+":", "User is not ours")
         else:
-            print("Streams: None")
+            print(self.Name+":", "No Streams")
 
     async def check_for_streams(self):
         await self.bot.wait_until_ready()
         while not self.bot.is_closed:
             await self.check_streams()
             await asyncio.sleep(self.Config["Refresh"])
-
-    async def check_stream(self, url):
-        """Check if url is twitch stream and has been checked"""
-
-        print("Stream URL:", url)
-
-        if url.startswith("https://www.twitch.tv"):
-            username = url.replace("https://www.twitch.tv/", "")
-
-            print("Checking the stream")
-            url = "https://api.twitch.tv/kraken/streams/?channel={}"
-            headers = {'Client-ID': self.Config["Client ID"]}
-
-            print("Getting streams")
-            response = requests.get(url.format(username), headers=headers)
-            print("Response: ", response)
-            data = self.Parser.jsonLoads(response.content)
-            print("Data: ", data)
-            if data["_total"] is not 0:
-                print("Streams: ", data["_total"])
-                for stream in data["streams"]:
-                    print("Stream ID: ", stream["_id"])
-                    if stream["_id"] in self.checked_streams:
-                        print("Stream has been checked")
-                    else:
-                        print("Stream has not been checked")
-                        if stream["channel"]["name"] == username:
-                            print("Found stream")
-                            embed_data = self.Config["Embed"]
-                            embed_data["Colour"] = 0x6441A4
-                            print("Getting Embed")
-                            em = self.Parser.createEmbed(
-                                data=embed_data,
-                                extra=stream
-                            )
-                            print("Embed: ", em.to_dict())
-                            print("Appedning Stream")
-                            self.checked_streams.append(stream["_id"])
-                            print("Getting announcement")
-                            announcement = discord.Object(
-                                id=self.bot.currentAnnounce
-                            )
-                            print("Sending Embed")
-                            await self.bot.send_message(
-                                announcement,
-                                embed=em
-                            )
-                            print("Sent Embed")
-                        else:
-                            print("User is not ours")
-            else:
-                print("Streams: None")
-        else:
-            print("Non Twitch Stream")
 
     @commands.group(pass_context=True)
     async def twitch(self, ctx):

@@ -12,3 +12,22 @@ from .emailmanager import Email
 from .parser import Parser, MemberParser, MessageParser, ServerParser, ConfigParser, ChannelParser, RoleParser, EmojiParser
 #from .salt import * # I have not uploaded this yet
 from .steammanager import Player, SteamRep, SteamY
+
+class Exceptions(Exception):
+    """"""
+    pass
+
+class DBError(Exceptions):
+    """Base Error Class"""
+
+class DoesNotExists(DBError):
+    """Object doesn't exists"""
+    pass
+
+class Exists(DBError):
+    """Object Exists"""
+    pass
+
+class CouldNotCreate(DBError):
+    """Object could not be created error"""
+    pass
