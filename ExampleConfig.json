@@ -105,8 +105,12 @@
             "Music": {
                 "Default Volume": 100, //Default Volume
                 "Autojoin Channel": "294769288131117056", //The voice channel the bot automatically joins
-                "Auto Playlist": [ //Music that is automatically played
-
+                "Delete Invoke": false, //Delete the invoking command!
+                "Mention Requester": true, //Mention the person who requested the song.
+                "Auto Playlist": [ //Please not th
+                    "https://pastebin.com/mW1tKRy5", //Hoorah for pastebin support
+                    "https://www.youtube.com/playlist?list=PLsQAPOtjlaP-cercsuoiANXTBdJb3StQ6", //YouTube Playlist too!
+                    "AutoPlaylist.txt" //Whats this? File support too!
                 ]
             },
             "Rules": {//Rules Command Management
