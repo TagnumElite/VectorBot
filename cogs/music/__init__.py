@@ -3,6 +3,16 @@ from ..utils import checks, config
 import discord
 import asyncio
 
+def CheckChannel(*args, **kwargs):
+    """Check if the channels the message are posted in are the right ones"""
+
+    def decorator(func):
+        pass
+    return decorator
+
+if not discord.opus.is_loaded():
+    discord.opus.load_opus('opus')
+
 class VoiceEntry:
     def __init__(self, message, player):
         self.requester = message.author
@@ -54,14 +64,29 @@ class VoiceState:
             await self.play_next_song.wait()
 
 class Music:
-    """Handles the bot's music system."""
+    """Handles the bot's music system.
+
+    Parameters
+    ----------
+    bot: discord.ext.commands.bot.Bot
+        The bot that is currently running"""
 
     def __init__(self, bot):
         self.bot = bot
         self.voice_states = {}
+        self.Config = bot.Config.get(self.__class__.__name__, None)
+        self.server = None
 
-        if not discord.opus.is_loaded():
-            discord.opus.load_opus('opus')
+        for server in bot.servers:
+            if server.id == bot.Config["Server"]:
+                self.server = server
+                break
+
+        if self.server == None:
+            raise Exception("Closing Music Functionallity: Unable to access main server")
+
+        if self.Config is None:
+            raise Exception("Closing Music Functionallity: Not Setup in config.json")
 
     def get_voice_state(self, server):
         """"""
@@ -89,20 +114,26 @@ class Music:
 
     @commands.command(pass_context=True, no_pm=True)
     async def join(self, ctx, *, channel : discord.Channel):
-        """Joins a voice channel."""
+        """Joins a voice channel.
+        Command: {prefix}join Music"""
+
+        msgs = [ctx.message]
 
         try:
             await self.create_voice_client(channel)
         except discord.ClientException:
-            await self.bot.say('Already in a voice channel...')
+            msgs.append(await self.bot.say('Already in a voice channel...'))
         except discord.InvalidArgument:
-            await self.bot.say('This is not a voice channel...')
+            msgs.append(await self.bot.say('This is not a voice channel...'))
         else:
-            await self.bot.say('Ready to play audio in ' + channel.name)
+            msgs.append(await self.bot.say('Ready to play audio in ' + channel.name))
+
+        await self.bot.delete_message()
 
     @commands.command(pass_context=True, no_pm=True)
     async def summon(self, ctx):
         """Summons the bot to join your voice channel."""
+
         summoned_channel = ctx.message.author.voice_channel
         if summoned_channel is None:
             await self.bot.say('You are not in a voice channel.')
@@ -219,7 +250,7 @@ class Music:
         else:
             await self.bot.say('You have already voted to skip this song.')
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(pass_context=True, no_pm=True, alias=["np"])
     async def playing(self, ctx):
         """Shows info about the currently played song."""
 

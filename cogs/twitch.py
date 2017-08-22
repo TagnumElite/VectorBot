@@ -45,36 +45,24 @@ class Twitch:
         self.Parser = Parser()
         self.checked_streams = []
         self.bot.loop.create_task(self.check_for_streams())
-        self.Name = self.__class__.__name__
 
     async def on_member_update(self, before, after):
         """Check for when members stream"""
 
-        print("Member:", before.name)
-
         if check_ignore([before.id, before.server.id], self.bot.Config["Ignored IDs"]):
-            print("Stream: Ignored Object")
             return True
         if before.server.id == self.bot.mainServer:
             if before.game != after.game:
-                if before.game.type is 1 and after.game.type is not 1:
-                    print("Finished Streaming")
+                if before.game.type is 1 or after.game.type is not 1:
                     return
-                if after.game.type is 1 and before.game.type is 0:
-                    print("Started Streaming")
+                if before.game.type is 0 and after.game.type is 1:
                     return await self.check_streams(after.game.url)
-                print("Stream Unknown")
-            else:
-                print("Same Game")
-        else:
-            print("Not Main Server")
         return
 
     async def check_streams(self, url=None):
         channel = ""
         if url is None:
-            if len(self.Config["Users"]) == 0:
-                print(self.Name+":", "No streamers in config")
+            if len(self.Config["Users"]) <= 0:
                 return
             else:
                 channel = ", ".join(users)
@@ -82,55 +70,36 @@ class Twitch:
             if url.startswith("https://www.twitch.tv"):
                 channel = url.replace("https://www.twitch.tv/", "")
             else:
-                print(self.Name+":", "None Twitch Stream")
                 return
 
         for server in self.bot.servers:
             config = self.bot.Config.get(server.id)
-        print(self.Name+":", "Checking for streams")
         url = "https://api.twitch.tv/kraken/streams/?channel={}"
         headers = {'Client-ID': self.Config["Client ID"]}
         users = self.Config["Users"]
 
-        print(self.Name+":", "Getting streams")
         response = requests.get(url.format(channel), headers=headers)
-        print(self.Name+":", "Response:", response)
         data = self.Parser.jsonLoads(response.content)
-        print(self.Name+":", "Data:", data)
         if data["_total"] is not 0:
-            print(self.Name+":", "Streams:", data["_total"])
             for stream in data["streams"]:
-                print(self.Name+":", "Stream ID:", stream["_id"])
                 if stream["_id"] in self.checked_streams:
-                    print(self.Name+":", "Stream has been checked")
+                    continue
                 else:
-                    print(self.Name+":", "Stream has not been checked")
                     if stream["channel"]["name"] in users:
-                        print(self.Name+":", "Found stream")
                         embed_data = self.Config["Embed"]
                         embed_data["Colour"] = 0x6441A4
-                        print(self.Name+":", "Getting Embed")
                         em = self.Parser.createEmbed(
                             data=embed_data,
                             extra=stream
                         )
-                        print(self.Name+":", "Embed:", em.to_dict())
-                        print(self.Name+":", "Appedning Stream")
                         self.checked_streams.append(stream["_id"])
-                        print(self.Name+":", "Getting announcement channel")
                         announcement = discord.Object(
                             id=self.bot.currentAnnounce
                         )
-                        print(self.Name+":", "Sending Embed")
                         await self.bot.send_message(
                             announcement,
                             embed=em
                         )
-                        print(self.Name+":", "Sent Embed")
-                    else:
-                        print(self.Name+":", "User is not ours")
-        else:
-            print(self.Name+":", "No Streams")
 
     async def check_for_streams(self):
         await self.bot.wait_until_ready()

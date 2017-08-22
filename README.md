@@ -10,15 +10,14 @@ I don't have any rules yet but I will in the future!
 ## Features:
 - [ ] Database Extension
     - [x] MessageDB
-    - [x] ServerDB
-    - [ ] MembersDB
-    - [ ] ConfigsDB
+    - [ ] ServerDB
+    - [ ] UserDB
+    - [ ] ConfigDB
 - [ ] Multi Server Support (Requires Database Extension to be done)
 - [x] Splash (Member Splash Management)
 - [ ] Steam Extension ([SteamRep API](https://github.com/EliteKast/libzaek.py))
 - [ ] Wordpress API Support (More Importantly REST API Support)
-- [ ] Feeds Extension (RSS, ATOM, MOAR)
-- [ ] Notifier / Social Feed
+- [ ] Social Extension `Feeds Extension will be merged into here`
     - [X] Twitch `WIP, Enabled only in Dev Mode`
     - [ ] Twitter `PLANNED`
     - [ ] Facebook `PLANNED`
@@ -29,11 +28,8 @@ I don't have any rules yet but I will in the future!
     - Suggest Moar!
 - [ ] Image Extension (Image Manipulation) `Only Enabled In Dev Mode`
 - [ ] Email Support (Send emails when needed) `No Extension, will have no commands.`
-- [x] Music Player (Stolen from discord.py)  `Dev Mode Only, Will be improved immensly before it is enabled by default`
+- [x] Music Extension (Stolen from discord.py)  `Dev Mode Only, Will be improved immensly before it is enabled by default`
 - [ ] Record Player (Prep. Not Possible right now) `Currently Impossible`
-
-## TODO:
-- [ ] Change database logging to be similar to wordpress meta system `This allows me to change the database without having to drop tables or modify them`
 
 ## Discord
 [![Join me on discord](http://splash.vectoresports.co.za/members/179891973795086336.png 'Join me on discord')](https://discord.gg/qJbwA7d)

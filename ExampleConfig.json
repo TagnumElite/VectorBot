@@ -104,7 +104,8 @@
             },
             "Music": {
                 "Default Volume": 100, //Default Volume
-                "Autojoin Channel": "294769288131117056", //The voice channel the bot automatically joins
+                "Voice Channel": "294769339771387906", //The voice channel the bot automatically joins
+                "Text Channel": "294769288131117056", //The text channel that the bot listens to
                 "Delete Invoke": false, //Delete the invoking command!
                 "Mention Requester": true, //Mention the person who requested the song.
                 "Auto Playlist": [ //Please not th

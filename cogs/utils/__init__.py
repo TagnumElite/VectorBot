@@ -3,7 +3,7 @@
 This is just for documentation!"""
 
 from .checks import Checks
-from .databases import DBC, MessageDB, ServerDB, MembersDB, TeamDB, ConfigDB
+from .databases import DBC, MessageDB, ServerDB, UserDB, TeamDB, ConfigDB
 from .draw import Splash
 from .emailmanager import Email
 #from .formats import * # I have not uploaded this yet

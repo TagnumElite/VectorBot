@@ -126,12 +126,17 @@ async def on_ready():
         bot.uptime = datetime.datetime.utcnow()
     print("Started:")
     await bot.change_presence(game=discord.Game(name=Config["Status"]))
+    bot.owner = None
     for server in bot.servers:
         for member in server.members:
             if member.id == Config["Owner"]:
                 print("Found Owner %s/%s#%s" % (member.id, member.name, member.discriminator))
                 bot.owner = member
                 break
+            if bot.owner is not None:
+                break
+        if bot.owner is not None:
+            break
     if bot.owner is None:
         print("Failed to find owner")
 

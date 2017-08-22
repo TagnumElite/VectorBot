@@ -37,7 +37,7 @@ class Database:
     ---------
     MDB: MessageDB
     SDB: ServerDB
-    MBDB: MembersDB"""
+    UDB: UserDB"""
 
     def __init__(self, bot):
         self.bot = bot
@@ -66,12 +66,12 @@ class Database:
         else:
             self.SDB = ServerDB(bot.DBC, self.Config["Prefix"])
         try:
-            from .utils.databases import MembersDB
+            from .utils.databases import UserDB
         except:
             print("Member Database Offline")
-            self.MBDB = None
+            self.UDB = None
         else:
-            self.MBDB = MembersDB(bot.DBC, self.Config["Prefix"])
+            self.UDB = UserDB(bot.DBC, self.Config["Prefix"])
         try:
             from .utils.databases import ConfigDB
         except:
@@ -93,7 +93,7 @@ class Database:
         .. warning::
             NOT SETUP"""
         if date is None:
-            message = self.MBDB.fetch(user)[1]
+            message = self.UDB.fetch(user)[1]
             await self.bot.say(message)
 
     @database.command(pass_context=True)
@@ -283,7 +283,7 @@ class Database:
             return False
         return self.SDB.updateStatus(server, 0)
 
-    async def on_server_emojis_update_todo(self, before, after):
+    async def on_server_emojis_update(self, before, after):
         """Called when an emojis is updated/create/deleted
 
         Parameters
@@ -302,11 +302,13 @@ class Database:
             for idx, emoji in enumerate(beforeS):
                 #if
                 NOTE = "I have to check between the two lists what's new"
-            return self.SDB.createEmoji(None)
+            print("Create Emoji")
+            #return self.SDB.create(None)
         elif len(before) > len(after):
-            return self.SDB.deleteEmoji(None)
+            print("Delete Emoji")
+            #return self.SDB.delete(None)
         elif len(before) is len(after):
-            return self.SDB.updateEmoji(before, after)
+            return self.SDB.update(before, after)
         else:
             return "That doesn't make sense."
         return
@@ -404,7 +406,7 @@ class Database:
             return
         if not check_database(self.SDB):
             return False
-        return self.MBDB.ban(member)
+        return self.UDB.ban(member)
 
     async def on_member_unbant(self, server: discord.Server, user: discord.User):
         """Called when a user is unbanned
@@ -419,7 +421,7 @@ class Database:
             return
         if not check_database(self.SDB):
             return False
-        return self.MBDB.unban(server, user)
+        return self.UDB.unban(server, user)
 
     async def on_member_joint(self, member: discord.Member):
         """Called when a member joins a server the bot is in.
@@ -432,10 +434,10 @@ class Database:
             return
         if not check_database(self.SDB):
             return False
-        if not check_database(self.MBDB):
+        if not check_database(self.UDB):
             return False
         self.SDB.createMember(member)
-        return self.MBDB.create(member)
+        return self.UDB.create(member)
 
     async def on_member_removet(self, member: discord.Member):
         """Called when a member (leaves/kicked from/banned from) a server
@@ -449,10 +451,10 @@ class Database:
             return
         if not check_database(self.SDB):
             return False
-        if not check_database(self.MBDB):
+        if not check_database(self.UDB):
             return False
         self.SDB.deleteMember(member)
-        return self.MBDB.delete(member)
+        return self.UDB.delete(member)
 
     async def on_member_updatet(self, before: discord.Member, after: discord.Member):
         """Called when a member calls an update the server the bot is in.
@@ -465,9 +467,9 @@ class Database:
             The New Member"""
         if checks.check_ignore([before.id, before.server.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.MBDB):
+        if not check_database(self.UDB):
             return False
-        return self.MBDB.update(before, after)
+        return self.UDB.update(before, after)
 
 def setup(bot):
     bot.add_cog(Database(bot))

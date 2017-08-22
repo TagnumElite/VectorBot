@@ -21,7 +21,7 @@ Databases
 .. autoclass:: ServerDB
     :members:
 
-.. autoclass:: MembersDB
+.. autoclass:: UserDB
     :members:
 
 .. autoclass:: ConfigDB

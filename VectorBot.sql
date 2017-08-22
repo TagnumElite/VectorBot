@@ -13,77 +13,72 @@ have to DROP, CREATE and ALTER tables anymore.
 
 -- We create the Schema/Database to use only if it doesn't exists
 CREATE SCHEMA IF NOT EXISTS vectorbot;
--- Select that table we just created
-SELECT vectorbot;
 -- Now we create a user that can be access from any ip address by the password: 'PASSWORD'
 -- It is recommended you change the password to something more secure!
 CREATE USER IF NOT EXISTS 'Vector'@'%' IDENTIFIED BY 'PASSWORD';
 -- Give that users those privileges to to do what ever it wants on the database
 -- we created earlier
 GRANT ALL privileges on vectorbot.* to Vector;
--- Drop the dev tables, if you want to keep those tables just add an '-- ' to the start
--- of the line. Example: '-- DROP TABLE IF EXISTS vd_servers, vd_messages, vd_members;'
-DROP TABLE IF EXISTS vd_servers, vd_messages, vd_members;
-
+-- Flush Privileges
+FLUSH PRIVILEGES;
 /*
 Now we create the ServerDB
 */
-CREATE TABLE IF NOT EXISTS `vectorbot`.`vb_servers` (
-  `id` BIGINT(18) NOT NULL,
-  `name` VARCHAR(45) NOT NULL,
-  `members` JSON NOT NULL,
-  `default_role` VARCHAR(45) NOT NULL,
-  `default_channel` VARCHAR(45) NOT NULL,
-  `roles` JSON NOT NULL,
-  `channels` JSON NOT NULL,
-  `config` JSON,
-  `emojis` JSON NULL,
-  `afk_timeout` INT NULL,
-  `region` ENUM('Brazil', 'Central Europe', 'Hong Kong', 'Russia', 'Singapore', 'Sydney', 'US Central', 'US East', 'US South', 'US West', 'Western Europe') NOT NULL,
-  `afk_channel` VARCHAR(45) NULL,
-  `icon_url` TEXT(30) NULL,
-  `owner` VARCHAR(45) NOT NULL,
-  `status` TINYINT NOT NULL DEFAULT 1,
-  `large` TINYINT NOT NULL DEFAULT 0,
-  `mfa` TINYINT NOT NULL DEFAULT 0,
-  `verfication_level` ENUM('None', 'Low', 'Medium', 'High', 'Table Flip') NOT NULL DEFAULT 'None',
-  `splash` VARCHAR(45) NULL,
-  `size` REAL NOT NULL DEFAULT 1,
-  `created` DATETIME NOT NULL,
-  PRIMARY KEY (`id`));
+CREATE TABLE `vectorbot`.`vb_servers` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `server_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the server. Stored as an string',
+  `owner_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the owner. Stored as a string.',
+  `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the server. Stored as DATETIME',
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `server_id_UNIQUE` (`server_id` ASC))
+COMMENT = 'This is where we will be storing the server unchanging data.';
 
-CREATE TABLE IF NOT EXISTS `vectorbot`.`vb_messages` (
-  `id` BIGINT(18) NOT NULL,
-  `server_id` VARCHAR(45) NOT NULL,
-  `channel_id` VARCHAR(45) NOT NULL,
-  `author_id` VARCHAR(45) NOT NULL,
-  `content` JSON NOT NULL,
-  `mention_everyone` TINYINT NULL DEFAULT 0,
-  `mentions` JSON NULL,
-  `channel_mentions` JSON NULL,
-  `role_mentions` JSON NULL,
-  `attachments` LONGTEXT NULL,
-  `pinned` TINYINT NULL DEFAULT 0,
-  `reactions` JSON NULL,
-  PRIMARY KEY (`id`));
-
-CREATE TABLE `vectorbot`.`vb_members` (
-  `id` INT NOT NULL,
-  `username` VARCHAR(45) NOT NULL,
-  `discriminator` INT NOT NULL,
-  `avatar_url` VARCHAR(45) NULL,
-  `default_url` VARCHAR(45) NOT NULL,
-  `status` VARCHAR(45) NULL,
-  `game` VARCHAR(45) NULL,
-  `servers` JSON NULL,
-  `confs` JSON NULL,
-  `created_at` DATETIME NOT NULL,
+CREATE TABLE `vectorbot`.`vb_servers_meta` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `server_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the server. Stored as an string',
+  `key` VARCHAR(100) NOT NULL COMMENT 'The Name of the content being stored!',
+  `value` VARCHAR(10000) NOT NULL COMMENT 'The Content being stored',
   PRIMARY KEY (`id`))
-COMMENT = 'Here is where the members are stored!';
-
+COMMENT = 'This is where we will be storing the servers changeable data.';
 
 /*
-After we create the Tables we must create the functions
-
-sadly i have no functions right now :(
+Now we create the MessageDB
 */
+CREATE TABLE `vectorbot`.`vb_messages` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `message_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message. Stored as an string',
+  `server_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s server. Stored as an string',
+  `channel_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s channel. Stored as an string',
+  `author_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s author. Stored as an string',
+  `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the message. Stored as DATETIME',
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `message_id_UNIQUE` (`message_id` ASC))
+COMMENT = 'This is where we will be storing the messages main unchanging data.';
+
+CREATE TABLE `vectorbot`.`vb_messages_meta` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `message_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message. Stored as an string',
+  `key` VARCHAR(100) NOT NULL COMMENT 'The Name of the content being stored!',
+  `value` VARCHAR(10000) NOT NULL COMMENT 'The Content being stored',
+  PRIMARY KEY (`id`))
+COMMENT = 'This is where we will be storing the messages changeable data.';
+
+/*
+Now we create the UserDB
+I have no support for the UserDB
+*/
+CREATE TABLE `vectorbot`.`vb_users` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the user. Stored as an string',
+  `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the u. Stored as DATETIME',
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `user_id_UNIQUE` (`user_id` ASC))
+COMMENT = 'This is where we will be storing the users unchanging data.';
+
+CREATE TABLE `vectorbot`.`vb_users_meta` (
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `user_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the user. Stored as an string',
+  `key` VARCHAR(100) NOT NULL COMMENT 'The Name of the content being stored!',
+  `value` VARCHAR(10000) NOT NULL COMMENT 'The Content being stored',
+  PRIMARY KEY (`id`))
+COMMENT = 'This is where we will be storing the user\'s changeable data.';

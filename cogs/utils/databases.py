@@ -31,21 +31,6 @@ cDiscriminator = "`discriminator` INT NOT NULL"
 cKey = "`key` VARCHAR(100) NOT NULL"
 cValue = '`value` VARCHAR(10000) NOT NULL'
 
-class DBError(Exception):
-    """Base Error Class"""
-
-    class DoesNotExists():
-        """Object doesn't exists"""
-        pass
-
-    class Exists():
-        """Object Exists"""
-        pass
-
-    class CouldNotCreate():
-        """Object could not be created error"""
-        pass
-
 class DBC():
     """This is the database connection to a MySQL databse
     This class make things run smoother and easier.
@@ -258,7 +243,7 @@ class DB():
 
     def __init__(self, DBC, DB):
         self.DBC = DBC
-        self.DB = DB
+        self.DB = DB.lower()
         self.createTables()
         # Setup Parsers
         self.P = Parser()
@@ -291,7 +276,7 @@ class DB():
         result = self.DBC.queryOne(
             "SELECT * FROM {PRE}_{TAB}s WHERE `{TAB}_id`={MID};".format(
                 PRE=self.DB,
-                TAB=self.table,
+                TAB=self.table.lower(),
                 MID=item.id
             )
         )
@@ -641,7 +626,7 @@ class ServerDB(DB):
 
     insertServerData = iInto+" {PRE}_servers (`server_id`, `owner_id`, `created_at`) VALUES('{SID}', '{OID}', '{CAT}')"
 
-    def __update(self, data):
+    def __update(self, before, after):
         """Updates data inside the server
 
         Used to update or add data
@@ -708,41 +693,15 @@ class ServerDB(DB):
                 )
             )
 
-    def __exists(self, data):
-        """Checks if data.id exists in the servers table
+    def update(self, before, after):
+        """"""
+        pass
+    def exists(self, obj):
+        """Check if the object exists in the server database
 
         Parameters
         ----------
-        data: [discord.Role, discord:Member, discord.Channel, discord.Emoji]
-            The data to check for"""
-
-        key = ""
-
-        if isinstance(data, discord.Role):
-            key = "roles"
-        elif isinstance(data, discord.Channel):
-            key = "channels"
-        elif isinstance(data, discord.Emoji):
-            key = "emojis"
-        elif isinstance(data, discord.Member):
-            key = "members"
-        else:
-            raise Exception("You failed to provide the appropiate data")
-
-        results = self.DBC.queryOne("SELECT {KEY} FROM {PRE}_servers WHERE `id`={SID};".format(
-            KEY=key,
-            PRE=self.DB,
-            SID=data.server.id
-        ))
-        data_dict = json.loads(results[0])
-        return data.id in roles_dict
-
-    def exists(self, server: discord.Server):
-        """Check if a server exists in the databaes
-
-        Parameters
-        ----------
-        server: discord.Server
+        server: discord.Object
             The Server"""
 
         results = self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
@@ -754,273 +713,67 @@ class ServerDB(DB):
         else:
             return True
 
-    def existsRole(self, role: discord.Role):
-        """Checks if the role exists in the server
+    def create(self, obj):
+        """Adds the object to the server database
 
         Parameters
         ----------
-        role: discord.Role
-            The Role to be added"""
-        return self.__exists(role)
+        server: discord.Object
+            The Object to be created"""
 
-    def existsChannel(self, channel: discord.Channel):
-        """Checks if the channel exists in the server
+        if self.exists(obj): return False;
 
-        Parameters
-        ----------
-        channel: discord.Channel"""
-        return self.__exists(channel)
+        if isinstance(obj, discord.Server):
+            members = json.dumps(self.MBP.Servers(server.members)).replace("'", '"')
+            roles = json.dumps(self.RP.Servers(server.roles)).replace("'", '"')
+            emojis = json.dumps(self.EP.Servers(server.emojis)).replace("'", '"')
+            channels = json.dumps(self.CP.Servers(server.channels)).replace("'", '"')
+            config = {
 
-    def existsEmoji(self, emoji: discord.Emoji):
-        """Checks if an emoji exists in a server
-
-        Parameters
-        ----------
-        emoji: discord.Emoji
-            The Emoji To Check For"""
-        return self.__exists(emoji)
-
-    def existsMember(self, member: discord.Member):
-        """Checks if the member exists in the database
-
-        Parameters
-        ----------
-        member: discord.Member
-            The Member To Check For"""
-        return self.__exists(member)
-
-    def create(self, server: discord.Server):
-        """Adds a server to the table
-
-        Parameters
-        ----------
-        server: discord.Server
-            The Server to be created"""
-
-        if self.exists(server):
-            return False
-        members = json.dumps(self.MBP.Servers(server.members)).replace("'", '"')
-        roles = json.dumps(self.RP.Servers(server.roles)).replace("'", '"')
-        emojis = json.dumps(self.EP.Servers(server.emojis)).replace("'", '"')
-        channels = json.dumps(self.CP.Servers(server.channels)).replace("'", '"')
-        config = {
-
-        }
-        try:
-            self.DBC.query(
-                self.insertServerData.format(
-                    PRE = self.DB,
-                    SID = server.id,
-                    OWN = server.owner.id,
-                    CAT = server.created_at
+            }
+            try:
+                self.DBC.query(
+                    self.insertServerData.format(
+                        PRE = self.DB,
+                        SID = server.id,
+                        OWN = server.owner.id,
+                        CAT = server.created_at
+                    )
                 )
-            )
-        except:
-            return False
-
-    def createRole(self, role: discord.Role):
-        """Add a role
-
-        Parameters
-        ----------
-        role: discord.Role
-            The Role"""
-        self.__update(role)
-
-    def createChannel(self, channel: discord.Channel):
-        """Add a channel
-
-        Parameters
-        ----------
-        channel: discord.Channel
-            The channel to be added"""
-        self.__update(channel)
-
-    def createEmoji(self, emoji: discord.Emoji):
-        """Add a emoji
-
-        Parameters
-        ----------
-        emoji: discord.Emoji
-            The New Emoji"""
-        self.__update(emoji)
-
-    def createMember(self, member: discord.Member):
-        """Called when a server is joined
-
-        Parameters
-        ----------
-        member: discord.Member
-            The Member that was added"""
-        self.__update(member)
-
-    def _update(self, before: discord.Server, after: discord.Server):
-        """Updates a server in the database
-
-        Parameters
-        ----------
-        before: discord.Server
-            The Previous Server
-        after: discord.Server
-            The New Server"""
-
-        if not self.exists(before):
-            return self.create(after)
-        else:
-            updates = self.SP.getUpdates(before, after)
-            query = self.SP.ServerUpdate(after, updates)
-            return self.DBC.query(
-                "UPDATE `{PRE}_servers` SET {DATA} WHERE `id`={SID};".format(
-                    PRE=self.DB,
-                    DATA=query,
-                    SID=int(after.id)
-                )
-            )
-
-    def updateRole(self, role: discord.Role):
-        """Update a role
-
-        Parameters
-        ----------
-        role: discord.Role
-            The New Role"""
-        self.__update(role)
-
-    def updateChannel(self, channel: discord.Channel):
-        """Update a channel
-
-        Parameters
-        ----------
-        channel: discord.Channel
-            The New Channel"""
-        self.__update(channel)
-
-    def updateEmoji(self, emoji: discord.Emoji):
-        """Update a emoji
-
-        Parameters
-        ----------
-        emoji: discord.Emoji
-            The New Emoji"""
-        self.__update(emoji)
-
-    def __delete(self, data):
-        """Deletes data from inside the table
-
-        Parameters
-        ----------
-        data: [discord.Role, discord:Member, discord.Channel, discord.Emoji]
-            The data to check for"""
-
-        key = ""
-
-        if isinstance(data, discord.Role):
-            key = "roles"
-        elif isinstance(data, discord.Channel):
-            key = "channels"
-        elif isinstance(data, discord.Emoji):
-            key = "emojis"
-        elif isinstance(data, discord.Member):
-            key = "members"
-        else:
-            raise Exception("You failed to provide the appropiate data")
-
-        results = self.DBC.queryOne("SELECT {KEY} FROM {PRE}_servers WHERE `id`={SID};".format(
-            KEY=key,
-            PRE=self.DB,
-            SID=int(data.server.id)
-        ))
-        data_dict = json.loads(results[0])
-        if data.id in data_dict:
-            del data_dict[data.id]
-            return self.DBC.query(
-                "UPDATE `{PRE}_servers` SET `{KEY}`='{DATA}' WHERE `id`={SID};".format(
-                    KEY=key,
-                    PRE=self.DB,
-                    DATA=str(json.dumps(data_dict)).replace(
-                        "None", "null"
-                    ).replace(
-                        "False", "false"
-                    ).replace(
-                        "'", '"'
-                    ),
-                    SID=int(data.server.id)
-                )
-            )
+            except:
+                return False
+        elif isinstance(obj, discord.Member):
+            return
+        elif isinstance(obj, discord.Channel):
+            return
+        elif isinstance(obj, list):
+            """Check for difference in emojis"""
+            return
         else:
             return False
 
-    def delete(self, server: discord.Server):
-        """Called when a server is deleted or the
-        bot is kicked!
+    def delete(self, obj):
+        """Remove the object from the server database
 
         Parameters
         ----------
-        server: discord.Server
-            The Server That was removed"""
+        server: discord.Object
+            The Object That was removed"""
 
-        return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
+        if isinstance(obj, discord.Server):
+            return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
+        elif isinstance(obj, discord.Member):
+            return False
+        elif isinstance(obj, discord.Role):
+            return False
+        elif isinstance(obj, discord.Channel):
+            return False
+        elif isinstance(obj, discord.Emoji):
+            return False
+        else:
+            return False
 
-    def deleteRole(self, role: discord.Role):
-        """Removes a role
-
-        Parameters
-        ----------
-        role: discord.Role
-            The Old Role"""
-        return self.__delete(role)
-
-    def deleteChannel(self, channel: discord.Role):
-        """Removes a channel
-
-        Parameters
-        ----------
-        channel: discord.Channel"""
-        return self.__delete(channel)
-
-    def deleteEmoji(self, emoji: discord.Emoji):
-        """Removes an emoji
-
-        Parameters
-        ----------
-        emoji: discord.Emoji"""
-        return self.__delete(emoji)
-
-    def deleteMember(self, member: discord.Member):
-        """Called when a member has been removed
-
-        Parameters
-        ----------
-        member: discord.Member
-            The Member that was removed"""
-        return self.__delete(member)
-
-    def updateStatus(self, server: discord.Server, status):
-        """Updates the servers availibility
-
-        Parameters
-        ----------
-        server: discord.Server
-            The Server
-        status: int or bool
-            Online or Offline/True or False/1 or 0"""
-        if isinstance(status, str):
-            if status.lower() is "online":
-                status = 1
-            else:
-                status = 0
-
-        if not self.exists(server):
-            return self.create(server)
-        return self.DBC.query(
-            "UPDATE `{PRE}_servers` SET `status`='{VAL}' WHERE `id`={SID};".format(
-                PRE=self.DB,
-                VAL=int(status),
-                SID=int(server.id)
-            )
-        )
-
-class MembersDB(DB):
+class UserDB(DB):
     """Members Database Class
 
     Parameters
@@ -1229,7 +982,7 @@ class TeamDB(DB):
             UTC Time when message was deleted"""
         pass
 
-class ConfigDB(ServerDB):
+class ConfigDB(DB):
     """Configs Database Class
 
     Parameters
