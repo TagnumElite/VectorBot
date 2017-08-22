@@ -77,16 +77,31 @@ class Music:
         self.Config = bot.Config.get(self.__class__.__name__, None)
         self.server = None
 
-        for server in bot.servers:
-            if server.id == bot.Config["Server"]:
+        if self.Config is None:
+            raise Exception("Closing Music Functionallity: Not Setup in config.json")
+
+    async def on_ready(self):
+        for server in self.bot.servers:
+            if server.id == self.bot.Config["Server"]:
                 self.server = server
                 break
 
         if self.server == None:
-            raise Exception("Closing Music Functionallity: Unable to access main server")
+            print ("Closing Music Functionallity: Unable to access main server")
+            self.bot.remove_cog(self.__class__.__name__)
+        else:
+            print("Found Main Server")
 
-        if self.Config is None:
-            raise Exception("Closing Music Functionallity: Not Setup in config.json")
+    async def on_server_remove(self, server):
+        if server.id == self.bot.Configs["Server"]:
+            print ("Closing Music Functionallity: Unable to access main server")
+            self.bot.remove_cog(self.__class__.__name__)
+        return
+
+    #async def on_server_join(self, server): Redundent
+    #    if server.id == self.bot.Configs["Server"]:
+    #        self.bot.add_cog(self.__class__.__name__)
+    #    return
 
     def get_voice_state(self, server):
         """"""
