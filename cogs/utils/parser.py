@@ -108,9 +108,9 @@ class Parser:
         results = {}
         if isinstance(item, dict):
             results = item
-        elif isinstance(item, discord.Server):
-            results["server"] = item.name
-            results["server_id"] = item.id
+        elif isinstance(item, discord.Guild):
+            results["guild"] = item.name
+            results["guild_id"] = item.id
             #results["emojis"] = self.make_dict(item.emojis)
             #results["roles"] = self.make_dict(item.roles)
             #results["region"] = str(item.region)
@@ -141,7 +141,7 @@ class Parser:
             results["user_id"] = item.id
         #elif isinstance(item, discord.Emoji):
         #elif isinstance(item, discord.Role):
-        #elif isinstance(item, discord.Channel):
+        #elif isinstance(item, discord.abc.GuildChannel):
         elif isinstance(item, discord.Message):
             results["edited_timestamp"] = item.edited_timestamp
             results["timestamp"] = item.timestamp
@@ -157,7 +157,7 @@ class Parser:
         #elif isinstance(item, discord.Game):
         #elif isinstance(item, discord.Permissions):
         #elif isinstance(item, discord.PermissionsOverwrite):
-        #elif isinstance(item, discord.PrivateChannel):
+        #elif isinstance(item, discord.Privateabc.GuildChannel):
         #elif isinstance(item, discord.Invite):
         #elif isinstance(item, discord.CallMessage):
         #elif isinstance(item, discord.GroupCall):
@@ -228,7 +228,7 @@ class MemberParser(Parser):
         else:
             return game.name
 
-    def Server(self, member: discord.Member):
+    def Guild(self, member: discord.Member):
         """Returns a dict with the member's details
 
         Parameters
@@ -249,7 +249,7 @@ class MemberParser(Parser):
             data[member.id]["roles"].append(role.id)
         return data
 
-    def Servers(self, members):
+    def Guilds(self, members):
         """Returns a dict with the members and their details
 
         Parameters
@@ -257,12 +257,12 @@ class MemberParser(Parser):
         members: list[discord.Member]"""
         data = {}
         for member in members:
-            data[member.id] = self.Server(member)[member.id]
+            data[member.id] = self.Guild(member)[member.id]
         return data
 
     def dict(self, member: discord.Member):
         """Turns a discord.Member into a dict which is
-        understandable by the MySQL Server
+        understandable by the MySQL Guild
 
         Parameters
         ----------
@@ -439,10 +439,10 @@ class MessageParser(Parser):
                     query = "`mentions'='%s'"%(str(self.MessageMentions(message)).replace("'", '"'))
             return query
 
-class ServerParser(Parser):
-    """Server Parser: Parser
+class GuildParser(Parser):
+    """Guild Parser: Parser
 
-    This a parser mostly for discord.Server related things"""
+    This a parser mostly for discord.Guild related things"""
 
     def getRegion(self, region):
         """Gets a Verification Level and returns a string.
@@ -454,33 +454,33 @@ class ServerParser(Parser):
         if isinstance(region, str):
             return region
         else:
-            if region is discord.ServerRegion.us_west:
+            if region is discord.GuildRegion.us_west:
                 return "US West"
-            elif region is discord.ServerRegion.us_east:
+            elif region is discord.GuildRegion.us_east:
                 return "US East"
-            elif region is discord.ServerRegion.us_central:
+            elif region is discord.GuildRegion.us_central:
                 return "US Central"
-            elif region is discord.ServerRegion.eu_west:
+            elif region is discord.GuildRegion.eu_west:
                 return "Western Europe"
-            elif region is discord.ServerRegion.eu_central:
+            elif region is discord.GuildRegion.eu_central:
                 return "Central Europe"
-            elif region is discord.ServerRegion.singapore:
+            elif region is discord.GuildRegion.singapore:
                 return "Singapore"
-            elif region is discord.ServerRegion.london:
+            elif region is discord.GuildRegion.london:
                 return "London"
-            elif region is discord.ServerRegion.sydney:
+            elif region is discord.GuildRegion.sydney:
                 return "Sydney"
-            elif region is discord.ServerRegion.amsterdam:
+            elif region is discord.GuildRegion.amsterdam:
                 return "Amsterdam"
-            elif region is discord.ServerRegion.frankfurt:
+            elif region is discord.GuildRegion.frankfurt:
                 return "Frankfurt"
-            elif region is discord.ServerRegion.brazil:
+            elif region is discord.GuildRegion.brazil:
                 return "Brazil"
-            elif region is discord.ServerRegion.vip_us_east:
+            elif region is discord.GuildRegion.vip_us_east:
                 return "VIP US East"
-            elif region is discord.ServerRegion.vip_us_west:
+            elif region is discord.GuildRegion.vip_us_west:
                 return "VIP US West"
-            elif region is discord.ServerRegion.vip_amsterdam:
+            elif region is discord.GuildRegion.vip_amsterdam:
                 return "VIP Amsterdam"
 
     def getVLV(self, VerificationLevel):
@@ -504,14 +504,14 @@ class ServerParser(Parser):
             elif VerificationLevel is discord.VerificationLevel.table_flip:
                 return "Table Flip"
 
-    def getUpdates(self, before: discord.Server, after: discord.Server):
+    def getUpdates(self, before: discord.Guild, after: discord.Guild):
         """Returns a list of string with what has changed
 
         Parameters
         ----------
-        before: discord.Server
+        before: discord.Guild
             Before the updat
-        after: discord.Server
+        after: discord.Guild
             After the update"""
         updates = []
         if before.name is not after.name:
@@ -542,13 +542,13 @@ class ServerParser(Parser):
             updates.append("size")
         return updates
 
-    def ServerUpdate(self, server: discord.Server, updates):
+    def GuildUpdate(self, guild: discord.Guild, updates):
         """Returns MySQL syntax friendly string
 
         Parameters
         ---------
-        server: discord.Server
-            The New Server
+        guild: discord.Guild
+            The New Guild
         updates: list
             The things that were updated"""
 
@@ -556,101 +556,101 @@ class ServerParser(Parser):
 
         if "name" in updates:
             if len(query) is 0:
-                query = "`name`='%s'" % (server.name)
+                query = "`name`='%s'" % (guild.name)
             else:
-                query += ", `name`='%s'" % (server.name)
+                query += ", `name`='%s'" % (guild.name)
         if "region" in updates:
             if len(query) is 0:
-                "`region`='%s'" % (self.getRegion(server.region))
+                "`region`='%s'" % (self.getRegion(guild.region))
             else:
-                query += ", `region`='%s'" % (self.getRegion(server.region))
+                query += ", `region`='%s'" % (self.getRegion(guild.region))
         if "afk_timeout" in updates:
             if len(query) is 0:
-                query = "`afk_timeout`=%s" % (server.afk_timeout)
+                query = "`afk_timeout`=%s" % (guild.afk_timeout)
             else:
-                query += ", `afk_timeout`=%s" % (server.afk_timeout)
+                query += ", `afk_timeout`=%s" % (guild.afk_timeout)
         if "afk_channel" in updates:
             if len(query) is 0:
-                query = "`afk_channel`='%s'" % (server.afk_channel.id)
+                query = "`afk_channel`='%s'" % (guild.afk_channel.id)
             else:
-                query += ", `name`='%s'" % (server.afk_channel.id)
+                query += ", `name`='%s'" % (guild.afk_channel.id)
         if "icon" in updates:
             if len(query) is 0:
-                query = "`icon_url`='%s'" % (server.icon_url)
+                query = "`icon_url`='%s'" % (guild.icon_url)
             else:
-                query += ", `icon_url`='%s'" % (server.icon_url)
+                query += ", `icon_url`='%s'" % (guild.icon_url)
         if "owner" in updates:
             if len(query) is 0:
-                query = "`owner`='%s'" % (server.owner.id)
+                query = "`owner`='%s'" % (guild.owner.id)
             else:
-                query += ", `owner`='%s'" % (server.owner.id)
+                query += ", `owner`='%s'" % (guild.owner.id)
         #if "large" in updates:
         #    if len(query) is 0:
-        #        query = "`large`=%s" % (int(server.large))
+        #        query = "`large`=%s" % (int(guild.large))
         #    else:
-        #        query += ", `large`=%s" % (int(server.large))
+        #        query += ", `large`=%s" % (int(guild.large))
         if "mfa_level" in updates:
             if len(query) is 0:
-                query = "`mfa`=%s" % (server.mfa_level)
+                query = "`mfa`=%s" % (guild.mfa_level)
             else:
-                query += ", `mfa`=%s" % (server.mfa_level)
+                query += ", `mfa`=%s" % (guild.mfa_level)
         if "verification_level" in updates:
             if len(query) is 0:
-                "`verification_level`='%s'" % (self.getVLV(server.verification_level))
+                "`verification_level`='%s'" % (self.getVLV(guild.verification_level))
             else:
-                query += ", `verification_level`='%s'" % (self.getVLV(server.verification_level))
+                query += ", `verification_level`='%s'" % (self.getVLV(guild.verification_level))
         if "splash" in updates:
             if len(query) is 0:
-                query = "`splash`='%s'" % (server.splash_url)
+                query = "`splash`='%s'" % (guild.splash_url)
             else:
-                query += ", `splash`='%s'" % (server.splash_url)
+                query += ", `splash`='%s'" % (guild.splash_url)
         if "default_role" in updates:
             if len(query) is 0:
-                query = "`default_role`='%s'" % (server.default_role.id)
+                query = "`default_role`='%s'" % (guild.default_role.id)
             else:
-                query += ", `default_role`='%s'" % (server.default_role.id)
+                query += ", `default_role`='%s'" % (guild.default_role.id)
         if "default_channel" in updates:
             if len(query) is 0:
-                query = "`default_channel`='%s'" % (server.default_channel.id)
+                query = "`default_channel`='%s'" % (guild.default_channel.id)
             else:
-                query += ", `default_channel`='%s'" % (server.default_channel.id)
+                query += ", `default_channel`='%s'" % (guild.default_channel.id)
         if "size" in updates:
             if len(query) is 0:
-                query = "`size`=%s" % (server.member_count)
+                query = "`size`=%s" % (guild.member_count)
             else:
-                query += ", `size`=%s" % (server.member_count)
+                query += ", `size`=%s" % (guild.member_count)
         return query
 
 class ChannelParser(Parser):
     """Channel Parser: Parser
 
-    This a parser mostly for discord.Channel related things"""
+    This a parser mostly for discord.abc.GuildChannel related things"""
 
     def getChannelType(self, channelType):
         """Gets a channels type and returns a string.
 
         Parameters
         ---------
-        channelType: str or discord.ChannelType
+        channelType: str or discord.abc.GuildChannelType
             If a string is put in it will return the string."""
         if isinstance(channelType, str):
             return channelTyle
         else:
-            if channelType is discord.ChannelType.text:
+            if channelType is discord.abc.GuildChannelType.text:
                 return "Text"
-            elif channelType is discord.ChannelType.voice:
+            elif channelType is discord.abc.GuildChannelType.voice:
                 return "Voice"
-            elif channelType is discord.ChannelType.private:
+            elif channelType is discord.abc.GuildChannelType.private:
                 return "Private"
-            elif channelType is discord.ChannelType.group:
+            elif channelType is discord.abc.GuildChannelType.group:
                 return "Group"
 
-    def Server(self, channel: discord.Channel):
-        """Returns a dict that is acceptableish by MySQL and the Server Parser
+    def Guild(self, channel: discord.abc.GuildChannel):
+        """Returns a dict that is acceptableish by MySQL and the Guild Parser
 
         Parameters
         ----------
-        channel: discord.Channel
+        channel: discord.abc.GuildChannel
 
         Returns
         -------
@@ -661,7 +661,7 @@ class ChannelParser(Parser):
             "name": channel.name,
             "topic": channel.topic if channel.topic is not None else "",
             "position": channel.position,
-            "type": self.getChannelType(channel.type),
+            "type": self.getGuildChannelType(channel.type),
             "bitrate": channel.bitrate,
             "connected": len(channel.voice_members),
             "user_limit": channel.user_limit,
@@ -672,15 +672,15 @@ class ChannelParser(Parser):
         }
         return data
 
-    def Servers(self, channels):
+    def Guilds(self, channels):
         """Returns a dict with the channels and their details
 
         Parameters
         ----------
-        channels: list[discord.Channel]"""
+        channels: list[discord.abc.GuildChannel]"""
         data = {}
         for channel in channels:
-            data[channel.id] = self.Server(channel)[channel.id]
+            data[channel.id] = self.Guild(channel)[channel.id]
         return data
 
 class RoleParser(Parser):
@@ -688,7 +688,7 @@ class RoleParser(Parser):
 
     This a parser mostly for discord.Role related things"""
 
-    def Server(self, role: discord.Role):
+    def Guild(self, role: discord.Role):
         """Returns a dict with the role's details
 
         Parameters
@@ -708,7 +708,7 @@ class RoleParser(Parser):
         }
         return data
 
-    def Servers(self, roles):
+    def Guilds(self, roles):
         """Returns a dict with the roles and their details
 
         Parameters
@@ -716,7 +716,7 @@ class RoleParser(Parser):
         roles: list[discord.Role]"""
         data = {}
         for role in roles:
-            data[role.id] = self.Server(role)[role.id]
+            data[role.id] = self.Guild(role)[role.id]
         return data
 
 class EmojiParser(Parser):
@@ -724,7 +724,7 @@ class EmojiParser(Parser):
 
     This a parser mostly for discord.Emoji related things"""
 
-    def Server(self, emoji: discord.Emoji):
+    def Guild(self, emoji: discord.Emoji):
         """Returns a dict with the emoji's details
 
         Parameters
@@ -740,7 +740,7 @@ class EmojiParser(Parser):
         }
         return data
 
-    def Servers(self, emojis):
+    def Guilds(self, emojis):
         """Returns a dict with the channels and their details
 
         Parameters
@@ -748,7 +748,7 @@ class EmojiParser(Parser):
         emojis: list[discord.Emoji]"""
         data = {}
         for emoji in emojis:
-            data[emoji.id] = self.Server(emoji)[emoji.id]
+            data[emoji.id] = self.Guild(emoji)[emoji.id]
         return data
 
 class ConfigParser(Parser):

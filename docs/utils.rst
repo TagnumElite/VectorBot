@@ -18,7 +18,7 @@ Databases
 .. autoclass:: MessageDB
     :members:
 
-.. autoclass:: ServerDB
+.. autoclass:: GuildDB
     :members:
 
 .. autoclass:: UserDB
@@ -51,7 +51,7 @@ Parser
 .. autoclass:: MessageParser
     :members:
 
-.. autoclass:: ServerParser
+.. autoclass:: GuildParser
     :members:
 
 .. autoclass:: ChannelParser

@@ -14,11 +14,11 @@ class Steam:
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.group(pass_context=True, aliases=['rtfd'], invoke_without_command=True)
+    @commands.group(, aliases=['rtfd'], invoke_without_command=True)
     async def steam(self, ctx, *, obj : str = None):
         """Steam Functionality!"""
 
-    @steam.command(pass_context=True)
+    @steam.command()
     async def fetch(self, ctx, user: str, *args):
         """Fetches Users Data From SteamRep"""
         SteamY = steammanager.SteamY("LOL NO")
@@ -40,9 +40,9 @@ class Steam:
             em.add_field(name=key, value=value)
 
 
-        await self.bot.say(embed=em)
+        await self.bot.send(embed=em)
 
-    @commands.command(pass_context=True)
+    @commands.command()
     async def stats(self, ctx, user: str, *args):
         """Outputs a embed with users steam stats"""
         print("start!")
@@ -68,7 +68,7 @@ class Steam:
         #em.add_field(name="Banned Friends!", value=len(SteamY.bannedFriends(user)))
 
 
-        await self.bot.say(embed=em)
+        await self.bot.send(embed=em)
 
 def setup(bot):
     bot.add_cog(Steam(bot))

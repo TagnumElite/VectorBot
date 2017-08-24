@@ -4,7 +4,7 @@ Databases
 """
 
 from . import checks, parser
-from .parser import Parser, MemberParser, MessageParser, ServerParser, ConfigParser, ChannelParser, RoleParser, EmojiParser
+from .parser import Parser, MemberParser, MessageParser, GuildParser, ConfigParser, ChannelParser, RoleParser, EmojiParser
 from _mysql_exceptions import OperationalError
 import warnings, functools
 import discord
@@ -19,11 +19,11 @@ PKID = "primary key(id)"
 iInto = "INSERT INTO"
 cTableIfNot = "CREATE TABLE IF NOT EXISTS"
 cID = "`id` INT NOT NULL AUTO_INCREMENT"
-cServerID = "`server_id` VARCHAR(100) NOT NULL"
+cGuildID = "`guild_id` VARCHAR(100) NOT NULL"
 cMessageID = "`message_id` VARCHAR(100) NOT NULL"
 cAuthorID = "`author_id` VARCHAR(100) NOT NULL"
 cUserID = "`user_id` VARCHAR(100) NOT NULL"
-cChannelID = "`channel_id` VARCHAR(100) NOT NULL"
+cGuildChannelID = "`channel_id` VARCHAR(100) NOT NULL"
 cOwnerID = "`owner_id` VARCHAR(100) NOT NULL"
 cCreatedAt = "`created_at` DATETIME NOT NULL"
 cError = "`error` VARCHAR(3000) NOT NULL"
@@ -44,7 +44,7 @@ class DBC():
     password : Optional[str]
         Defaults to a blank string. The password of the user that will be logging in.
     host : Optional[str]
-        Default to `localhost`. Only use this if the database is on a different server!
+        Default to `localhost`. Only use this if the database is on a different guild!
     port : Optional[int]
         Defauts to `3306`. Only use this if the database is on a different port
     retries: Optional[int]
@@ -249,7 +249,7 @@ class DB():
         self.P = Parser()
         self.MP = MessageParser()
         self.MBP = MemberParser()
-        self.SP = ServerParser()
+        self.SP = GuildParser()
         self.CFP = ConfigParser()
         self.CP = ChannelParser()
         self.RP = RoleParser()
@@ -330,11 +330,11 @@ class MessageDB(DB):
 
     table = "message"
 
-    createDataTable = cTableIfNot+" {PRE}_messages ("+cID+", "+cMessageID+" UNIQUE, "+cServerID+", "+cChannelID+", "+cAuthorID+", "+cCreatedAt+", "+PKID+");"
+    createDataTable = cTableIfNot+" {PRE}_messages ("+cID+", "+cMessageID+" UNIQUE, "+cGuildID+", "+cGuildChannelID+", "+cAuthorID+", "+cCreatedAt+", "+PKID+");"
 
     createMetaTable = cTableIfNot+" {PRE}_messages_meta ("+cID+", "+cMessageID+", "+cKey+", "+cValue+", "+PKID+");"
 
-    insertMessageData = iInto+" {PRE}_messages (`message_id`, `server_id`, `channel_id`, `author_id`, `created_at`) VALUES ('{MID}', '{SID}', '{CID}', '{AID}', '{CAT}');"
+    insertMessageData = iInto+" {PRE}_messages (`message_id`, `guild_id`, `channel_id`, `author_id`, `created_at`) VALUES ('{MID}', '{SID}', '{CID}', '{AID}', '{CAT}');"
 
     insertMessageMeta = iInto+" {PRE}_messages_meta (`message_id`, `key`, `value`) VALUES ('{MID}', '{KEY}', '{VAL}');"
 
@@ -378,7 +378,7 @@ class MessageDB(DB):
                 self.insertMessageData.format(
                     PRE=self.DB,
                     MID=message.id,
-                    SID=message.server.id,
+                    SID=message.guild.id,
                     CID=message.channel.id,
                     AID=message.author.id,
                     CAT=message.timestamp
@@ -608,8 +608,8 @@ class MessageDB(DB):
             #raise DBError.DoesNotExists("Message doesn't exists")
             return False
 
-class ServerDB(DB):
-    """Server Databases, contains details for all the channels and config
+class GuildDB(DB):
+    """Guild Databases, contains details for all the channels and config
 
     Parameters
     ----------
@@ -618,22 +618,22 @@ class ServerDB(DB):
     DB: str
         This is the table prefix to denote whether we are running in dev mode or not!"""
 
-    table = "server"
+    table = "guild"
 
-    createDataTable = cTableIfNot+" {PRE}_servers ("+cID+", "+cServerID+" UNIQUE, "+cOwnerID+", "+cCreatedAt+", "+PKID+");"
+    createDataTable = cTableIfNot+" {PRE}_guilds ("+cID+", "+cGuildID+" UNIQUE, "+cOwnerID+", "+cCreatedAt+", "+PKID+");"
 
-    createMetaTable = cTableIfNot+" {PRE}_servers_meta ("+cID+", "+cServerID+", "+cKey+", "+cValue+", "+PKID+");"
+    createMetaTable = cTableIfNot+" {PRE}_guilds_meta ("+cID+", "+cGuildID+", "+cKey+", "+cValue+", "+PKID+");"
 
-    insertServerData = iInto+" {PRE}_servers (`server_id`, `owner_id`, `created_at`) VALUES('{SID}', '{OID}', '{CAT}')"
+    insertGuildData = iInto+" {PRE}_guilds (`guild_id`, `owner_id`, `created_at`) VALUES('{SID}', '{OID}', '{CAT}')"
 
     def __update(self, before, after):
-        """Updates data inside the server
+        """Updates data inside the guild
 
         Used to update or add data
 
         Parameters
         ----------
-        data: [discord.Role, discord:Member, discord.Channel, discord.Emoji]
+        data: [discord.Role, discord:Member, discord.abc.GuildChannel, discord.Emoji]
             The new data"""
 
         key = ""
@@ -642,7 +642,7 @@ class ServerDB(DB):
         if isinstance(data, discord.Role):
             key = "roles"
             CurrentParser = self.RP
-        elif isinstance(data, discord.Channel):
+        elif isinstance(data, discord.abc.GuildChannel):
             key = "channels"
             CurrentParser = self.CP
         elif isinstance(data, discord.Emoji):
@@ -654,16 +654,16 @@ class ServerDB(DB):
         else:
             raise Exception("You failed to provide the appropiate data")
 
-        results = self.DBC.queryOne("SELECT {KEY} FROM {PRE}_servers WHERE `id`={SID};".format(
+        results = self.DBC.queryOne("SELECT {KEY} FROM {PRE}_guilds WHERE `id`={SID};".format(
             KEY=key,
             PRE=self.DB,
-            SID=data.server.id
+            SID=data.guild.id
         ))
         data_dict = json.loads(results[0])
         if data.id in data_dict:
-            data_dict[data.id] = CurrentParser.Server(data)[data.id]
+            data_dict[data.id] = CurrentParser.Guild(data)[data.id]
             return self.DBC.query(
-                "UPDATE `{PRE}_servers` SET `{KEY}`='{DATA}' WHERE `id`={SID};".format(
+                "UPDATE `{PRE}_guilds` SET `{KEY}`='{DATA}' WHERE `id`={SID};".format(
                     KEY=key,
                     PRE=self.DB,
                     DATA=str(json.dumps(data_dict)).replace(
@@ -673,13 +673,13 @@ class ServerDB(DB):
                     ).replace(
                         "'", '"'
                     ),
-                    SID=data.server.id
+                    SID=data.guild.id
                 )
             )
         else:
-            data_dict[role.id] = CurrentParser.Server(data)[data.id]
+            data_dict[role.id] = CurrentParser.Guild(data)[data.id]
             return self.DBC.query(
-                "UPDATE `{PRE}_servers` SET `{KEY}`='{DATA}' WHERE `id`={SID};".format(
+                "UPDATE `{PRE}_guilds` SET `{KEY}`='{DATA}' WHERE `id`={SID};".format(
                     KEY=key,
                     PRE=self.DB,
                     DATA=str(json.dumps(data_dict)).replace(
@@ -689,7 +689,7 @@ class ServerDB(DB):
                     ).replace(
                         "'", '"'
                     ),
-                    SID=data.server.id
+                    SID=data.guild.id
                 )
             )
 
@@ -697,16 +697,16 @@ class ServerDB(DB):
         """"""
         pass
     def exists(self, obj):
-        """Check if the object exists in the server database
+        """Check if the object exists in the guild database
 
         Parameters
         ----------
-        server: discord.Object
-            The Server"""
+        guild: discord.Object
+            The Guild"""
 
-        results = self.DBC.queryOne("SELECT * FROM {PRE}_servers WHERE `id`={SID};".format(
+        results = self.DBC.queryOne("SELECT * FROM {PRE}_guilds WHERE `id`={SID};".format(
             PRE=self.DB,
-            SID=int(server.id)
+            SID=int(guild.id)
         ))
         if not results:
             return False
@@ -714,37 +714,37 @@ class ServerDB(DB):
             return True
 
     def create(self, obj):
-        """Adds the object to the server database
+        """Adds the object to the guild database
 
         Parameters
         ----------
-        server: discord.Object
+        guild: discord.Object
             The Object to be created"""
 
         if self.exists(obj): return False;
 
-        if isinstance(obj, discord.Server):
-            members = json.dumps(self.MBP.Servers(server.members)).replace("'", '"')
-            roles = json.dumps(self.RP.Servers(server.roles)).replace("'", '"')
-            emojis = json.dumps(self.EP.Servers(server.emojis)).replace("'", '"')
-            channels = json.dumps(self.CP.Servers(server.channels)).replace("'", '"')
+        if isinstance(obj, discord.Guild):
+            members = json.dumps(self.MBP.Guilds(guild.members)).replace("'", '"')
+            roles = json.dumps(self.RP.Guilds(guild.roles)).replace("'", '"')
+            emojis = json.dumps(self.EP.Guilds(guild.emojis)).replace("'", '"')
+            channels = json.dumps(self.CP.Guilds(guild.channels)).replace("'", '"')
             config = {
 
             }
             try:
                 self.DBC.query(
-                    self.insertServerData.format(
+                    self.insertGuildData.format(
                         PRE = self.DB,
-                        SID = server.id,
-                        OWN = server.owner.id,
-                        CAT = server.created_at
+                        SID = guild.id,
+                        OWN = guild.owner.id,
+                        CAT = guild.created_at
                     )
                 )
             except:
                 return False
         elif isinstance(obj, discord.Member):
             return
-        elif isinstance(obj, discord.Channel):
+        elif isinstance(obj, discord.abc.GuildChannel):
             return
         elif isinstance(obj, list):
             """Check for difference in emojis"""
@@ -753,20 +753,20 @@ class ServerDB(DB):
             return False
 
     def delete(self, obj):
-        """Remove the object from the server database
+        """Remove the object from the guild database
 
         Parameters
         ----------
-        server: discord.Object
+        guild: discord.Object
             The Object That was removed"""
 
-        if isinstance(obj, discord.Server):
-            return self.DBC.query("DELETE FROM %s_servers WHERE `id`=%s"%(self.DB, int(server.id)))
+        if isinstance(obj, discord.Guild):
+            return self.DBC.query("DELETE FROM %s_guilds WHERE `id`=%s"%(self.DB, int(guild.id)))
         elif isinstance(obj, discord.Member):
             return False
         elif isinstance(obj, discord.Role):
             return False
-        elif isinstance(obj, discord.Channel):
+        elif isinstance(obj, discord.abc.GuildChannel):
             return False
         elif isinstance(obj, discord.Emoji):
             return False
@@ -785,11 +785,11 @@ class UserDB(DB):
 
     table = "member"
 
-    createDataTable = cTableIfNot+" {PRE}_members ("+cID+", "+cUserID+" UNIQUE, "+cServerID+", "+cCreatedAt+", "+PKID+");"
+    createDataTable = cTableIfNot+" {PRE}_members ("+cID+", "+cUserID+" UNIQUE, "+cGuildID+", "+cCreatedAt+", "+PKID+");"
 
-    createMetaTable = cTableIfNot+" {PRE}_servers_meta ("+cID+", "+cUserID+", "+cKey+", "+cValue+", "+PKID+");"
+    createMetaTable = cTableIfNot+" {PRE}_guilds_meta ("+cID+", "+cUserID+", "+cKey+", "+cValue+", "+PKID+");"
 
-    createMember = "INSERT INTO {PRE}_members(`id`, `username`, `discriminator`, `avatar_url`, `default_url`, `servers`, `status`, `game`, `servers`, `confs`, `created_at`) VALUES({MID}, '{MUN}', {DIS}, '{ARL}', '{DRL}', '{STS}', '{GME}', '{SVR}', '{CON}', '{CAT}');"
+    createMember = "INSERT INTO {PRE}_members(`id`, `username`, `discriminator`, `avatar_url`, `default_url`, `guilds`, `status`, `game`, `guilds`, `confs`, `created_at`) VALUES({MID}, '{MUN}', {DIS}, '{ARL}', '{DRL}', '{STS}', '{GME}', '{SVR}', '{CON}', '{CAT}');"
 
     def exists(self, user):
         """Checks if user/member exists in the table
@@ -818,13 +818,13 @@ class UserDB(DB):
             )
         elif isinstance(user, discord.Member):
             results = self.DBC.queryOne(
-                "SELECT `servers` FROM {PRE}_members WHERE `id` = {MID};".format(
+                "SELECT `guilds` FROM {PRE}_members WHERE `id` = {MID};".format(
                     PRE=self.DB,
                     MID=int(user.id)
                 )
             )
             data = json.loads(results[0])
-            results = member.server.id in data
+            results = member.guild.id in data
 
         else:
             raise Exception("Incorrect Data Type")
@@ -837,7 +837,7 @@ class UserDB(DB):
     def create(self, member: discord.Member):
         """Adds a member to the database
 
-        Parameters1
+        Parameters
         ----------
         member: discord.Member
             The Member to be added"""
@@ -852,7 +852,7 @@ class UserDB(DB):
             DRL=member.default_avatar_url,
             STS=self.MBP.getStatus(member.status),
             GME=self.MBP.getGame(member.game),
-            SVR='null',  #NOTE: Remember to find a good way to go through all the servers in the mysql database to find all the servers this person is in and get the configs from that
+            SVR='null',  #NOTE: Remember to find a good way to go through all the guilds in the mysql database to find all the guilds this person is in and get the configs from that
             CON='{}',
             CAT=member.created_at
         ))
@@ -891,11 +891,11 @@ class UserDB(DB):
         pass
 
     def ban(self, member: discord.Member):
-        """Ban a user from a server
+        """Ban a user from a guild
 
         .. note::
-            Bans will overwrite the full ``servers`` to replace the
-            current servers data with {"banned": true}
+            Bans will overwrite the full ``guilds`` to replace the
+            current guilds data with {"banned": true}
 
         Parameters
         ----------
@@ -903,17 +903,17 @@ class UserDB(DB):
             Thbe Member that was banned"""
         pass
 
-    def unban(self, server: discord.Server, user: discord.User):
-        """Unban a user from a server
+    def unban(self, guild: discord.Guild, user: discord.User):
+        """Unban a user from a guild
 
         .. note::
-            Bans will overwrite the full ``servers`` to remove the
-            current servers data!
+            Bans will overwrite the full ``guilds`` to remove the
+            current guilds data!
 
         Parameters
         ----------
-        server: discord.Server
-            The server from which the user was unbanned
+        guild: discord.Guild
+            The guild from which the user was unbanned
         user: discord.User
             The user that was unbanned"""
         pass
@@ -959,9 +959,6 @@ class TeamDB(DB):
             The message that was sent"""
         pass
 
-    def _update(self, before, after):
-        pass
-
     def update(self, before, after):
         """Update a message
 
@@ -996,24 +993,24 @@ class ConfigDB(DB):
         self.DBC = DBC
         self.DB = DB
 
-    def getServerConfig(self, server: discord.Server, setting: str):
-        """Get Server Config
+    def getGuildConfig(self, guild: discord.Guild, setting: str):
+        """Get Guild Config
 
         Parameters
         ----------
-        server: discord.Server
+        guild: discord.Guild
 
         setting: str
             """
         if self.DBC.query("NOT EXISTS"):
             return
 
-    def setServerConfig(self, server: discord.Server, setting: str, value):
-        """Set Server Config
+    def setGuildConfig(self, guild: discord.Guild, setting: str, value):
+        """Set Guild Config
 
         Parameters
         ----------
-        server: discord.Server
+        guild: discord.Guild
 
         setting: str
 
@@ -1021,23 +1018,23 @@ class ConfigDB(DB):
             """
         pass
 
-    def getServerPermission(self, server: discord.Server, permission: str):
-        """Get Server Permission
+    def getGuildPermission(self, guild: discord.Guild, permission: str):
+        """Get Guild Permission
 
         Parameters
         ----------
-        server: discord.Server
+        guild: discord.Guild
 
         permission: str
             """
         pass
 
-    def setServerPermission(self, server: discord.Server, permission: str, value):
-        """Set Server Permission
+    def setGuildPermission(self, guild: discord.Guild, permission: str, value):
+        """Set Guild Permission
 
         Parameters
         ----------
-        server: discord.Server
+        guild: discord.Guild
 
         permission: str
 
@@ -1045,24 +1042,24 @@ class ConfigDB(DB):
             """
         pass
 
-    def getChannelConfig(self, server: discord.Channel, setting: str):
+    def getChannelConfig(self, guild: discord.abc.GuildChannel, setting: str):
         """Get Channel Config
 
         Parameters
         ----------
-        server: discord.Channel
+        guild: discord.abc.GuildChannel
 
         setting: str
             """
         if self.DBC.query("NOT EXISTS"):
             return
 
-    def setChannelConfig(self, server: discord.Channel, setting: str, value):
+    def setChannelConfig(self, guild: discord.abc.GuildChannel, setting: str, value):
         """Set Channel Config
 
         Parameters
         ----------
-        server: discord.Channel
+        guild: discord.abc.GuildChannel
 
         setting: str
 
@@ -1070,23 +1067,23 @@ class ConfigDB(DB):
             """
         pass
 
-    def getChannelPermission(self, server: discord.Channel, permission: str):
+    def getChannelPermission(self, guild: discord.abc.GuildChannel, permission: str):
         """Get Channel Permission
 
         Parameters
         ----------
-        server: discord.Channel
+        guild: discord.abc.GuildChannel
 
         permission: str
             """
         pass
 
-    def setChannelPermission(self, server: discord.Channel, permission: str, value):
+    def setChannelPermission(self, guild: discord.abc.GuildChannel, permission: str, value):
         """Set Channel Permission
 
         Parameters
         ----------
-        server: discord.Channel
+        guild: discord.abc.GuildChannel
 
         permission: str
 
@@ -1094,24 +1091,24 @@ class ConfigDB(DB):
             """
         pass
 
-    def getMemberConfig(self, server: discord.Member, setting: str):
+    def getMemberConfig(self, guild: discord.Member, setting: str):
         """Get Member Config
 
         Parameters
         ----------
-        server: discord.Member
+        guild: discord.Member
 
         setting: str
             """
         if self.DBC.query("NOT EXISTS"):
             return
 
-    def setMemberConfig(self, server: discord.Member, setting: str, value):
+    def setMemberConfig(self, guild: discord.Member, setting: str, value):
         """Set Member Config
 
         Parameters
         ----------
-        server: discord.Member
+        guild: discord.Member
 
         setting: str
 
@@ -1119,35 +1116,26 @@ class ConfigDB(DB):
             """
         pass
 
-    def getMemberPermission(self, server: discord.Member, permission: str):
+    def getMemberPermission(self, guild: discord.Member, permission: str):
         """Get Member Permission
 
         Parameters
         ----------
-        server: discord.Member
+        guild: discord.Member
 
         permission: str
             """
         pass
 
-    def setMemberPermission(self, server: discord.Member, permission: str, value):
+    def setMemberPermission(self, guild: discord.Member, permission: str, value):
         """Set Member Permission
 
         Parameters
         ----------
-        server: discord.Member
+        guild: discord.Member
 
         permission: str
 
         value
             """
         pass
-
-def log_ready(bot):
-    pass
-
-def log_resumed(bot):
-    pass
-
-def log_error(bot, error):
-    pass

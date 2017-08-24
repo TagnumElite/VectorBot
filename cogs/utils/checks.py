@@ -74,16 +74,16 @@ def admin_or_permissions(**perms):
 
     return commands.check(predicate)
 
-def is_in_servers(*server_ids):
+def is_in_guilds(*guild_ids):
     def predicate(ctx):
-        server = ctx.message.server
-        if server is None:
+        guild = ctx.message.guild
+        if guild is None:
             return False
-        return server.id in server_ids
+        return guild.id in guild_ids
     return commands.check(predicate)
 
 def is_lounge_cpp():
-    return is_in_servers('145079846832308224')
+    return is_in_guilds('145079846832308224')
 
 def find_user(username, members):
     usernames = []
@@ -145,14 +145,14 @@ async def get_different_perms(before, after):
         updates['administrator'] = "%s -> %s" % (before.administrator, after.administrator)
     if before.manage_channels != after.manage_channels:
         updates['manage_channels'] = "%s -> %s" % (before.manage_channels, after.manage_channels)
-    if before.manage_server != after.manage_server:
-        updates['manage_server'] = "%s -> %s" % (before.manage_server, after.manage_server)
+    if before.manage_guild != after.manage_guild:
+        updates['manage_guild'] = "%s -> %s" % (before.manage_guild, after.manage_guild)
     if before.add_reactions != after.add_reactions:
         updates['add_reactions'] = "%s -> %s" % (before.add_reactions, after.add_reactions)
     if before.read_messages != after.read_messages:
         updates['read_messages'] = "%s -> %s" % (before.read_messages, after.read_messages)
-    if before.send_messages != after.send_messages:
-        updates['send_messages'] = "%s -> %s" % (before.send_messages, after.send_messages)
+    if before.sends != after.sends:
+        updates['sends'] = "%s -> %s" % (before.sends, after.sends)
     if before.send_tts_messages != after.send_tts_messages:
         updates['send_tts_messages'] = "%s -> %s" % (before.send_tts_messages, after.send_tts_messages)
     if before.manage_messages != after.manage_messages:
@@ -197,7 +197,7 @@ async def get_different_perms(before, after):
 
     return updateStringasync
 
-def getServerDif(before, after):
+def getGuildDif(before, after):
     updates = {}
     if before.create_instant_invite != after.create_instant_invite:
         updates['create_instant_invite'] = "%s -> %s" % (before.create_instant_invite, after.create_instant_invite)
@@ -209,14 +209,14 @@ def getServerDif(before, after):
         updates['administrator'] = "%s -> %s" % (before.administrator, after.administrator)
     if before.manage_channels != after.manage_channels:
         updates['manage_channels'] = "%s -> %s" % (before.manage_channels, after.manage_channels)
-    if before.manage_server != after.manage_server:
-        updates['manage_server'] = "%s -> %s" % (before.manage_server, after.manage_server)
+    if before.manage_guild != after.manage_guild:
+        updates['manage_guild'] = "%s -> %s" % (before.manage_guild, after.manage_guild)
     if before.add_reactions != after.add_reactions:
         updates['add_reactions'] = "%s -> %s" % (before.add_reactions, after.add_reactions)
     if before.read_messages != after.read_messages:
         updates['read_messages'] = "%s -> %s" % (before.read_messages, after.read_messages)
-    if before.send_messages != after.send_messages:
-        updates['send_messages'] = "%s -> %s" % (before.send_messages, after.send_messages)
+    if before.sends != after.sends:
+        updates['sends'] = "%s -> %s" % (before.sends, after.sends)
     if before.send_tts_messages != after.send_tts_messages:
         updates['send_tts_messages'] = "%s -> %s" % (before.send_tts_messages, after.send_tts_messages)
     if before.manage_messages != after.manage_messages:

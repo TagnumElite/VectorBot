@@ -10,10 +10,10 @@ I don't have any rules yet but I will in the future!
 ## Features:
 - [ ] Database Extension
     - [x] MessageDB
-    - [ ] ServerDB
+    - [ ] GuildDB
     - [ ] UserDB
     - [ ] ConfigDB
-- [ ] Multi Server Support (Requires Database Extension to be done)
+- [ ] Multi Guild Support (Requires Database Extension to be done)
 - [x] Splash (Member Splash Management)
 - [ ] Steam Extension ([SteamRep API](https://github.com/EliteKast/libzaek.py))
 - [ ] Wordpress API Support (More Importantly REST API Support)

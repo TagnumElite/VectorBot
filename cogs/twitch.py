@@ -49,9 +49,9 @@ class Twitch:
     async def on_member_update(self, before, after):
         """Check for when members stream"""
 
-        if check_ignore([before.id, before.server.id], self.bot.Config["Ignored IDs"]):
+        if check_ignore([before.id, before.guild.id], self.bot.Config["Ignored IDs"]):
             return True
-        if before.server.id == self.bot.mainServer:
+        if before.guild.id == self.bot.main_guild:
             if before.game != after.game:
                 if before.game.type is 1 or after.game.type is not 1:
                     return
@@ -72,8 +72,8 @@ class Twitch:
             else:
                 return
 
-        for server in self.bot.servers:
-            config = self.bot.Config.get(server.id)
+        for guild in self.bot.guilds:
+            config = self.bot.Config.get(guild.id)
         url = "https://api.twitch.tv/kraken/streams/?channel={}"
         headers = {'Client-ID': self.Config["Client ID"]}
         users = self.Config["Users"]
@@ -96,7 +96,7 @@ class Twitch:
                         announcement = discord.Object(
                             id=self.bot.currentAnnounce
                         )
-                        await self.bot.send_message(
+                        await self.bot.send(
                             announcement,
                             embed=em
                         )
@@ -107,31 +107,31 @@ class Twitch:
             await self.check_streams()
             await asyncio.sleep(self.Config["Refresh"])
 
-    @commands.group(pass_context=True)
+    @commands.group()
     async def twitch(self, ctx):
         """Twitch commands"""
 
         pass
 
-    @twitch.command(pass_context=True)
+    @twitch.command()
     async def add(self, ctx, user):
         """Add a user to the announcement list"""
 
         pass
 
-    @twitch.command(pass_context=True)
+    @twitch.command()
     async def remove(self, ctx, user):
         """Remove a user to the announcement list"""
 
         pass
 
-    @twitch.command(pass_context=True)
+    @twitch.command()
     async def list(self, ctx):
         """List current users"""
 
         pass
 
-    @twitch.command(pass_context=True)
+    @twitch.command()
     @commands.cooldown(rate=1, per=60.0)
     async def check(self, ctx, streamer: str=None):
         """Check if someone is livestreaming, if you put in

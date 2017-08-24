@@ -14,7 +14,7 @@ General
 
 General questions!
 
-MultiServer Splash Support
+MultiGuild Splash Support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This is will not be programmed in because of many things.
@@ -22,11 +22,11 @@ This is will not be programmed in because of many things.
 I will name some:
 
 - High Storage
-    - A user will have a banner per server
+    - A user will have a banner per guild
 - High CPU/Memory Usage
     - Each time a user is updated he will get a new splash
 
-I have more, I won't and will not script MultiServer Splash Support.
+I have more, I won't and will not script MultiGuild Splash Support.
 If you want me to do it as an example then I will.
 Even then it will not be enabled even in dev mode!
 
@@ -45,7 +45,7 @@ Parser Util
 
 Questions regarding cogs.utils.parser.Parser
 
-Why does some of the Server[Members/Roles/Channels] have blank perms or confs
+Why does some of the Guild[Members/Roles/GuildChannels] have blank perms or confs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-That is to do with config and permission handleing for each server separately.
+That is to do with config and permission handleing for each guild separately.

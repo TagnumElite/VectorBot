@@ -21,10 +21,10 @@ class Admin:
         try:
             self.bot.load_extension(module)
         except Exception as e:
-            await self.bot.say('\N{PISTOL}')
-            await self.bot.say('{}: {}'.format(type(e).__name__, e))
+            await self.bot.send('\N{PISTOL}')
+            await self.bot.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await self.bot.say('\N{OK HAND SIGN}')
+            await self.bot.send('\N{OK HAND SIGN}')
 
     @commands.command(hidden=True)
     @checks.admin_or_permissions(administrator=True)
@@ -33,10 +33,10 @@ class Admin:
         try:
             self.bot.unload_extension(module)
         except Exception as e:
-            await self.bot.say('\N{PISTOL}')
-            await self.bot.say('{}: {}'.format(type(e).__name__, e))
+            await self.bot.send('\N{PISTOL}')
+            await self.bot.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await self.bot.say('\N{OK HAND SIGN}')
+            await self.bot.send('\N{OK HAND SIGN}')
 
     @commands.command(name='reload', hidden=True)
     @checks.admin_or_permissions(administrator=True)
@@ -46,10 +46,10 @@ class Admin:
             self.bot.unload_extension(module)
             self.bot.load_extension(module)
         except Exception as e:
-            await self.bot.say('\N{PISTOL}')
-            await self.bot.say('{}: {}'.format(type(e).__name__, e))
+            await self.bot.send('\N{PISTOL}')
+            await self.bot.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await self.bot.say('\N{OK HAND SIGN}')
+            await self.bot.send('\N{OK HAND SIGN}')
 
     @commands.command(pass_context=True, hidden=True)
     @checks.admin_or_permissions(administrator=True)
@@ -63,7 +63,7 @@ class Admin:
             'bot': self.bot,
             'ctx': ctx,
             'message': ctx.message,
-            'server': ctx.message.server,
+            'guild': ctx.message.guild,
             'channel': ctx.message.channel,
             'author': ctx.message.author
         }
@@ -75,10 +75,10 @@ class Admin:
             if inspect.isawaitable(result):
                 result = await result
         except Exception as e:
-            await self.bot.say(python.format(type(e).__name__ + ': ' + str(e)))
+            await self.bot.send(python.format(type(e).__name__ + ': ' + str(e)))
             return
 
-        await self.bot.say(python.format(result))
+        await self.bot.send(python.format(result))
 
 def setup(bot):
     bot.add_cog(Admin(bot))

@@ -14,41 +14,6 @@ Welcome to VectorBot's documentation!
    utils
    faq
 
-.. module:: test
-
-Tests
-=====
-
-Colour
-------
-
-.. autoclass:: Colour
-    :members:
-
-Role
-----
-
-.. autoclass:: Role
-    :members:
-
-Game
-----
-
-.. autoclass:: Game
-    :members:
-
-Server
-------
-
-.. autoclass:: Server
-    :members:
-
-Member
-------
-
-.. autoclass:: Member
-    :members:
-
 Indices and tables
 ==================
 

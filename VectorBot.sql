@@ -22,24 +22,24 @@ GRANT ALL privileges on vectorbot.* to Vector;
 -- Flush Privileges
 FLUSH PRIVILEGES;
 /*
-Now we create the ServerDB
+Now we create the GuildDB
 */
-CREATE TABLE `vectorbot`.`vb_servers` (
+CREATE TABLE `vectorbot`.`vb_guilds` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `server_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the server. Stored as an string',
+  `guild_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the guild. Stored as an string',
   `owner_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the owner. Stored as a string.',
-  `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the server. Stored as DATETIME',
+  `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the guild. Stored as DATETIME',
   PRIMARY KEY (`id`),
-  UNIQUE INDEX `server_id_UNIQUE` (`server_id` ASC))
-COMMENT = 'This is where we will be storing the server unchanging data.';
+  UNIQUE INDEX `guild_id_UNIQUE` (`guild_id` ASC))
+COMMENT = 'This is where we will be storing the guild unchanging data.';
 
-CREATE TABLE `vectorbot`.`vb_servers_meta` (
+CREATE TABLE `vectorbot`.`vb_guilds_meta` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `server_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the server. Stored as an string',
+  `guild_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the guild. Stored as an string',
   `key` VARCHAR(100) NOT NULL COMMENT 'The Name of the content being stored!',
   `value` VARCHAR(10000) NOT NULL COMMENT 'The Content being stored',
   PRIMARY KEY (`id`))
-COMMENT = 'This is where we will be storing the servers changeable data.';
+COMMENT = 'This is where we will be storing the guilds changeable data.';
 
 /*
 Now we create the MessageDB
@@ -47,7 +47,7 @@ Now we create the MessageDB
 CREATE TABLE `vectorbot`.`vb_messages` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `message_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message. Stored as an string',
-  `server_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s server. Stored as an string',
+  `guild_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s guild. Stored as an string',
   `channel_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s channel. Stored as an string',
   `author_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s author. Stored as an string',
   `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the message. Stored as DATETIME',

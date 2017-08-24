@@ -22,13 +22,31 @@ import logging
 import traceback
 import sys
 import os
-import atexit
 import re
 import discord.errors
 import discord
 from discord.ext import commands
 from cogs.utils import checks, databases
 from cogs.utils import parser, config
+
+def setup_loggers():
+    discord_logger = logging.getLogger('discord')
+    discord_logger.setLevel(logging.CRITICAL)
+    log = logging.getLogger()
+    log.setLevel(logging.DEBUG)
+    handler = logging.FileHandler(
+        filename='logs/vectorlog_{:%Y-%m-%d_%H;%M}.log'.format(
+            datetime.datetime.utcnow()
+        ),
+        encoding='utf-8',
+        mode='w'
+    )
+    handler.setFormatter(
+        logging.Formatter(
+            '%(asctime)s:%(levelname)s:%(name)s: %(message)s'
+        )
+    )
+    log.addHandler(handler)
 
 Config = {}
 try:
@@ -50,213 +68,208 @@ except FileNotFoundError:
             #    ))
             newconfig.write(re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig))
         exit("Setup config.json!!!")
-
-defaultDir = os.getcwd()
 Mode = Config["Mode"]
 Config = Config["Modes"][Mode]
-mainServer = Config["Server"]
-Database = Config["Database"]
-Embeds = Config["Embeds"]
 
-DBC = databases.DBC(
-    database=Database["Name"],
-    user=Database["User"],
-    password=Database["Pass"],
-    host=Database["Host"],
-    port=Database["Port"]
-)
-startup_time = datetime.datetime.utcnow()
 
-discord_logger = logging.getLogger('discord')
-discord_logger.setLevel(logging.CRITICAL)
-log = logging.getLogger()
-log.setLevel(logging.DEBUG)
-handler = logging.FileHandler(
-    filename='logs/vectorlog_{:%Y-%m-%d_%H;%M}.log'.format(
-        datetime.datetime.utcnow()
-    ),
-    encoding='utf-8',
-    mode='w'
-)
-handler.setFormatter(
-    logging.Formatter(
-        '%(asctime)s:%(levelname)s:%(name)s: %(message)s'
-    )
-)
-log.addHandler(handler)
+class VectorBot(commands.Bot):
+    """This is the VectorBot's main class and what runs the whole bot.
 
-help_attrs = dict(hidden=True)
+    Parameters
+    ----------
+    config: dict
+        The Main config the bot will run off of"""
 
-bot = commands.Bot(
-    command_prefix=Config["Prefix"],
-    description=Config["Description"],
-    pm_help=Config["DM Help"],
-    help_attrs=help_attrs
-)
+    def __init__(self, config, **kwargs):
+        self.Version = __version__
 
-def isHelpCommand(query):
-    """Checks if the text starts with any of the prefixes"""
-    for pre in Config["Prefix"]:
-        if query.lower().startswith(pre+"help"):
-            return True
-    return False
+        self.Config = config
+        self.defaultDir = os.getcwd()
+        self.main_guild = self.Config["Guild"]
+        self.Database = self.Config["Database"]
+        self.Embeds = self.Config["Embeds"]
 
-@bot.event
-async def on_command_error(error, ctx):
-    """This is called when an error has occured when running a command"""
-    if isinstance(error, commands.NoPrivateMessage):
-        await bot.send_message(ctx.message.author, 'This command cannot be used in private messages.')
-    elif isinstance(error, commands.DisabledCommand):
-        await bot.send_message(ctx.message.author, 'Sorry. This command is disabled and cannot be used.')
-    elif isinstance(error, commands.CommandInvokeError):
-        print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
-        traceback.print_tb(error.original.__traceback__)
-        print('{0.__class__.__name__}: {0}'.format(error.original), file=sys.stderr)
-    elif isinstance(error, commands.CommandOnCooldown):
-        await bot.send_message(ctx.message.author, error)
+        self.Config["Prefix"] = kwargs.get("command_prefix", self.Config["Prefix"])
+        kwargs["description"] = kwargs.get("description", self.Config["Description"])
+        kwargs["pm_help"] = kwargs.get("kwargs", self.Config["DM Help"])
+        kwargs["help_attrs"] = dict(hidden=True)
 
-@bot.event
-async def on_ready():
-    """This is called when the bot has logged in and can run all of its functions"""
-    print('Logged in as:')
-    print('User:', bot.user.name+"#"+bot.user.discriminator)
-    print('ID: ', bot.user.id)
-    print('------')
-    if not hasattr(bot, 'uptime'):
-        bot.uptime = datetime.datetime.utcnow()
-    print("Started:")
-    await bot.change_presence(game=discord.Game(name=Config["Status"]))
-    bot.owner = None
-    for server in bot.servers:
-        for member in server.members:
-            if member.id == Config["Owner"]:
-                print("Found Owner %s/%s#%s" % (member.id, member.name, member.discriminator))
-                bot.owner = member
+        super().__init__(command_prefix=commands.when_mentioned_or(self.Config["Prefix"]), **kwargs)
+
+        self.Status = []
+
+        self.DBC = databases.DBC(
+            database=self.Database["Name"],
+            user=self.Database["User"],
+            password=self.Database["Pass"],
+            host=self.Database["Host"],
+            port=self.Database["Port"]
+        )
+        self.startup_time = datetime.datetime.utcnow()
+
+        for cog in self.Config["Cogs"]:
+            try:
+                self.load_extension(cog)
+            except Exception as E:
+                print('Could not load extension {{0}} due to {{1.__class__.__name__}}'.format(cog, E))
+            else:
+                print('Loaded Exention {0}'.format(cog))
+    def isHelpCommand(self, query):
+        """Checks if the text starts with any of the prefixes"""
+        for pre in self.Config["Prefix"]:
+            if query.lower().startswith(pre+"help"):
+                return True
+        return False
+
+    async def on_ready(self):
+        """This is called when the bot has logged in and can run all of its functions"""
+
+        print('Logged in as:')
+        print('User:', self.user.name+"#"+self.user.discriminator)
+        print('ID: ', self.user.id)
+        print('------')
+        if not hasattr(self, 'uptime'):
+            self.uptime = datetime.datetime.utcnow()
+        print("Started:")
+        await self.change_presence(game=discord.Game(name=self.Config["Status"]))
+        self.owner = None
+        for guild in self.guilds:
+            for member in guild.members:
+                if member.id == self.Config["Owner"]:
+                    print("Found Owner %s/%s#%s" % (member.id, member.name, member.discriminator))
+                    self.owner = member
+                    break
+                if self.owner is not None:
+                    break
+            if self.owner is not None:
                 break
-            if bot.owner is not None:
-                break
-        if bot.owner is not None:
-            break
-    if bot.owner is None:
-        print("Failed to find owner")
+        if self.owner is None:
+            print("Failed to find owner")
 
-@bot.event
-async def on_resumed():
-    """I don't know yet."""
-    print("Resumed...")
+        await self.setup_loops()
 
-@bot.event
-async def on_message(message):
-    """Called when the bot recieves a message. Either through t a private/group/guild/server message"""
-    msg = message.content
-    author = message.author
-    server = message.server
-    channel = message.channel
-    if message.author.bot or message.author.id == bot.user.id:
-        bot.messages.remove(message)
-        return
-    if message.author.id in Config["Ignored IDs"] or message.server.id in Config["Ignored IDs"] or message.channel.id in Config["Ignored IDs"]:
-        bot.messages.remove(message)
-        print("Ignored")
-        return
-    if len(msg.split()) > 1: # This is to make so that commands aren't case sensitive
-        msg = msg.split(maxsplit=1)
-        msg[0] = msg[0].lower()
-        content = " ".join(msg)
-        message.content = content
-        await bot.process_commands(message)
-    else:
-        await bot.process_commands(message)
-    if isHelpCommand(message.content):
-        try:
-            await bot.delete_message(message)
-        except discord.errors.Forbidden():
-            await databases.log_message(message)
-        except:
-            print(
-                """Error deleteing command `help` run by %s(%s) on server %s(%s) in channel %s(%s)
-Error: {0}""".format(Forbidden) % (
-                    author, author.id,
-                    server, server.id,
-                    channel, channel.id
+    async def on_command_error(self, error, ctx):
+        """This is called when an error has occured when running a command"""
+        if isinstance(error, commands.NoPrivateMessage):
+            await self.send(ctx.message.author, 'This command cannot be used in private messages.')
+        elif isinstance(error, commands.DisabledCommand):
+            await self.send(ctx.message.author, 'Sorry. This command is disabled and cannot be used.')
+        elif isinstance(error, commands.CommandInvokeError):
+            print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
+            traceback.print_tb(error.original.__traceback__)
+            print('{0.__class__.__name__}: {0}'.format(error.original), file=sys.stderr)
+        elif isinstance(error, commands.CommandOnCooldown):
+            await self.send(ctx.message.author, error)
+
+    async def on_resumed(self):
+        """I don't know yet."""
+        print("Resumed...")
+    async def on_message(self, message):
+        """Called when the bot recieves a message. Either through t a private/group/guild message"""
+        msg = message.content
+        author = message.author
+        guild = message.guild
+        channel = message.channel
+        if message.author.id in self.Config["Ignored IDs"] or message.guild.id in self.Config["Ignored IDs"] or message.channel.id in self.Config["Ignored IDs"]:
+            print("Ignored")
+            return
+        if len(msg.split()) > 1: # This is to make so that commands aren't case sensitive
+            msg = msg.split(maxsplit=1)
+            msg[0] = msg[0].lower()
+            content = " ".join(msg)
+            message.content = content
+            await self.process_commands(message)
+        else:
+            await self.process_commands(message)
+        if self.isHelpCommand(message.content):
+            try:
+                await self.delete_message(message)
+            except discord.errors.Forbidden():
+                await databases.log_message(message)
+            except:
+                print(
+                    """Error deleteing command `help` run by %s(%s) on guild %s(%s) in channel %s(%s)
+    Error: {0}""".format(Forbidden) % (
+                        author, author.id,
+                        guild, guild.id,
+                        channel, channel.id
+                    )
                 )
-            )
 
-@bot.event
-async def on_member_join(member):
-    """Called when a member has joined the server. This function handles the Welcome messages"""
-    continuee = False
-    server_id = member.server.id
-    await asyncio.sleep(10)
-    server = bot.get_server(server_id)
-    for members in server.members:
-        if member is members:
-            continuee = True
-            break
-    if not continuee:
-        return
-    print(
-        "Member: %s(%s) has gone joined the server %s(%s)" % (
-            member.name, member.id,
-            member.server.name, member.server.id
-        ),
-        datetime.datetime.utcnow()
-    )
-    channel = discord.Object(id=currentWelcome)
-    embed = Embeds["Welcome"]
-    embed["Colour"] = 0x2ecc71
-    em = Parser.createEmbed(
-        data=embed,
-        extra=Parser.make_dicts(member, member.server, Config)
-    )
-    await bot.send_message(channel, embed=em)
+    async def on_member_join(self, member):
+        """Called when a member has joined the guild. This function handles the Welcome messages"""
+        continuee = False
+        guild_id = member.guild.id
+        await asyncio.sleep(10)
+        guild = self.get_guild(guild_id)
+        for members in guild.members:
+            if member is members:
+                continuee = True
+                break
+        if not continuee:
+            return
+        print(
+            "Member: %s(%s) has gone joined the guild %s(%s)" % (
+                member.name, member.id,
+                member.guild.name, member.guild.id
+            ),
+            datetime.datetime.utcnow()
+        )
+        channel = discord.Object(id=currentWelcome)
+        embed = self.Embeds["Welcome"]
+        embed["Colour"] = 0x2ecc71
+        em = Parser.createEmbed(
+            data=embed,
+            extra=Parser.make_dicts(member, member.guild, self.Config)
+        )
+        await self.send(channel, embed=em)
 
-@atexit.register
-def onExit():
-    """Called when the programs crashes or shutsdown normally.
-    Won't work if the window/screen/tmux is shut down forcefully."""
-    os.chdir(defaultDir+"/buffers")
-    if len(DBC.Buffer) > 0:
-        with open("buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
-            for query in DBC.Buffer:
-                buffer.write(query)
-            buffer.close()
-    DBC.close()
+    async def setup_loops(self):
+        """Setup the loops"""
+
+        self.loop.create_task(self.change_status())
+
+    async def add_status(self, status, priority="LOW", time=60):
+        """Add a status the bot
+
+        Parameters
+        ----------
+        status: discord.Game
+            The status to change to
+        priority: str
+            Defaults to "LOW". Don't know yet
+        time: int
+            Don't know yet"""
+
+        self.Status.append((status, priority, time))
+
+    async def change_status(self):
+        await self.wait_until_ready()
+        self.Status.append()
+        while not self.is_closed():
+            pass
 
 def main():
-    """This runs the magic and everything else!"""
-
-    #Set Global Vars Before Setting Up Cogs
-    bot.owner = None
-    bot.mainServer = mainServer
-    bot.currentDIR = defaultDir
-    bot.Config = Config
-    os.chdir(defaultDir+"\configs")
-    bot.Configs = []
+    """Redundent"""
     for file in os.listdir():
         if file.endswith(".json"):
             print("Loading config", file)
             bot.Configs.append(config.Config(file.replace(".json", "")))
-    os.chdir(defaultDir)
-    bot.DBC = DBC
-    bot.startup_time = startup_time
 
-    #Setup Main Cogs
-    for extension in Config["Cogs"]:
-        try:
-            bot.load_extension(extension)
-        except Exception as e:
-            print('Failed to load extension {}\n{}: {}'.format(extension, type(e).__name__, e))
-        else:
-            print("Loaded Extension: ", extension)
+if __name__ == '__main__':
+    setup_loggers()
 
-    #Run Bot
-    bot.run(Config["Token"])
+    Bot = VectorBot(config=Config)
+    Bot.run(Config["Token"])
+
+    if len(Bot.DBC.Buffer) > 0:
+        with open("buffers/buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
+            for query in Bot.DBC.Buffer:
+                buffer.write(query)
+            buffer.close()
+    Bot.DBC.close()
 
     handlers = log.handlers[:]
     for hdlr in handlers:
         hdlr.close()
         log.removeHandler(hdlr)
-
-if __name__ == '__main__':
-    main()

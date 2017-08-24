@@ -50,7 +50,7 @@ def getR(role: discord.Role, default: discord.Role):
     role: discord.Role
         The Users role
     default: discord.Role
-        The Servers Default Role"""
+        The Guilds Default Role"""
     if role == default:
         return (
             255,
@@ -93,9 +93,9 @@ class Splash():
         """Updates Splash
 
         .. note::
-            I would not let all servers use this and only your main server.
+            I would not let all guilds use this and only your main guild.
             The reason why is memory usage will be extremely high.
-            Also MultiServer Splash Support is not planned and won't be.
+            Also MultiGuild Splash Support is not planned and won't be.
             Check the FAQ why!
         Notes
         -----
@@ -146,7 +146,7 @@ class Splash():
         roles = sorted(member.roles, key=attrgetter('position'))
         # Run roles in reverse so that the highest ranking role goes first
         for role in reversed(roles):
-            if role is not member.server.default_role:
+            if role is not member.guild.default_role:
                 avatarP = Path(default+role.name.lower()+"_avatar.png")
                 bannerP = Path(default+role.name.lower()+"_banner.png")
                 fontNameP = Path(default+role.name.lower()+"_font_name.ttf")
@@ -258,7 +258,7 @@ class Splash():
             font=fontName,
             fill=getR(
                 member.top_role,
-                member.server.default_role
+                member.guild.default_role
             )
         )
         text.line(

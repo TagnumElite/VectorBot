@@ -17,12 +17,6 @@ Database
 .. autoclass:: Database
     :members:
 
-Feeds
------
-
-.. autoclass:: Feeds
-    :members:
-
 Image Manipulation
 ------------------
 
