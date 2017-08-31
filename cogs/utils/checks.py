@@ -24,12 +24,6 @@ def similar(w1, w2):
     w2 = w2 + ' ' * (len(w1) - len(w2))
     return sum(1 if i == j else 0 for i, j in zip(w1, w2)) / float(len(w1))
 
-def is_owner_check(message):
-    return message.author.id == '179891973795086336' # Must make this a Config["Owner"]
-
-def is_owner():
-    return commands.check(lambda ctx: is_owner_check(ctx.message))
-
 # The permission system of the bot is based on a "just works" basis
 # You have permissions and the bot has permissions. If you meet the permissions
 # required to execute the command (and the bot does as well) then it goes through

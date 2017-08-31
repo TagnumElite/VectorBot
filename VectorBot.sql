@@ -26,8 +26,8 @@ Now we create the GuildDB
 */
 CREATE TABLE `vectorbot`.`vb_guilds` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `guild_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the guild. Stored as an string',
-  `owner_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the owner. Stored as a string.',
+  `guild_id` INT NOT NULL COMMENT 'The ID of the guild. Stored as an integer',
+  `owner_id` INT NOT NULL COMMENT 'The ID of the owner. Stored as a integer.',
   `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the guild. Stored as DATETIME',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `guild_id_UNIQUE` (`guild_id` ASC))
@@ -35,7 +35,7 @@ COMMENT = 'This is where we will be storing the guild unchanging data.';
 
 CREATE TABLE `vectorbot`.`vb_guilds_meta` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `guild_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the guild. Stored as an string',
+  `guild_id` INT NOT NULL COMMENT 'The ID of the guild. Stored as an integer',
   `key` VARCHAR(100) NOT NULL COMMENT 'The Name of the content being stored!',
   `value` VARCHAR(10000) NOT NULL COMMENT 'The Content being stored',
   PRIMARY KEY (`id`))
@@ -46,10 +46,10 @@ Now we create the MessageDB
 */
 CREATE TABLE `vectorbot`.`vb_messages` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `message_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message. Stored as an string',
-  `guild_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s guild. Stored as an string',
-  `channel_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s channel. Stored as an string',
-  `author_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message\'s author. Stored as an string',
+  `message_id` INT NOT NULL COMMENT 'The ID of the message. Stored as an integer',
+  `guild_id` INT NOT NULL COMMENT 'The ID of the message\'s guild. Stored as an integer',
+  `channel_id` INT NOT NULL COMMENT 'The ID of the message\'s channel. Stored as an integer',
+  `author_id` INT NOT NULL COMMENT 'The ID of the message\'s author. Stored as an integer',
   `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the message. Stored as DATETIME',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `message_id_UNIQUE` (`message_id` ASC))
@@ -57,7 +57,7 @@ COMMENT = 'This is where we will be storing the messages main unchanging data.';
 
 CREATE TABLE `vectorbot`.`vb_messages_meta` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `message_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the message. Stored as an string',
+  `message_id` INT NOT NULL COMMENT 'The ID of the message. Stored as an integer',
   `key` VARCHAR(100) NOT NULL COMMENT 'The Name of the content being stored!',
   `value` VARCHAR(10000) NOT NULL COMMENT 'The Content being stored',
   PRIMARY KEY (`id`))
@@ -69,7 +69,7 @@ I have no support for the UserDB
 */
 CREATE TABLE `vectorbot`.`vb_users` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `user_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the user. Stored as an string',
+  `user_id` INT NOT NULL COMMENT 'The ID of the user. Stored as an integer',
   `created_at` DATETIME NOT NULL COMMENT 'The datetime creation of the u. Stored as DATETIME',
   PRIMARY KEY (`id`),
   UNIQUE INDEX `user_id_UNIQUE` (`user_id` ASC))
@@ -77,7 +77,7 @@ COMMENT = 'This is where we will be storing the users unchanging data.';
 
 CREATE TABLE `vectorbot`.`vb_users_meta` (
   `id` INT NOT NULL AUTO_INCREMENT,
-  `user_id` VARCHAR(100) NOT NULL COMMENT 'The ID of the user. Stored as an string',
+  `user_id` INT NOT NULL COMMENT 'The ID of the user. Stored as an integer',
   `key` VARCHAR(100) NOT NULL COMMENT 'The Name of the content being stored!',
   `value` VARCHAR(10000) NOT NULL COMMENT 'The Content being stored',
   PRIMARY KEY (`id`))

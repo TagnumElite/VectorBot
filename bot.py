@@ -72,7 +72,7 @@ Mode = Config["Mode"]
 Config = Config["Modes"][Mode]
 
 
-class VectorBot(commands.Bot):
+class VectorBot(commands.AutoShardedBot):
     """This is the VectorBot's main class and what runs the whole bot.
 
     Parameters
@@ -88,6 +88,7 @@ class VectorBot(commands.Bot):
         self.main_guild = self.Config["Guild"]
         self.Database = self.Config["Database"]
         self.Embeds = self.Config["Embeds"]
+        if self.Config["Owner"]: self.owner_id = self.Config["Owner"];
 
         self.Config["Prefix"] = kwargs.get("command_prefix", self.Config["Prefix"])
         kwargs["description"] = kwargs.get("description", self.Config["Description"])
@@ -135,7 +136,7 @@ class VectorBot(commands.Bot):
         self.owner = None
         for guild in self.guilds:
             for member in guild.members:
-                if member.id == self.Config["Owner"]:
+                if member.id == self.owner_id:
                     print("Found Owner %s/%s#%s" % (member.id, member.name, member.discriminator))
                     self.owner = member
                     break
@@ -148,18 +149,19 @@ class VectorBot(commands.Bot):
 
         await self.setup_loops()
 
-    async def on_command_error(self, error, ctx):
+    async def on_command_error(self, ctx, error):
+        author = ctx.message.author
         """This is called when an error has occured when running a command"""
         if isinstance(error, commands.NoPrivateMessage):
-            await self.send(ctx.message.author, 'This command cannot be used in private messages.')
+            await author.send('This command cannot be used in private messages.')
         elif isinstance(error, commands.DisabledCommand):
-            await self.send(ctx.message.author, 'Sorry. This command is disabled and cannot be used.')
+            await author.send('Sorry. This command is disabled and cannot be used.')
         elif isinstance(error, commands.CommandInvokeError):
             print('In {0.command.qualified_name}:'.format(ctx), file=sys.stderr)
             traceback.print_tb(error.original.__traceback__)
             print('{0.__class__.__name__}: {0}'.format(error.original), file=sys.stderr)
         elif isinstance(error, commands.CommandOnCooldown):
-            await self.send(ctx.message.author, error)
+            await author.send(error)
 
     async def on_resumed(self):
         """I don't know yet."""
@@ -178,9 +180,7 @@ class VectorBot(commands.Bot):
             msg[0] = msg[0].lower()
             content = " ".join(msg)
             message.content = content
-            await self.process_commands(message)
-        else:
-            await self.process_commands(message)
+        await self.process_commands(message)
         if self.isHelpCommand(message.content):
             try:
                 await self.delete_message(message)
@@ -222,7 +222,7 @@ class VectorBot(commands.Bot):
             data=embed,
             extra=Parser.make_dicts(member, member.guild, self.Config)
         )
-        await self.send(channel, embed=em)
+        await channel.send(embed=em)
 
     async def setup_loops(self):
         """Setup the loops"""
@@ -248,13 +248,6 @@ class VectorBot(commands.Bot):
         self.Status.append()
         while not self.is_closed():
             pass
-
-def main():
-    """Redundent"""
-    for file in os.listdir():
-        if file.endswith(".json"):
-            print("Loading config", file)
-            bot.Configs.append(config.Config(file.replace(".json", "")))
 
 if __name__ == '__main__':
     setup_loggers()

@@ -19,15 +19,16 @@ PKID = "primary key(id)"
 iInto = "INSERT INTO"
 cTableIfNot = "CREATE TABLE IF NOT EXISTS"
 cID = "`id` INT NOT NULL AUTO_INCREMENT"
-cGuildID = "`guild_id` VARCHAR(100) NOT NULL"
-cMessageID = "`message_id` VARCHAR(100) NOT NULL"
-cAuthorID = "`author_id` VARCHAR(100) NOT NULL"
-cUserID = "`user_id` VARCHAR(100) NOT NULL"
-cGuildChannelID = "`channel_id` VARCHAR(100) NOT NULL"
-cOwnerID = "`owner_id` VARCHAR(100) NOT NULL"
+cGuildID = "`guild_id` INT NOT NULL"
+cMessageID = "`message_id` INT NOT NULL"
+cAuthorID = "`author_id` INT NOT NULL"
+cUserID = "`user_id` INT NOT NULL"
+cChannelID = "`channel_id` INT NOT NULL"
+cOwnerID = "`owner_id` INT NOT NULL"
 cCreatedAt = "`created_at` DATETIME NOT NULL"
 cError = "`error` VARCHAR(3000) NOT NULL"
 cDiscriminator = "`discriminator` INT NOT NULL"
+cPrivate = "`private` INT NOT NULL DEFAULT 0"
 cKey = "`key` VARCHAR(100) NOT NULL"
 cValue = '`value` VARCHAR(10000) NOT NULL'
 
@@ -330,7 +331,7 @@ class MessageDB(DB):
 
     table = "message"
 
-    createDataTable = cTableIfNot+" {PRE}_messages ("+cID+", "+cMessageID+" UNIQUE, "+cGuildID+", "+cGuildChannelID+", "+cAuthorID+", "+cCreatedAt+", "+PKID+");"
+    createDataTable = cTableIfNot+" {PRE}_messages ("+cID+", "+cMessageID+" UNIQUE, "+cGuildID+", "+cChannelID+", "+cAuthorID+", "+cCreatedAt+", "+PKID+");"
 
     createMetaTable = cTableIfNot+" {PRE}_messages_meta ("+cID+", "+cMessageID+", "+cKey+", "+cValue+", "+PKID+");"
 

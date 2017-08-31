@@ -16,44 +16,48 @@ class Admin:
 
     @commands.command(hidden=True)
     @checks.admin_or_permissions(administrator=True)
-    async def load(self, *, module : str):
+    async def load(self, ctx, *, module : str):
         """Loads a module."""
+        channel = ctx.channel
         try:
             self.bot.load_extension(module)
         except Exception as e:
-            await self.bot.send('\N{PISTOL}')
-            await self.bot.send('{}: {}'.format(type(e).__name__, e))
+            await channel.send('\N{PISTOL}')
+            await channel.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await self.bot.send('\N{OK HAND SIGN}')
+            await channel.send('\N{OK HAND SIGN}')
 
     @commands.command(hidden=True)
     @checks.admin_or_permissions(administrator=True)
-    async def unload(self, *, module : str):
+    async def unload(self, ctx, *, module : str):
         """Unloads a module."""
+        channel = ctx.channel
         try:
             self.bot.unload_extension(module)
         except Exception as e:
-            await self.bot.send('\N{PISTOL}')
-            await self.bot.send('{}: {}'.format(type(e).__name__, e))
+            await channel.send('\N{PISTOL}')
+            await channel.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await self.bot.send('\N{OK HAND SIGN}')
+            await channel.send('\N{OK HAND SIGN}')
 
     @commands.command(name='reload', hidden=True)
     @checks.admin_or_permissions(administrator=True)
-    async def _reload(self, *, module : str):
+    async def _reload(self, ctx, *, module : str):
         """Reloads a module."""
+        channel = ctx.channel
         try:
             self.bot.unload_extension(module)
             self.bot.load_extension(module)
         except Exception as e:
-            await self.bot.send('\N{PISTOL}')
-            await self.bot.send('{}: {}'.format(type(e).__name__, e))
+            await channel.send('\N{PISTOL}')
+            await channel.send('{}: {}'.format(type(e).__name__, e))
         else:
-            await self.bot.send('\N{OK HAND SIGN}')
+            await channel.send('\N{OK HAND SIGN}')
 
     @commands.command(pass_context=True, hidden=True)
     @checks.admin_or_permissions(administrator=True)
     async def debug(self, ctx, *, code : str):
+        channel = ctx.channel
         """Evaluates code."""
         code = code.strip('` ')
         python = '```py\n{}\n```'
@@ -75,10 +79,10 @@ class Admin:
             if inspect.isawaitable(result):
                 result = await result
         except Exception as e:
-            await self.bot.send(python.format(type(e).__name__ + ': ' + str(e)))
+            await channel.send(python.format(type(e).__name__ + ': ' + str(e)))
             return
 
-        await self.bot.send(python.format(result))
+        await channel.send(python.format(result))
 
 def setup(bot):
     bot.add_cog(Admin(bot))

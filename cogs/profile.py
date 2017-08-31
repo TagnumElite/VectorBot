@@ -34,62 +34,31 @@ class Profile:
             BotPath=bot.currentDIR
         )
 
-    @commands.command(pass_context=True, aliases=["sub"])
-    async def subscribe(self, ctx, Mth: str=None, *, Role: str=None):
-        """Subscribe to a role to get updates from the role!
-        NOTE: That you need to write the exact name of the role!
-
-        Example: V!sub (c)reate/(a)dd/(r)emove/(d)elete CSGO to have the CSGO role created/addded/removed/deleted (to/from your profile)/(to/from the guild)"""
-
-        pass
-
-        msgs = []
-        MTHL = Mth.lower()
-        if MTHL in ["create", "c"]:
-            if checks.admin_or_permissions(manage_roles=True):
-                msgs.append(await self.bot.send("Create Role not setup"))
-            else:
-                msgs.append(await self.bot.send("You do not have permission to do this!"))
-        elif MTHL in ["add", "a"]:
-            msgs.append(await self.bot.send("Add Role Not Setup Yet"))
-        elif MTHL in ["remove", "r"]:
-            msgs.append(await self.bot.send("Remove Role Not Setup Yet"))
-        elif MTHL in ["delete", "d"]:
-            if checks.admin_or_permissions(manage_roles=True):
-                msgs.append(await self.bot.send("Delete Role not setup"))
-            else:
-                msgs.append(await self.bot.send("You do not have permission to do this!"))
-        else:
-            msgs.append(await self.bot.send("Please specifiy whether you want to create/add/remove a role!"))
-        await asyncio.sleep(7)
-        await self.bot.delete_messages(msgs)
-
     @commands.command()
     async def banner(self, ctx, *, args):
         """Get your own banner! Main Guild Only!"""
         message = ctx.message
-        author = message.author
-        guild = message.guild
+        author = ctx.author
+        guild = ctx.guild
+        channel = ctx.channel
         await self.bot.delete_message(message)
         if guild.id is self.bot.Config["Guild"]:
-            await self.bot.send(
-                author,
+            await author.send(
                 "Here is your custom splash! {}/members/{}".format(
                     self.bot.Config["Splash Site"],
                     self.Splash.Check(member) # I won't do Update because in large guilds that can cause the bot to crash
                 )
             )
         else:
-            msg = await self.bot.send("That is not permitted here!")
+            msg = await channel.send("That is not permitted here!")
             await asyncio.sleep(4)
-            await self.bot.delete_message(msg)
+            await msg.delete()
 
     async def on_member_join(self, member):
         if member.guild.id is self.bot.Config["Guild"] and not member.bot:
-            await self.bot.send(
-                author,
+            await member.send(
                 "Here is your custom splash! {}/members/{}".format(
-                    self.bot.Config["Modes"][self.bot.Config["Mode"]]["Splash Site"],
+                    self.bot.Config["Splash Site"],
                     self.Splash.Update(member)
                 )
             )
@@ -106,6 +75,8 @@ class Profile:
                 self.Splash.Update(after)
             elif before.status is not after.status:
                 self.Splash.Update(after)
+            else:
+                return
 
     async def on_member_ban(self, member):
         if member.guild.id == self.bot.Config["Guild"]:

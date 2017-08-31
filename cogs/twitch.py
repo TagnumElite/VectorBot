@@ -96,10 +96,7 @@ class Twitch:
                         announcement = discord.Object(
                             id=self.bot.currentAnnounce
                         )
-                        await self.bot.send(
-                            announcement,
-                            embed=em
-                        )
+                        await announcement.send(embed=em)
 
     async def check_for_streams(self):
         await self.bot.wait_until_ready()

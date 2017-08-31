@@ -28,6 +28,9 @@ def check_database(Database):
 class Database:
     """Database Functionallity
 
+    .. warning::
+        EVERYTHING IS BROKEN!!!
+
     Parameters
     ----------
     bot: discord.Client
@@ -36,7 +39,7 @@ class Database:
     Attributes
     ---------
     MDB: MessageDB
-    SDB: GuildDB
+    GDB: GuildDB
     UDB: UserDB"""
 
     def __init__(self, bot):
@@ -62,9 +65,9 @@ class Database:
             from .utils.databases import GuildDB
         except:
             print("Guild Database Offline")
-            self.SDB = None
+            self.GDB = None
         else:
-            self.SDB = GuildDB(bot.DBC, self.Config["Prefix"])
+            self.GDB = GuildDB(bot.DBC, self.Config["Prefix"])
         try:
             from .utils.databases import UserDB
         except:
@@ -228,9 +231,9 @@ class Database:
         guild: discord.Guild"""
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.create(guild)
+        return self.GDB.create(guild)
 
     async def on_guild_remove(self, guild: discord.Guild):
         """Called when the bot Leaves/Kicked From/Banned From a guild.
@@ -240,9 +243,9 @@ class Database:
         guild: discord.Guild"""
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.delete(guild)
+        return self.GDB.delete(guild)
 
     async def on_guild_update(self, before: discord.Guild, after: discord.Guild):
         """Called when guild updates that the bot is in.
@@ -255,9 +258,9 @@ class Database:
             After Update"""
         if checks.check_ignore(before.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.update(before, after)
+        return self.GDB.update(before, after)
 
     async def on_guild_available(self, guild: discord.Guild):
         """Called when a guild comes back online
@@ -267,9 +270,9 @@ class Database:
         guild: discord.Guild"""
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.updateStatus(guild, 1)
+        return self.GDB.updateStatus(guild, 1)
 
     async def on_guild_unavailable(self, guild: discord.Guild):
         """Called when a guild goes offline
@@ -279,11 +282,11 @@ class Database:
         guild: discord.Guild"""
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.updateStatus(guild, 0)
+        return self.GDB.updateStatus(guild, 0)
 
-    async def on_guild_emojis_update(self, before, after):
+    async def on_guild_emojis_update(self, guild: discordl.Guild, before, after):
         """Called when an emojis is updated/create/deleted
 
         Parameters
@@ -294,7 +297,7 @@ class Database:
             A list of emojis after the update"""
         if checks.check_ignore([before.id, before.guild.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
         beforeS = sorted(before, key=lambda x: x.id)
         afterS = sorted(after, key=lambda x: x.id)
@@ -303,12 +306,12 @@ class Database:
                 #if
                 NOTE = "I have to check between the two lists what's new"
             print("Create Emoji")
-            #return self.SDB.create(None)
+            #return self.GDB.create(None)
         elif len(before) > len(after):
             print("Delete Emoji")
-            #return self.SDB.delete(None)
+            #return self.GDB.delete(None)
         elif len(before) is len(after):
-            return self.SDB.update(before, after)
+            return self.GDB.update(before, after)
         else:
             return "That doesn't make sense."
         return
@@ -322,9 +325,9 @@ class Database:
             The New Role"""
         if checks.check_ignore(role.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.createRole(role)
+        return self.GDB.createRole(role)
 
     async def on_guild_role_delete(self, role: discord.Role):
         """Called when a role is deleted
@@ -335,9 +338,9 @@ class Database:
             The Delted Role"""
         if checks.check_ignore(role.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.deleteRole(role)
+        return self.GDB.deleteRole(role)
 
     async def on_guild_role_update(self, before: discord.Role, after: discord.Role):
         """Called when a role is updated
@@ -350,11 +353,11 @@ class Database:
             New Role"""
         if checks.check_ignore(before.id, self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.updateRole(after)
+        return self.GDB.updateRole(after)
 
-    async def on_channel_delete(self, channel: discord.abc.GuildChannel):
+    async def on_guild_channel_delete(self, channel: discord.abc.GuildChannel):
         """Called when a channel is deleted
 
         Parameters
@@ -363,11 +366,11 @@ class Database:
             The Delted GuildChannel"""
         if checks.check_ignore([channel.id, channel.guild.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.deleteGuildChannel(channel)
+        return self.GDB.deleteGuildChannel(channel)
 
-    async def on_channel_create(self, channel: discord.abc.GuildChannel):
+    async def on_guild_channel_create(self, channel: discord.abc.GuildChannel):
         """Called when a channel is created!
 
         Parameters
@@ -376,11 +379,11 @@ class Database:
             The new GuildChannel"""
         if checks.check_ignore([channel.id, channel.guild.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.createGuildChannel(self, channel)
+        return self.GDB.createGuildChannel(self, channel)
 
-    async def on_channel_update(Self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel):
+    async def on_guild_channel_update(Self, before: discord.abc.GuildChannel, after: discord.abc.GuildChannel):
         """Called when a channel is updated
 
         Parameters
@@ -391,11 +394,11 @@ class Database:
             The New GuildChannel"""
         if checks.check_ignore([channel.id, channel.guild.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
-        return self.SDB.updateGuildChannel(after)
+        return self.GDB.updateGuildChannel(after)
 
-    async def on_member_bant(self, member: discord.Member):
+    async def on_member_ban_todo(self, guild: discord.Guild, user: discord.User):
         """Called when a member is banned
 
         Parameters
@@ -404,11 +407,11 @@ class Database:
             The banned Member"""
         if checks.check_ignore([member.id, member.guild.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
         return self.UDB.ban(member)
 
-    async def on_member_unbant(self, guild: discord.Guild, user: discord.User):
+    async def on_member_unban_todo(self, guild: discord.Guild, user: discord.User):
         """Called when a user is unbanned
 
         Parameters
@@ -419,11 +422,11 @@ class Database:
             The User"""
         if checks.check_ignore([guild.id, user.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
         return self.UDB.unban(guild, user)
 
-    async def on_member_joint(self, member: discord.Member):
+    async def on_member_join_todo(self, member: discord.Member):
         """Called when a member joins a guild the bot is in.
 
         Parameters
@@ -432,14 +435,14 @@ class Database:
             The Guild Member that was added"""
         if checks.check_ignore([member.id, member.guild.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
         if not check_database(self.UDB):
             return False
-        self.SDB.createMember(member)
+        self.GDB.createMember(member)
         return self.UDB.create(member)
 
-    async def on_member_removet(self, member: discord.Member):
+    async def on_member_remove_todo(self, member: discord.Member):
         """Called when a member (leaves/kicked from/banned from) a guild
         the bot is in.
 
@@ -449,14 +452,14 @@ class Database:
             The Guild Member that was removed"""
         if checks.check_ignore([member.id, member.guild.id], self.bot.Config["Ignored IDs"]):
             return
-        if not check_database(self.SDB):
+        if not check_database(self.GDB):
             return False
         if not check_database(self.UDB):
             return False
-        self.SDB.deleteMember(member)
+        self.GDB.deleteMember(member)
         return self.UDB.delete(member)
 
-    async def on_member_updatet(self, before: discord.Member, after: discord.Member):
+    async def on_member_update_todo(self, before: discord.Member, after: discord.Member):
         """Called when a member calls an update the guild the bot is in.
 
         Parameters
