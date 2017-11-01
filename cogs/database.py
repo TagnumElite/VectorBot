@@ -286,7 +286,7 @@ class Database:
             return False
         return self.GDB.updateStatus(guild, 0)
 
-    async def on_guild_emojis_update(self, guild: discordl.Guild, before, after):
+    async def on_guild_emojis_update(self, guild: discord.Guild, before, after):
         """Called when an emojis is updated/create/deleted
 
         Parameters

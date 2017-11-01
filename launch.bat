@@ -44,7 +44,7 @@ IF '%choice%'=='u' GOTO update
 
 :normal
 CLS
-CMD /k python bot.py
+CMD /k python launch.py
 GOTO end
 
 :update
@@ -62,7 +62,7 @@ GOTO auto
 
 :auto
 CLS
-GOTO normal
+CMD /k python launch.py --autorestart
 
 :nopython
 ECHO ERROR: Python has either not been installed or not added to your PATH.

@@ -47,6 +47,7 @@ def setup_loggers():
         )
     )
     log.addHandler(handler)
+    return log
 
 Config = {}
 try:
@@ -68,9 +69,6 @@ except FileNotFoundError:
             #    ))
             newconfig.write(re.sub("\/\/[a-zA-Z0-9 .#':/!,*-{};()]+(?=\n)", "", ExampleConfig))
         exit("Setup config.json!!!")
-Mode = Config["Mode"]
-Config = Config["Modes"][Mode]
-
 
 class VectorBot(commands.AutoShardedBot):
     """This is the VectorBot's main class and what runs the whole bot.
@@ -83,12 +81,13 @@ class VectorBot(commands.AutoShardedBot):
     def __init__(self, config, **kwargs):
         self.Version = __version__
 
-        self.Config = config
         self.defaultDir = os.getcwd()
-        self.main_guild = self.Config["Guild"]
-        self.Database = self.Config["Database"]
-        self.Embeds = self.Config["Embeds"]
-        if self.Config["Owner"]: self.owner_id = self.Config["Owner"];
+        self.Config = config
+        self.setup_configs()
+        if "Owner" in self.Config:
+            self.owner_id = self.Config["Owner"]
+        else:
+            self.owner_id = None
 
         self.Config["Prefix"] = kwargs.get("command_prefix", self.Config["Prefix"])
         kwargs["description"] = kwargs.get("description", self.Config["Description"])
@@ -99,13 +98,6 @@ class VectorBot(commands.AutoShardedBot):
 
         self.Status = []
 
-        self.DBC = databases.DBC(
-            database=self.Database["Name"],
-            user=self.Database["User"],
-            password=self.Database["Pass"],
-            host=self.Database["Host"],
-            port=self.Database["Port"]
-        )
         self.startup_time = datetime.datetime.utcnow()
 
         for cog in self.Config["Cogs"]:
@@ -115,6 +107,24 @@ class VectorBot(commands.AutoShardedBot):
                 print('Could not load extension {{0}} due to {{1.__class__.__name__}}'.format(cog, E))
             else:
                 print('Loaded Exention {0}'.format(cog))
+
+    def setup_configs(self):
+        Mode = self.Config["Mode"]
+        self.Config = self.Config["Modes"][Mode]
+        if "Prefix" in self.Config:
+            self.Config["Prefix"] = self.Config["Prefix"]
+        else:
+            self.Config["Prefix"] = "!"
+        if "Guild" in self.Config:
+            self.main_guild = self.Config["Guild"]
+        if "Database" in self.Config:
+            self.Database = self.Config["Database"]
+        if "Embeds" in self.Config:
+            self.Embeds = self.Config["Embeds"]
+
+        if "Token" not in self.Config:
+            exit("There is no token in the config")
+
     def isHelpCommand(self, query):
         """Checks if the text starts with any of the prefixes"""
         for pre in self.Config["Prefix"]:
@@ -134,19 +144,14 @@ class VectorBot(commands.AutoShardedBot):
         print("Started:")
         await self.change_presence(game=discord.Game(name=self.Config["Status"]))
         self.owner = None
-        for guild in self.guilds:
-            for member in guild.members:
-                if member.id == self.owner_id:
-                    print("Found Owner %s/%s#%s" % (member.id, member.name, member.discriminator))
-                    self.owner = member
-                    break
-                if self.owner is not None:
-                    break
-            if self.owner is not None:
-                break
+        if self.owner_id is None:
+            self.AppInfo = await self.application_info()
+            self.owner = self.AppInfo.owner
+            self.owner_id = self.owner.id
+        else:
+            self.owner = await self.get_user_info(self.owner_id)
         if self.owner is None:
-            print("Failed to find owner")
-
+            print("Failed to find owner:", self.owner_id)
         await self.setup_loops()
 
     async def on_command_error(self, ctx, error):
@@ -172,15 +177,20 @@ class VectorBot(commands.AutoShardedBot):
         author = message.author
         guild = message.guild
         channel = message.channel
-        if message.author.id in self.Config["Ignored IDs"] or message.guild.id in self.Config["Ignored IDs"] or message.channel.id in self.Config["Ignored IDs"]:
+        print("Message Recieved")
+        if author.id in self.Config["Ignored IDs"] or guild.id in self.Config["Ignored IDs"] or channel.id in self.Config["Ignored IDs"] or author.bot:
             print("Ignored")
             return
+        print("Processing Message")
         if len(msg.split()) > 1: # This is to make so that commands aren't case sensitive
             msg = msg.split(maxsplit=1)
             msg[0] = msg[0].lower()
             content = " ".join(msg)
             message.content = content
+        print("Processed Message:", message.content)
+        print("Processing Command")
         await self.process_commands(message)
+        print("Processed Command")
         if self.isHelpCommand(message.content):
             try:
                 await self.delete_message(message)
@@ -249,11 +259,20 @@ class VectorBot(commands.AutoShardedBot):
         while not self.is_closed():
             pass
 
+    def start_bot():
+        self.DBC = databases.DBC(
+            database=self.Database["Name"],
+            user=self.Database["User"],
+            password=self.Database["Pass"],
+            host=self.Database["Host"],
+            port=self.Database["Port"]
+        )
+
 if __name__ == '__main__':
-    setup_loggers()
+    log = setup_loggers()
 
     Bot = VectorBot(config=Config)
-    Bot.run(Config["Token"])
+    Bot.run(Bot.Config["Token"])
 
     if len(Bot.DBC.Buffer) > 0:
         with open("buffers/buffer_{:%Y-%m-%d_%H;%M}.txt".format(startup_time), 'w') as buffer:
