@@ -1,5 +1,7 @@
 from discord.ext import commands
 from .utils import checks, config
+
+import random
 import discord
 import asyncio
 import inspect
@@ -290,6 +292,11 @@ class Utilities:
             await channelsend("Guild has no creation date! WAIT WHAT!")
         else:
             await channel.send("%s was created on: %s" % (guild.name, guild.created_at))
+
+    @commands.command()
+    async def choose(self, ctx, *choices : str):
+        """Chooses between multiple choices."""
+        await ctx.send(random.choice(choices))
 
 def setup(bot):
     bot.add_cog(Utilities(bot))

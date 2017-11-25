@@ -54,40 +54,11 @@ class Database:
              "Type": "MySQL",
              "Prefix": "vb"}
         )
-        try:
-            from .utils.databases import MessageDB
-        except:
-            print("Message Database Offline")
-            self.MDB = None
-        else:
-            self.MDB = MessageDB(bot.DBC, self.Config["Prefix"])
-        try:
-            from .utils.databases import GuildDB
-        except:
-            print("Guild Database Offline")
-            self.GDB = None
-        else:
-            self.GDB = GuildDB(bot.DBC, self.Config["Prefix"])
-        try:
-            from .utils.databases import UserDB
-        except:
-            print("Member Database Offline")
-            self.UDB = None
-        else:
-            self.UDB = UserDB(bot.DBC, self.Config["Prefix"])
-        try:
-            from .utils.databases import ConfigDB
-        except:
-            print("Config Database Offline")
-            self.CDB = None
-        else:
-            self.CDB = ConfigDB(bot.DBC, self.Config["Prefix"])
 
     @commands.group()
     async def database(self, ctx):
         """Database commands! NONE FUNCTIONAL"""
-        #await self.bot.send("I IS NOT READY!")
-        print("Yes")
+        pass
 
     @database.command()
     async def fetch(self, ctx, user: discord.Member, date: str=None):
@@ -97,7 +68,8 @@ class Database:
             NOT SETUP"""
         if date is None:
             message = self.UDB.fetch(user)[1]
-            await self.bot.send(message)
+            await ctx.send(message)
+        return
 
     @database.command()
     async def check(self, ctx, key, value):
@@ -105,15 +77,39 @@ class Database:
 
         .. warning::
             NOT SETUP"""
-
         pass
 
-    async def on_ready_todo(self):
-        """Called when the bot is ready
-
-        .. note::
-            TODO"""
-        pass
+    async def on_ready(self):
+        """Setup the databases on bot ready!"""
+        print("Database: On Ready")
+        try:
+            from .utils.databases import MessageDB
+        except:
+            print("Message Database Offline")
+            self.MDB = None
+        else:
+            self.MDB = MessageDB(self.bot.DBC, self.Config["Prefix"])
+        try:
+            from .utils.databases import GuildDB
+        except:
+            print("Guild Database Offline")
+            self.GDB = None
+        else:
+            self.GDB = GuildDB(self.bot.DBC, self.Config["Prefix"])
+        try:
+            from .utils.databases import UserDB
+        except:
+            print("Member Database Offline")
+            self.UDB = None
+        else:
+            self.UDB = UserDB(self.bot.DBC, self.Config["Prefix"])
+        try:
+            from .utils.databases import ConfigDB
+        except:
+            print("Config Database Offline")
+            self.CDB = None
+        else:
+            self.CDB = ConfigDB(self.bot.DBC, self.Config["Prefix"])
 
     async def on_resumed_todo(self):
         """Called when the bot resumes
@@ -146,6 +142,7 @@ class Database:
     async def on_message(self, message: discord.Message):
         """Called when a message is create. This adds the message
         if it is not an ignored ID to the database."""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([message.author.id, message.guild.id, message.channel.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.MDB):
@@ -161,6 +158,7 @@ class Database:
         """Called when a message is deleted. This makes it so that the
         message JSON in the database leads to null as it's last update
         if it is not an ignored ID to the database."""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([message.author.id, message.guild.id, message.channel.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.MDB):
@@ -171,6 +169,7 @@ class Database:
         """Called when a message is updates. This adds the message new
         content while still keeping the old content if it is not an
         ignored ID to the database."""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([before.author.id, before.guild.id, before.channel.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.MDB):
@@ -186,6 +185,7 @@ class Database:
             The reaction to be added
         user: discord.User
             The user that added the reaction"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(user.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.MDB):
@@ -201,6 +201,7 @@ class Database:
             The reaction to be added
         user: discord.User
             The user that added the reaction"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(user.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.MDB):
@@ -217,6 +218,7 @@ class Database:
         reactions: list[discord.Reaction]
             List of reactions cleared"""
 
+        await self.bot.wait_until_ready()
         if checks.check_ignore_todo([message.author.id, message.guild.id, message.channel.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.MDB):
@@ -229,6 +231,7 @@ class Database:
         Parameters
         ----------
         guild: discord.Guild"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -241,6 +244,7 @@ class Database:
         Parameters
         ----------
         guild: discord.Guild"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -256,6 +260,7 @@ class Database:
             Before Update
         after:  discord.Guild
             After Update"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(before.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -268,6 +273,7 @@ class Database:
         Parameters
         ----------
         guild: discord.Guild"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -280,6 +286,7 @@ class Database:
         Parameters
         ----------
         guild: discord.Guild"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(guild.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -295,6 +302,7 @@ class Database:
             A list of the emojis before the update
         after: list[discord.Emojis]
             A list of emojis after the update"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([before.id, before.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -323,6 +331,7 @@ class Database:
         ----------
         role: discord.Role
             The New Role"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(role.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -336,6 +345,7 @@ class Database:
         ----------
         before: discord.Role
             The Delted Role"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(role.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -351,6 +361,7 @@ class Database:
             Old Role
         after: discord.Role
             New Role"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore(before.id, self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -364,6 +375,7 @@ class Database:
         ----------
         channel: discord.abc.GuildChannel
             The Delted GuildChannel"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([channel.id, channel.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -377,6 +389,7 @@ class Database:
         ----------
         channel: discord.abc.GuildChannel
             The new GuildChannel"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([channel.id, channel.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -392,6 +405,7 @@ class Database:
             The Old GuildChannel
         after: discord.abc.GuildChannel
             The New GuildChannel"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([channel.id, channel.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -405,6 +419,7 @@ class Database:
         ----------
         member: discord.Member
             The banned Member"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([member.id, member.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -420,6 +435,7 @@ class Database:
             The guild from which the user was unbanned from
         user: discord.User
             The User"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([guild.id, user.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -433,6 +449,7 @@ class Database:
         ----------
         memer: discord.Member
             The Guild Member that was added"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([member.id, member.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -450,6 +467,7 @@ class Database:
         ----------
         memer: discord.Member
             The Guild Member that was removed"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([member.id, member.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.GDB):
@@ -468,6 +486,7 @@ class Database:
             The Old Member
         after: discord.Member
             The New Member"""
+        await self.bot.wait_until_ready()
         if checks.check_ignore([before.id, before.guild.id], self.bot.Config["Ignored IDs"]):
             return
         if not check_database(self.UDB):

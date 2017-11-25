@@ -70,7 +70,7 @@ class Music:
     def __init__(self, bot):
         self.bot = bot
         self.voice_states = {}
-        self.Config = bot.Config.get(self.__class__.__name__, None)
+        self.Config = bot.Config.get(self.__class__.__name__, {})
         self.guild = None
 
         if self.Config is None:

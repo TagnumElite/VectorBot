@@ -33,8 +33,7 @@ default = {
             {"Name": "Viewers", "Value": "{viewers}", "Inline": True},
             {"Name": "Created At", "Value": "{created_at}", "Inline": True}
         ]
-    }
-}
+    }}
 
 class Twitch:
     """Handles the bot's twitch system."""
@@ -51,13 +50,15 @@ class Twitch:
 
         if check_ignore([before.id, before.guild.id], self.bot.Config["Ignored IDs"]):
             return True
-        if before.guild.id == self.bot.main_guild:
-            if before.game != after.game:
-                if before.game.type is 1 or after.game.type is not 1:
-                    return
-                if before.game.type is 0 and after.game.type is 1:
-                    return await self.check_streams(after.game.url)
-        return
+        try:
+            if before.guild.id == self.bot.main_guild:
+                if before.game != after.game:
+                    if before.game.type is 1 or after.game.type is not 1:
+                        return
+                    if before.game.type is 0 and after.game.type is 1:
+                        return await self.check_streams(after.game.url)
+        except Exception as E:
+            return
 
     async def check_streams(self, url=None):
         channel = ""

@@ -84,6 +84,8 @@ class VectorBot(commands.AutoShardedBot):
         self.defaultDir = os.getcwd()
         self.Config = config
         self.setup_configs()
+        self.setup_dbc()
+
         if "Owner" in self.Config:
             self.owner_id = self.Config["Owner"]
         else:
@@ -104,7 +106,8 @@ class VectorBot(commands.AutoShardedBot):
             try:
                 self.load_extension(cog)
             except Exception as E:
-                print('Could not load extension {{0}} due to {{1.__class__.__name__}}'.format(cog, E))
+                print('Could not load extension {0} due to {1.__class__.__name__}'.format(cog, E))
+                logging.debug("Failed to load {0} due to {1}".format(cog, E))
             else:
                 print('Loaded Exention {0}'.format(cog))
 
@@ -125,6 +128,17 @@ class VectorBot(commands.AutoShardedBot):
         if "Token" not in self.Config:
             exit("There is no token in the config")
 
+    def setup_dbc(self):
+        db_config = {
+            'database': self.Database["Name"],
+            'user': self.Database["User"],
+            'password': self.Database.get("Password", ""),
+            'host': self.Database.get("Host", 'localhost'),
+            'port': self.Database.get("Port", 3306),
+            'retries': self.Database.get("Retries", 20)
+        }
+        self.DBC = databases.DBC(**db_config)
+
     def isHelpCommand(self, query):
         """Checks if the text starts with any of the prefixes"""
         for pre in self.Config["Prefix"]:
@@ -135,13 +149,10 @@ class VectorBot(commands.AutoShardedBot):
     async def on_ready(self):
         """This is called when the bot has logged in and can run all of its functions"""
 
-        print('Logged in as:')
-        print('User:', self.user.name+"#"+self.user.discriminator)
-        print('ID: ', self.user.id)
+        print(f'Ready: {self.user}#{self.user.discriminator} (self.user.id)')
         print('------')
         if not hasattr(self, 'uptime'):
             self.uptime = datetime.datetime.utcnow()
-        print("Started:")
         await self.change_presence(game=discord.Game(name=self.Config["Status"]))
         self.owner = None
         if self.owner_id is None:
@@ -172,7 +183,7 @@ class VectorBot(commands.AutoShardedBot):
         """I don't know yet."""
         print("Resumed...")
     async def on_message(self, message):
-        """Called when the bot recieves a message. Either through t a private/group/guild message"""
+        """Called when the bot recieves a message. Either through a private/group/guild message"""
         msg = message.content
         author = message.author
         guild = message.guild
@@ -189,12 +200,14 @@ class VectorBot(commands.AutoShardedBot):
             message.content = content
         print("Processed Message:", message.content)
         print("Processing Command")
-        await self.process_commands(message)
+        ctx = await self.get_context(message)
+        print(ctx.command)
+        await self.invoke(ctx)
         print("Processed Command")
         if self.isHelpCommand(message.content):
             try:
-                await self.delete_message(message)
-            except discord.errors.Forbidden():
+                await message.delete()
+            except discord.errors.Forbidden:
                 await databases.log_message(message)
             except:
                 print(

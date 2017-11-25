@@ -9,6 +9,11 @@ import asyncio
 import datetime
 from collections import Counter
 
+default = {
+    "Site": "http://example.com",
+    "Path": "C:/PUBLIC_HTML"
+}
+
 def getS(status):
     if status == discord.Status.online:
         return "Online"
@@ -28,10 +33,10 @@ class Profile:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Config = bot.Config.get(self.__class__.__name__, {})
+        self.Config = bot.Config.get(self.__class__.__name__, default)
         self.Splash = draw.Splash(
-            WebsitePath=self.bot.Config["Splash Path"],
-            BotPath=bot.currentDIR
+            WebsitePath=self.Config["Path"],
+            BotPath=bot.defaultDir
         )
 
     @commands.command()
@@ -45,7 +50,7 @@ class Profile:
         if guild.id is self.bot.Config["Guild"]:
             await author.send(
                 "Here is your custom splash! {}/members/{}".format(
-                    self.bot.Config["Splash Site"],
+                    self.Config["Site"],
                     self.Splash.Check(member) # I won't do Update because in large guilds that can cause the bot to crash
                 )
             )

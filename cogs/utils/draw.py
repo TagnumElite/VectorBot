@@ -220,9 +220,9 @@ class Splash():
         # If the member has an avatar get that instead!
         if member.avatar_url is not "":
             avreq = Request(member.avatar_url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urlopen(avreq) as response, open(member.id+".png", 'wb') as out_file:
+            with urlopen(avreq) as response, open(str(member.id)+".png", 'wb') as out_file:
                 shutil.copyfileobj(response, out_file)
-            avatar = Image.open(member.id+".png")
+            avatar = Image.open(str(member.id)+".png")
 
         #background
         background = Image.new('RGBA', banner.size, (0, 0, 0, 0))
@@ -328,14 +328,14 @@ class Splash():
         # Save Splash
         try:
             os.chdir(self.WebsitePath+"/members/")
-            out.save(member.id+".png")
+            out.save(str(member.id)+".png")
         except Exception as E:
             print("{}".format(E))
 
         # Delete the members avatar if we no longer need it!
         if member.avatar_url is not "":
             os.chdir(default)
-            os.remove(member.id+".png")
+            os.remove(str(member.id)+".png")
         return member.id+".png"
 
     def Check(member: discord.Member):
