@@ -18,6 +18,6 @@ deploy:
   github_token: $github_token
   local_dir: docs/_build/html
   on:
-    branch: develop
+    branch: rewrite
     repo: TagnumElite/yummy_sphinx_theme
     python: 3.6
