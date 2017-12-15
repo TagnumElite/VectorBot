@@ -1,13 +1,13 @@
-# VectorBot
-#### A discord bot created for [Vector eSports](http://vectoresports.co.za)
+## VectorBot - A discord bot created for [Vector eSports](http://vectoresports.co.za)
 
-## Installation
-Check the [Wiki](https://github.com/TagnumElite/VectorBot/wiki)
+[![Build Status](https://img.shields.io/travis/TagnumElite/VectorBot/rewrite.svg 'Build Status')](https://travis-ci.org/TagnumElite/VectorBot)
 
-## Contributing
-I don't have any rules yet but I will in the future!
+### Installation
+- [Windows](https://github.com/TagnumElite/VectorBot/wiki/Installation-Guides#windows)
+- [Ubuntu](https://github.com/TagnumElite/VectorBot/wiki/Installation-Guides#ubuntu-1604)
+- [OS X](https://github.com/TagnumElite/VectorBot/wiki/Installation-Guides#os-x)
 
-## Features:
+### Features:
 - [ ] Database Extension
     - [x] MessageDB
     - [ ] GuildDB
@@ -31,22 +31,22 @@ I don't have any rules yet but I will in the future!
 - [x] Music Extension (Stolen from discord.py)  `Dev Mode Only, Will be improved immensly before it is enabled by default`
 - [ ] Record Player (Prep. Not Possible right now) `Currently Impossible`
 
-## Discord
+### Discord
 [![Join me on discord](http://splash.vectoresports.co.za/members/179891973795086336.png 'Join me on discord')](https://discord.gg/qJbwA7d)
 
-### Image Extension?
+#### Image Extension?
 This will be used for a few things like when adding a new team on a website (WORDPRESS API SUPPORT) and it has an avatar. We will take that avatar and find the most used color and make them a role on discord with that color. Like I said, experimental and will not be enabled by default means.
 
-## FAQ : The Short Version
-### Where is the main FAQ?
+### FAQ : The Short Version
+#### Where is the main FAQ?
 In the [Wiki](https://github.com/TagnumElite/VectorBot/wiki)!
-### This bot looks familiar?
+#### This bot looks familiar?
 Thats because to understand discord.py I forked @Rapptz/RoboDanny and built off on that.
-### I want to report a bug:heavy_exclamation_mark:
+#### I want to report a bug:heavy_exclamation_mark:
 Make an issue, same goes for suggestions!
-### How did you learn to code? :coffee:
+#### How did you learn to code? :coffee:
 Self taught. Going around, looking at docs and taking apart existing code to see how everything works.
-### I got an JSON Error with the configs.json!
+#### I got an JSON Error with the configs.json!
 Please remove all 'comments' EG `//This is a comment` from the configs.json. These comments are for guidelines and break the JSONDecoder
-### Why start on version 6?
+#### Why start on version 6?
 Because this is an continuation of my other bots

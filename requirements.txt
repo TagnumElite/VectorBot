@@ -1,16 +1,8 @@
-#Required:
+pip
 https://github.com/Rapptz/discord.py/archive/rewrite.zip#egg=discord.py[voice]
-cffi==1.6.0; sys_platform == 'win32' #Don't Know
-mysqlclient #For Accessing the Database
-requests #Yes
-psutil #Might be optional
-lxml #This too, will decide in the future
+mysqlclient
+requests
 sphinx>=1.5.6
 youtube_dl
-Pillow>=4.0.0 #Image and Profile Extension Require It
-
-#Optional: Comment out what you don't want enabled!
-#oauthlib
-feedparser #May be removed
-#bcrypt #Encryption. Because we will be storing passwords in the future
-Flask #I plan to make this controllable from a website!
+Pillow>=4.0.0
+imgurpython

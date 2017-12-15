@@ -1,0 +1,23 @@
+language: python
+python:
+  - "3.5"
+  - "3.6"
+
+install:
+  - pip install -r requirements.txt
+
+script:
+  - cd docs && make html && cd ..
+
+notifications:
+  email: false
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $github_token
+  local_dir: docs/_build/html
+  on:
+    branch: develop
+    repo: TagnumElite/yummy_sphinx_theme
+    python: 3.6

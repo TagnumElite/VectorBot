@@ -35,7 +35,8 @@ needs_sphinx = '1.5.6'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.githubpages'
 ]
 
 intersphinx_mapping = {
