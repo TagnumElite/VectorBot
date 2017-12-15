@@ -19,5 +19,5 @@ deploy:
   local_dir: docs/_build/html
   on:
     branch: rewrite
-    repo: TagnumElite/yummy_sphinx_theme
+    repo: TagnumElite/VectorBot
     python: 3.6
