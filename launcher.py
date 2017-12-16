@@ -192,7 +192,7 @@ if __name__ == '__main__':
         print("Please use python3.5 or higher")
         sys.exit(1)
     if pip is None:
-        print("pip not found, disabling auto update and red compatability features")
+        print("pip not found, disabling auto update")
     if args.reset:
         reset()
     if args.update:

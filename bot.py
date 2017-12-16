@@ -12,7 +12,7 @@ __title__ = 'VectorBot'
 __author__ = 'TagnumElite'
 __license__ = 'GPL-3.0'
 __copyright__ = 'Copyright 2017, TagnumElite'
-__version__ = '1.0.0'
+__version__ = '1.0.0a'
 
 import os
 import sys
@@ -35,7 +35,8 @@ except ImportError:
 default_cogs = [
     "cogs.admin",
     "cogs.database",
-    "cogs.gallery"
+    "cogs.gallery",
+    "cogs.utilities"
 ]
 
 class VectorBot(commands.AutoShardedBot):
@@ -49,6 +50,7 @@ class VectorBot(commands.AutoShardedBot):
         super().__init__(**kwargs)
         
         self.remove_command("help")
+        self.add_command(self.cmd_commands)
         self.add_command(self.cmd_help)
         
         self.config['Cogs'] = self.config.get('Cogs', default_cogs)
@@ -76,12 +78,11 @@ class VectorBot(commands.AutoShardedBot):
         print(underline)
         if not hasattr(self, 'uptime'):
             self.uptime = datetime.datetime.utcnow()
-        status = self.config.get('Status', self.get_prefix())
+        status = self.config.get('Status', "vectorbot.elitekast.com")
         await self.change_presence(game=discord.Game(name=status))
     
     async def on_message(self, message):
         """"""
-        print("Message Recieved:", message.content)
         msg = message.content
         author = message.author
         channel = message.channel
@@ -93,18 +94,32 @@ class VectorBot(commands.AutoShardedBot):
             msg[0] = msg[0].lower()
             content = " ".join(msg)
             message.content = content
+        else:
+            msg = msg.lower()
+            message.content = msg
         await self.process_commands(message)
         await self.delete_help(message)
     
     async def delete_help(self, message):
-        for prefix in self.config["Prefix"]:
-            if message.content.lower().startswith(prefix+'help'):
-                try:
-                    await message.delete()
-                except:
-                    break
-                else:
-                    break
+        prefixes = await self.get_prefix(message)
+        if isinstance(prefixes, str):
+            if message.content.startswith(prefixes+'help'):
+                await message.delete()
+        else:
+            await self.delete_help_prefix(message, prefixes)
+    
+    async def delete_help_prefix(self, message, prefix):
+        if isinstance(prefix, str):
+            if message.content.startswith(prefix+'help'):
+                await message.delete()
+                return True
+            else:
+                return False
+        else:
+            for pre in prefix:
+                if await self.delete_help_prefix(message, pre):
+                    return True
+            return False
     
     async def on_resumed(self):
         """"""
@@ -112,6 +127,60 @@ class VectorBot(commands.AutoShardedBot):
     
     @commands.command(name="help")
     async def cmd_help(self, ctx, *commands):
+        """Shows this message."""
+        # No body wants the channel to be stuffed with embeds
+        destination = ctx.author
+        
+        def repl(obj):
+            return _mentions_transforms.get(obj.group(0), '')
+
+        # help by itself just lists our own commands.
+        if len(commands) == 0:
+            pages = await self.formatter.format_help_for(ctx, self)
+        elif len(commands) == 1:
+            # try to see if it is a cog name
+            name = _mention_pattern.sub(repl, commands[0])
+            command = None
+            if name in self.cogs:
+                command = self.cogs[name]
+            else:
+                command = self.all_commands.get(name)
+                if command is None:
+                    await destination.send(self.command_not_found.format(name))
+                    return
+
+            pages = await self.formatter.format_help_for(ctx, command)
+        else:
+            name = _mention_pattern.sub(repl, commands[0])
+            command = self.all_commands.get(name)
+            if command is None:
+                await destination.send(self.command_not_found.format(name))
+                return
+
+            for key in commands[1:]:
+                try:
+                    key = _mention_pattern.sub(repl, key)
+                    command = command.all_commands.get(key)
+                    if command is None:
+                        await destination.send(self.command_not_found.format(key))
+                        return
+                except AttributeError:
+                    await destination.send(self.command_has_no_subcommands.format(command, key))
+                    return
+
+            pages = await self.formatter.format_help_for(ctx, command)
+
+        if bot.pm_help is None:
+            characters = sum(map(lambda l: len(l), pages))
+            # modify destination based on length of pages.
+            if characters > 1000:
+                destination = ctx.message.author
+
+        for page in pages:
+            await destination.send(page)
+    
+    @commands.command(name="commands")
+    async def cmd_commands(self, ctx, *commands):
         for command in self.commands:
             print(command.name, command.module)
 
@@ -187,7 +256,7 @@ if __name__ == '__main__':
     logger = setup_loggers(mode)
     loop = asyncio.get_event_loop()
     description = config.get("Description")
-    prefix = commands.bot.when_mentioned_or(config["Prefix"])
+    prefix = commands.when_mentioned_or(config.get('Prefix', ['v!']))
     bot = VectorBot(
         config=config, logger=logger, loop=loop,
         description=description, command_prefix=prefix

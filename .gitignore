@@ -58,7 +58,7 @@ ENV/
 # I don't want your stuff
 /config.json
 logs/*
-!logs/BOT_YEAR-MONTH-DAY_HOUR;MINUTE
+!logs/_LOG_YEAR-MONTH-DAY_HOUR;MINUTE
 buffers/*.txt
 !buffers/_log files are text
 

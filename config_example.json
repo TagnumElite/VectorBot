@@ -7,7 +7,7 @@
             "Log": 286148169396649994, // This is the channel where the bot will log messages
             "Welcome": 286802443239686144, // This is the channel where the bot is going to welcome platers
             "Announce": 290747091020414978, //Discord ID of the channel #Annoucements
-            "Prefix": ["v!", "V!", "\\N{HEAVY EXCLAMATION MARK SYMBOL}"], //Prefixes, Remember to add both uppercase and lowercase!
+            "Prefix": "v!", //Prefix, Can be array. Even if you nest arrays it will work
             "Owner": 179891973795086336,  //The Discord ID of the user hosting/manageing the bot
             "Description": "Hello!, I am the VectorBot!",  //This is the description displayed on the help screen
             "DM Help": true,  //This is if you want the help message sent over a direct message

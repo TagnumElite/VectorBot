@@ -7,7 +7,7 @@ class Troll:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Config = bot.Config.get(self.__class__.__name__, {})
+        self.config = bot.config.get(self.__class__.__name__, {})
 
 def setup(bot):
     bot.add_cog(Troll(bot))

@@ -9,7 +9,7 @@ class Support:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Config = bot.Config.get(self.__class__.__name__, {})
+        self.config = bot.config.get(self.__class__.__name__, {})
 
     @commands.command(aliases=["bug"])
     @commands.cooldown(rate=1, per=120.0, type=commands.BucketType.user)
@@ -20,15 +20,17 @@ class Support:
         channel = ctx.channel
 
         if bug == None or bug == "":
-            await author.send("HOW TO MAKE A BUG REPORT")
+            return
+        
+        owner = self.bot.get_user(self.bot.owner_id)
 
-        if self.bot.owner is None:
+        if owner is None:
             msgs.append(await author.send("Sorry, bug could not be sent"))
             return
 
         em = discord.Embed(title="Bug Report", description=bug, colour=0xff0000)
         em.set_author(name=author.name+author.discriminator, icon_url=author.avatar_url)
-        await self.bot.owner.send(embed=em)
+        await owner.send(embed=em)
         msgs.append(await channel.send("Bug has been reported!"))
         await asyncio.sleep(5)
         await self.bot.delete_messages(msgs)
@@ -45,13 +47,15 @@ class Support:
         if suggestion == None or suggestion == "":
             await author.send("HOW TO MAKE A SUGGESTION")
 
-        if self.bot.owner is None:
+        owner = self.bot.get_user(self.bot.owner_id)
+        
+        if owner is None:
             msmgs.append(await author.send("Sorry, suggestion could not be sent"))
             return
 
         em = discord.Embed(title="Suggestion", description=suggestion, colour=0x00ff00)
         em.set_author(name=ctx.message.author.name+ctx.message.author.discriminator, icon_url=ctx.message.author.avatar_url)
-        await self.bot.owner.send(embed=em)
+        await owner.send(embed=em)
         msgs.append(await channel.send("Suggestion has been added!"))
         await asyncio.sleep(5)
         await self.bot.delete_messages(msgs)
@@ -62,7 +66,7 @@ class Support:
         """Returns the bot's version and discord.py version"""
         channel = ctx.channel
 
-        await channel.send("Bot: V({0}) / discord.py: V({1})".format(self.bot.Version, discord.__version__))
+        await channel.send("Bot: V({0}) / discord.py: V({1})".format(self.bot.version, discord.__version__))
         await ctx.message.delete()
 
 def setup(bot):

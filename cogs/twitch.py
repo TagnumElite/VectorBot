@@ -40,7 +40,7 @@ class Twitch:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Config = bot.Config.get(self.__class__.__name__, default)
+        self.config = bot.config.get(self.__class__.__name__, default)
         self.Parser = Parser()
         self.checked_streams = []
         self.bot.loop.create_task(self.check_for_streams())

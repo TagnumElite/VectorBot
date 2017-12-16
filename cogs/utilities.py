@@ -19,38 +19,11 @@ class Utilities:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Config = bot.Config.get(self.__class__.__name__, {})
-
-    def __unload(self):
-        """Clean Up Scripts"""
-        pass
-
-    async def __local_check(self, ctx):
-        """Checks that apply to every command in here"""
-        pass
-
-    async def __global_check(self, ctx):
-        """Checks that apply to every command in the bot"""
-        pass
-
-    async def __global_check_once(self, ctx):
-        """check that apply to every command but is guaranteed to be called only once"""
-        return True
-
-    async def __error(self, ctx, error):
-        """error handling to every command in here"""
-        pass
-
-    async def __before_invoke(self, ctx):
-        """called before a command is called here"""
-        pass
-
-    async def __after_invoke(self, ctx):
-        """called after a command is called here"""
-        pass
+        self.config = bot.config.get(self.__class__.__name__, {})
 
     @commands.command()
-    @checks.admin_or_permissions(manage_messages=True)
+    @commands.has_role('admin')
+    @commands.has_permissions(administrator=True, manage_message=True)
     async def prune(self, ctx, number: int, user=None):
         """Deletes messages from the chat!
         Example:
@@ -103,7 +76,7 @@ class Utilities:
         await asyncio.sleep(5)
         await self.bot.delete_messages(msgs)
 
-    @commands.command(pass_context=True, aliases=["setname"])
+    @commands.command(aliases=["setname"])
     @commands.cooldown(rate=2, per=3600.0)
     @commands.is_owner()
     async def setusername(self, ctx, username=None):
@@ -134,7 +107,7 @@ class Utilities:
         ping = now - created
         await channel.send("PING!: %s" % (ping.microseconds)+"ms")
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def status(self, ctx, *, status):
         """Changes the Bots status"""
@@ -197,7 +170,7 @@ class Utilities:
             )
         await author.send(embed=em)
 
-    @commands.command(pass_context=True, hidden=True)
+    @commands.command(hidden=True)
     @commands.is_owner()
     async def logout(self, ctx):
         """Logs Bot out of Discord"""
@@ -297,6 +270,6 @@ class Utilities:
     async def choose(self, ctx, *choices : str):
         """Chooses between multiple choices."""
         await ctx.send(random.choice(choices))
-
+    
 def setup(bot):
     bot.add_cog(Utilities(bot))

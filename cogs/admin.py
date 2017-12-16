@@ -12,7 +12,7 @@ class Admin:
 
     def __init__(self, bot):
         self.bot = bot
-        self.Config = bot.Config.get(self.__class__.__name__, {})
+        self.config = bot.config.get(self.__class__.__name__, {})
 
     @commands.command(hidden=True)
     @checks.admin_or_permissions(administrator=True)
@@ -67,9 +67,9 @@ class Admin:
             'bot': self.bot,
             'ctx': ctx,
             'message': ctx.message,
-            'guild': ctx.message.guild,
-            'channel': ctx.message.channel,
-            'author': ctx.message.author
+            'guild': ctx.guild,
+            'channel': ctx.channel,
+            'author': ctx.author
         }
 
         env.update(globals())
